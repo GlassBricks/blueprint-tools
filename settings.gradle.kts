@@ -5,3 +5,4 @@ rootProject.name = "factorio-tools"
 
 include("prototypes")
 include("blueprint")
+include("blueprint-model")
