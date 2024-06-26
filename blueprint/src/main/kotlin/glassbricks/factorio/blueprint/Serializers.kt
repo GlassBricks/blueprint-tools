@@ -17,14 +17,14 @@ internal val bpJson = Json {
     encodeDefaults = true
 }
 
-internal object BlueprintItemSerializer : KSerializer<BlueprintItem> {
+internal object BlueprintItemSerializer : KSerializer<ImportableBlueprint> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor(
         "BlueprintItem",
     ) {
         element("blueprint", Blueprint.serializer().descriptor, isOptional = true)
     }
 
-    override fun deserialize(decoder: Decoder): BlueprintItem = decoder.decodeStructure(descriptor) {
+    override fun deserialize(decoder: Decoder): ImportableBlueprint = decoder.decodeStructure(descriptor) {
         val result = when (decodeElementIndex(descriptor)) {
             0 -> decodeSerializableElement(descriptor, 0, Blueprint.serializer())
             CompositeDecoder.DECODE_DONE -> throw SerializationException("Expected some key, none found")
@@ -38,7 +38,7 @@ internal object BlueprintItemSerializer : KSerializer<BlueprintItem> {
     }
 
 
-    override fun serialize(encoder: Encoder, value: BlueprintItem) = encoder.encodeStructure(descriptor) {
+    override fun serialize(encoder: Encoder, value: ImportableBlueprint) = encoder.encodeStructure(descriptor) {
         when (value) {
             is Blueprint -> encodeSerializableElement(descriptor, 0, Blueprint.serializer(), value)
             is BlueprintBook -> TODO()
@@ -59,7 +59,7 @@ internal object DoubleAsIntSerializer : KSerializer<Double> {
         }
     }
 }
-/** A double that is serialized as an integer if it can be represented as an integer. */
+/** A double that is serialized as an integer if it can be represented as such. */
 public typealias DoubleAsInt = @Serializable(with = DoubleAsIntSerializer::class) Double
 
 internal fun getSerialName(

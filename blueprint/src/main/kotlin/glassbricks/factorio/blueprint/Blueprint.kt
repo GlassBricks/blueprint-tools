@@ -12,21 +12,25 @@ import kotlinx.serialization.json.JsonObject
 
 public typealias ItemPrototypeName = String
 
-@Serializable(with = BlueprintItemSerializer::class)
-public sealed interface BlueprintItem {
+public interface BlueprintItem {
     /** The name of the item that was saved */
-    public var item: ItemPrototypeName
+    public val item: ItemPrototypeName
     /** The name of the blueprint set by the user. */
-    public var label: String?
+    public val label: String?
     /** The color of the label of this blueprint. */
-    public var label_color: Color?
+    public val label_color: Color?
     /** The icons of the blueprint set by the user. */
-    public var icons: List<Icon>
+    public val icons: List<Icon>
     /** The description of the blueprint. */
-    public var description: String?
+    public val description: String?
     /** The map version of the map the blueprint was created in. */
-    public var version: FactorioVersion
+    public val version: FactorioVersion
 }
+
+
+@Serializable(with = BlueprintItemSerializer::class)
+public sealed interface ImportableBlueprint : BlueprintItem
+
 /**
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#Blueprint_book_object)
  */
@@ -48,7 +52,7 @@ public data class BlueprintBook(
     public override var description: String? = null,
     /** The map version of the map the blueprint was created in. */
     public override var version: FactorioVersion = FactorioVersion.DEFAULT
-) : BlueprintItem {
+) : ImportableBlueprint {
     override fun toString(): String = toStringImpl("BlueprintBook")
 }
 
@@ -82,16 +86,17 @@ public data class Blueprint(
     public override var description: String? = null,
     /** The dimensions of the grid to use for snapping. */
     @SerialName("snap-to-grid")
-    public var snap_to_grid: Position? = null,
+    public var snap_to_grid: TilePosition? = null,
     /** Whether the blueprint uses absolute or relative snapping. */
     @SerialName("absolute-snapping")
-    public var absolute_snapping: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var absolute_snapping: Boolean = false,
     /** Offset relative to the global absolute snapping grid. */
     @SerialName("position-relative-to-grid")
-    public var position_relative_to_grid: Position? = null,
+    public var position_relative_to_grid: TilePosition? = null,
     /** The map version of the map the blueprint was created in. */
     public override var version: FactorioVersion = FactorioVersion.DEFAULT
-) : BlueprintItem {
+) : ImportableBlueprint {
     override fun toString(): String = toStringImpl("Blueprint")
 }
 
@@ -327,7 +332,7 @@ public data class Tile(
     /** Prototype name of the tile (e.g. "concrete"). */
     public var name: String,
     /** Position of the entity within the blueprint. */
-    public var position: Position,
+    public var position: TilePosition,
 )
 
 /**
@@ -698,17 +703,30 @@ public enum class ComparatorString {
     NotEqual,
 }
 
-private fun BlueprintItem.toStringImpl(name: String) = buildString {
+private fun ImportableBlueprint.toStringImpl(name: String) = buildString {
     append(name)
-    append("(\"")
-    append(label)
+    append('(')
+    if (label != null) {
+        append('"').append(label).append("\" ")
+    } 
+    if (this@toStringImpl is Blueprint) {
+        if (!entities.isNullOrEmpty() || tiles.isNullOrEmpty()) {
+            append("with ").append(entities!!.size).append(" entities")
+        } else {
+            append("with ").append(tiles!!.size).append(" tiles")
+        }
+    } else {
+        this@toStringImpl as BlueprintBook
+        append("with ").append(blueprints.size).append(" items")
+    }
     val description = description
     if (!description.isNullOrEmpty()) {
-        append("\", \"")
+        append(", \"")
         append(description.take(20))
         if (description.length > 20) {
             append("...")
         }
+        append("\"")
     }
-    append("\")")
+    append(')')
 }

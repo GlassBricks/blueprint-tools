@@ -25,6 +25,7 @@ fun main() {
             } catch (e: Exception) {
                 println("Error: $e")
             }
+            continue
         }
         println("Blueprint: $bp")
 

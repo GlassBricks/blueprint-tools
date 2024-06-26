@@ -13,18 +13,18 @@ import java.util.*
 import java.util.zip.DeflaterOutputStream
 import java.util.zip.InflaterInputStream
 
-public fun importBlueprint(string: String): BlueprintItem {
+public fun importBlueprint(string: String): ImportableBlueprint {
     return importBlueprintFromStream(string.byteInputStream())
 }
-public fun importBlueprintFromFile(file: File): BlueprintItem {
+public fun importBlueprintFromFile(file: File): ImportableBlueprint {
     return importBlueprintFromStream(file.inputStream())
 }
 
 internal fun <T> importBlueprint(string: String, serializer: KSerializer<T>): T =
     importBlueprintFromStream(string.byteInputStream(), serializer)
 
-public fun importBlueprintFromStream(stream: InputStream): BlueprintItem {
-    return importBlueprintFromStream(stream, BlueprintItem.serializer())
+public fun importBlueprintFromStream(stream: InputStream): ImportableBlueprint {
+    return importBlueprintFromStream(stream, ImportableBlueprint.serializer())
 }
 
 internal fun <T> importBlueprintFromStream(stream: InputStream, serializer: KSerializer<T>): T {
@@ -40,24 +40,24 @@ internal fun <T> importBlueprintFromStream(stream: InputStream, serializer: KSer
 }
 
 
-public fun exportBlueprint(bp: BlueprintItem): String {
+public fun exportBlueprint(bp: ImportableBlueprint): String {
     val writeStream = ByteArrayOutputStream()
     exportBlueprintToStream(bp, writeStream)
     return writeStream.toString()
 }
 
-public fun exportBlueprintToFile(bp: BlueprintItem, file: File) {
+public fun exportBlueprintToFile(bp: ImportableBlueprint, file: File) {
     exportBlueprintToStream(bp, file.outputStream())
 }
 
-public fun exportBlueprintToStream(bp: BlueprintItem, stream: OutputStream) {
+public fun exportBlueprintToStream(bp: ImportableBlueprint, stream: OutputStream) {
     stream.write('0'.code)
     stream
         .let { Base64.getEncoder().wrap(it) }
         .let { DeflaterOutputStream(it) }
         .let {
             @OptIn(ExperimentalSerializationApi::class)
-            bpJson.encodeToStream(BlueprintItem.serializer(), bp, it)
+            bpJson.encodeToStream(ImportableBlueprint.serializer(), bp, it)
             it.close()
         }
 }
