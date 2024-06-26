@@ -9,6 +9,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/blueprint" />
             <option value="$PROJECT_DIR$/prototypes" />
           </set>
         </option>

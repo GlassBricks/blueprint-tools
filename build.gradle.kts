@@ -6,6 +6,8 @@ repositories {
     mavenCentral()
 }
 
+group = "glassbricks.factorio"
+
 dependencies {
     implementation(project(":prototypes"))
     testImplementation(kotlin("test"))
