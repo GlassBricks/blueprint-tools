@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/blueprint" />
             <option value="$PROJECT_DIR$/blueprint-model" />
             <option value="$PROJECT_DIR$/prototypes" />
+            <option value="$PROJECT_DIR$/prototypes/codegen" />
           </set>
         </option>
       </GradleProjectSettings>
