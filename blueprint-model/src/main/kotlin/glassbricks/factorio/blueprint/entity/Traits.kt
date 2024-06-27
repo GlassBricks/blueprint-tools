@@ -9,9 +9,6 @@ public interface WithColor {
     public var color: Color?
 }
 
-internal val EntityInit<WithColor>.color: Color?
-    get() = self?.color ?: json?.color
-
 /**
  * If this entity can have item requests.
  *
@@ -22,9 +19,6 @@ public interface WithItemRequests {
 }
 
 public interface WithModules : WithItemRequests
-
-internal val EntityInit<WithItemRequests>.itemRequests: MutableMap<ItemPrototypeName, Int>
-    get() = self?.itemRequests?.toMutableMap() ?: json?.items?.toMutableMap() ?: mutableMapOf()
 
 public interface WithBar {
     public var bar: Int?
@@ -43,9 +37,6 @@ public interface WithItemFilters {
     public val filters: Array<String?>
     public val numFilters: Int get() = filters.size
 }
-
-internal fun EntityInit<WithItemFilters>.getDirectFilters(size: Int): Array<String?> =
-    self?.filters?.copyOf() ?: json?.filters.toFilters(size)
 
 internal fun List<ItemFilter>?.toFilters(size: Int): Array<String?> = arrayOfNulls<String>(size).also { filters ->
     this?.forEach { filter ->

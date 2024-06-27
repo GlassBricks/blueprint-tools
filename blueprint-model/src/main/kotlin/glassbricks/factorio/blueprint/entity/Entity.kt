@@ -23,8 +23,6 @@ public interface Entity : EntityProps {
     public override var tags: JsonObject?
 
     public fun toJsonIsolated(entityNumber: EntityNumber): EntityJson
-
-    public fun copy(): Entity
 }
 
 internal fun EntityJson.deepCopy() = copy() // todo: actually deep copy

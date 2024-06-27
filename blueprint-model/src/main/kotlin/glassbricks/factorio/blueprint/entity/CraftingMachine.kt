@@ -4,55 +4,46 @@ import glassbricks.factorio.blueprint.json.ItemPrototypeName
 import glassbricks.factorio.prototypes.*
 
 
-public sealed class CraftingMachine(init: EntityInit<CraftingMachine>) : BaseEntity(init), WithModules, WithEnergySource {
+public sealed class CraftingMachine(init: EntityInit) : BaseEntity(init), WithModules, WithEnergySource {
     abstract override val prototype: CraftingMachinePrototype
     override val energySource: EnergySource get() = prototype.energy_source
-    
-    override val itemRequests: MutableMap<ItemPrototypeName, Int> = init.itemRequests
-    
+
+    override val itemRequests: MutableMap<ItemPrototypeName, Int> = init.json?.items.orEmpty().toMutableMap()
+
     override fun exportToJson(json: EntityJson) {
         json.items = itemRequests.takeIf { it.isNotEmpty() }
     }
-
-    abstract override fun copy(): CraftingMachine
 }
 
 
 public open class AssemblingMachine
 internal constructor(
     override val prototype: AssemblingMachinePrototype,
-    init: EntityInit<AssemblingMachine>,
+    init: EntityInit,
 ) : CraftingMachine(init) {
-    public var recipe: String? = init.self?.recipe ?: init.json?.recipe
+    public var recipe: String? = init.json?.recipe
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
         json.recipe = recipe
     }
-
-    override fun copy(): AssemblingMachine = AssemblingMachine(prototype, copyInit(this))
 }
 
 public class RocketSilo
 internal constructor(
     override val prototype: RocketSiloPrototype,
-    init: EntityInit<RocketSilo>,
+    init: EntityInit,
 ) : AssemblingMachine(prototype, init) {
-    public var autoLaunch: Boolean = init.self?.autoLaunch ?: init.json?.auto_launch ?: false
+    public var autoLaunch: Boolean = init.json?.auto_launch ?: false
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
         json.auto_launch = autoLaunch.takeIf { it }
     }
-
-    override fun copy(): RocketSilo = RocketSilo(prototype, copyInit(this))
 }
 
 public class Furnace
 internal constructor(
     override val prototype: FurnacePrototype,
-    init: EntityInit<Furnace>,
-) : CraftingMachine(init) {
-
-    override fun copy(): Furnace = Furnace(prototype, copyInit(this))
-}
+    init: EntityInit,
+) : CraftingMachine(init)

@@ -14,6 +14,7 @@ public interface PowerSwitchConnectionPoints {
     public val left: CableConnectionPoint
     public val right: CableConnectionPoint
 }
+
 public val PowerSwitchConnectionPoints.leftConnections: CableConnectionSet get() = left.cableConnections
 public val PowerSwitchConnectionPoints.rightConnections: CableConnectionSet get() = right.cableConnections
 
@@ -30,7 +31,7 @@ public fun CableConnectionSet(parent: CableConnectionPoint): CableConnectionSet 
 private class CableConnectionSetImpl(override val parent: CableConnectionPoint) : UpdatingSet<CableConnectionPoint>(),
     CableConnectionSet {
     override fun onAdd(element: CableConnectionPoint): Boolean {
-        if(element.entity == parent.entity) return false
+        if (element.entity == parent.entity) return false
         return (element.cableConnections as CableConnectionSetImpl).inner.add(parent)
     }
 
@@ -46,7 +47,7 @@ private class CableConnectionSetImpl(override val parent: CableConnectionPoint) 
 public class ElectricPole
 internal constructor(
     override val prototype: ElectricPolePrototype,
-    init: EntityInit<ElectricPole>,
+    init: EntityInit,
 ) : BaseEntity(init), CableConnectionPoint, CircuitConnectable {
     override val cableConnections: CableConnectionSet = CableConnectionSet(this)
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
@@ -56,29 +57,22 @@ internal constructor(
     override fun exportToJson(json: EntityJson) {
         // all connections handled by ImportExport
     }
-
-    override fun copy(): ElectricPole = ElectricPole(prototype, copyInit(this))
-
-
 }
 
 public class PowerSwitch
 internal constructor(
     override val prototype: PowerSwitchPrototype,
-    init: EntityInit<PowerSwitch>,
+    init: EntityInit,
 ) : BaseEntity(init), CircuitConnectable, PowerSwitchConnectionPoints {
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
     public override val left: CableConnectionPoint = ConnectionPoint()
     public override val right: CableConnectionPoint = ConnectionPoint()
 
-    public var switchState: Boolean = init.self?.switchState ?: init.json?.switch_state ?: false
-
+    public var switchState: Boolean = init.json?.switch_state ?: false
 
     override fun exportToJson(json: EntityJson) {
         json.switch_state = switchState
     }
-
-    override fun copy(): PowerSwitch = PowerSwitch(prototype, copyInit(this))
 
     private inner class ConnectionPoint : CableConnectionPoint {
         override val entity: PowerSwitch get() = this@PowerSwitch

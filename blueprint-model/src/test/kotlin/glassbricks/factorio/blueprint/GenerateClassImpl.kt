@@ -32,9 +32,6 @@ internal constructor(
     override fun exportToJson(json: EntityJson) {
         ${exports.prependIndent("        ")}
     }
-    
-    override fun copy(): $Class = ${Class}(prototype, copyInit(this))
-}
 """.trimIndent()
         )
     }

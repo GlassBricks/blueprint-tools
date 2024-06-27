@@ -65,14 +65,11 @@ class RollingStockKtTest {
         assertEquals(entityJson.color, Color(3.0, 2.0, 1.0))
         assertEquals(entityJson.items, mapOf("iron-plate" to 2))
         blueprint.schedules = null
-        blueprint.setEntitiesFrom(listOf(loco, loco.copy()))
+        blueprint.setEntitiesFrom(listOf(loco))
         assertEquals(
             blueprint.schedules, listOf(
                 Schedule(
-                    locomotives = listOf(
-                        EntityNumber(1),
-                        EntityNumber(2)
-                    ),
+                    locomotives = listOf(EntityNumber(1)),
                     schedule = schedule2
                 )
             )

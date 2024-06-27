@@ -2,15 +2,15 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
 
-internal fun createEntityFromPrototype(prototype: EntityWithOwnerPrototype, source: EntityInit<Nothing>): Entity {
+internal fun createEntityFromPrototype(prototype: EntityWithOwnerPrototype, source: EntityInit): Entity {
     return getConstructorForPrototype(prototype)(prototype, source)
 }
 
-private typealias Constructor = (EntityWithOwnerPrototype, EntityInit<*>) -> Entity
+private typealias Constructor = (EntityWithOwnerPrototype, EntityInit) -> Entity
 
 private inline fun <reified T : EntityWithOwnerPrototype>
         MutableMap<Class<out EntityWithOwnerPrototype>, Constructor>.add(
-    noinline constructor: (T, EntityInit<Nothing>) -> Entity,
+    noinline constructor: (T, EntityInit) -> Entity,
 ) {
     @Suppress("UNCHECKED_CAST")
     put(T::class.java, constructor as Constructor)

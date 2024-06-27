@@ -11,12 +11,12 @@ import glassbricks.factorio.blueprint.json.LogisticFilter as LogisticFilterJson
 public open class Container
 internal constructor(
     prototype_: ContainerPrototype,
-    init: EntityInit<Container>,
+    init: EntityInit,
 ) : BaseEntity(init),
     WithBar, WithItemFilters {
     override val prototype: ContainerPrototype = prototype_
-    public override val filters: Array<String?> = init.getDirectFilters(prototype_.inventory_size.toInt())
-    public override var bar: Int? = init.self?.bar ?: init.json?.bar
+    public override val filters: Array<String?> = init.json?.filters.toFilters(prototype_.inventory_size.toInt())
+    public override var bar: Int? = init.json?.bar
 
     // containers have control behavior, but it has no settings (always read chest contents)
 
@@ -24,20 +24,18 @@ internal constructor(
         json.bar = bar
         json.filters = getFiltersAsList()
     }
-
-    override fun copy(): Container = Container(prototype, copyInit(this))
 }
 
 public open class LogisticContainer
 internal constructor(
     prototype_: LogisticContainerPrototype,
-    init: EntityInit<LogisticContainer>,
+    init: EntityInit,
 ) : Container(prototype_, init) {
     override val prototype: LogisticContainerPrototype get() = super.prototype as LogisticContainerPrototype
-    public val requestFilters: Array<LogisticRequest?> = init.self?.requestFilters?.copyOf()
-        ?: init.json?.request_filters.toLogiFilters(prototype_.max_logistic_slots?.toInt() ?: prototype_.inventory_size.toInt())
-    public val requestFromBuffers: Boolean =
-        init.self?.requestFromBuffers ?: init.json?.request_from_buffers ?: false
+    public val requestFilters: Array<LogisticRequest?> = init.json?.request_filters.toLogiFilters(
+        prototype_.max_logistic_slots?.toInt() ?: prototype_.inventory_size.toInt()
+    )
+    public val requestFromBuffers: Boolean = init.json?.request_from_buffers ?: false
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
@@ -46,8 +44,6 @@ internal constructor(
         }
         json.request_from_buffers = requestFromBuffers
     }
-
-    override fun copy(): LogisticContainer = LogisticContainer(prototype, copyInit(this))
 }
 
 public data class LogisticRequest(
@@ -58,13 +54,11 @@ public data class LogisticRequest(
 public class InfinityContainer
 internal constructor(
     prototype_: InfinityContainerPrototype,
-    init: EntityInit<InfinityContainer>,
+    init: EntityInit,
 ) : LogisticContainer(prototype_, init) {
     override val prototype: InfinityContainerPrototype get() = super.prototype as InfinityContainerPrototype
-    public val infinityFilters: Array<InfinityFilter?> = init.self?.infinityFilters?.copyOf()
-        ?: init.json?.infinity_settings?.filters.toInfinityFilters(prototype.inventory_size.toInt())
-    public val removeUnfilteredItems: Boolean =
-        init.self?.removeUnfilteredItems ?: init.json?.infinity_settings?.remove_unfiltered_items ?: false
+    public val infinityFilters: Array<InfinityFilter?> = init.json?.infinity_settings?.filters.toInfinityFilters(prototype.inventory_size.toInt())
+    public val removeUnfilteredItems: Boolean = init.json?.infinity_settings?.remove_unfiltered_items ?: false
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
@@ -75,8 +69,6 @@ internal constructor(
             }
         )
     }
-
-    override fun copy(): InfinityContainer = InfinityContainer(prototype, copyInit(this))
 }
 
 public data class InfinityFilter(

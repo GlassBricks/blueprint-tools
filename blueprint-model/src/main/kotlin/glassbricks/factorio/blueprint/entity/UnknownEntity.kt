@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonPrimitive
 
 public class UnknownEntity internal constructor(
     override val prototype: EntityWithOwnerPrototype,
-    init: EntityInit<UnknownEntity>,
+    init: EntityInit,
 ) : Entity,
     CableConnectionPoint,
     CircuitConnectable2,
@@ -21,7 +21,7 @@ public class UnknownEntity internal constructor(
     override var direction: Direction by json::direction
     override var color: Color? by json::color
     override var bar: Int? by json::bar
-    override val filters: Array<String?> = init.self?.filters ?: json.filters.toFilters(128)
+    override val filters: Array<String?> = json.filters.toFilters(128)
 
     override val cableConnections: CableConnectionSet = CableConnectionSet(this)
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.First)
@@ -35,8 +35,6 @@ public class UnknownEntity internal constructor(
         neighbours = null,
         filters = this.getFiltersAsList(),
     )
-
-    override fun copy(): Entity = UnknownEntity(prototype, copyInit(this))
 }
 
 public fun UnknownEntity(
@@ -47,9 +45,8 @@ public fun UnknownEntity(
     return UnknownEntity(UnknownPrototype(name), propInit(name, position, direction))
 }
 
-private fun EntityInit<UnknownEntity>.getJson(): EntityJson {
-    val json = this.self?.json
-        ?: this.json
+private fun EntityInit.getJson(): EntityJson {
+    val json = this.json
         ?: EntityJson(
             entity_number = EntityNumber(1),
             name = this.name,
