@@ -1,9 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.*
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
-import glassbricks.factorio.blueprint.json.ConnectionPoint as ConnectionPointJson
 
 
 public fun createEntityFromPrototype(prototype: EntityWithOwnerPrototype, source: EntityProps): Entity {
@@ -19,9 +17,7 @@ internal fun BlueprintPrototypes.createEntityFromJson(
     return createEntityFromPrototype(prototype, source)
 }
 
-internal fun BlueprintPrototypes.entitiesFromJson(
-    json: BlueprintJson,
-): List<Entity>? {
+internal fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entity>? {
     val jsonEntities = json.entities
     if (jsonEntities.isNullOrEmpty()) return null
 
