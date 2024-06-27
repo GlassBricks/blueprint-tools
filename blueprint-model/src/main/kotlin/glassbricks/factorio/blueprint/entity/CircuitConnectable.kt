@@ -7,7 +7,7 @@ import glassbricks.factorio.blueprint.json.ConnectionData
 
 /**
  * An entity that can be connected with circuit wires.
- * 
+ *
  * Has 1 or 2 [CircuitConnectionPoint]s.
  */
 public interface CircuitConnectable : Entity {
@@ -76,7 +76,7 @@ public class CircuitConnectionPoint(
     internal inner class ConnectionSetImpl(override val color: WireColor) : UpdatingSet<CircuitConnectionPoint>(),
         CircuitConnectionSet {
         override fun onAdd(element: CircuitConnectionPoint): Boolean {
-            if(element == this@CircuitConnectionPoint) return false
+            if (element == this@CircuitConnectionPoint) return false
             return (element[color] as ConnectionSetImpl).inner.add(this@CircuitConnectionPoint)
         }
 

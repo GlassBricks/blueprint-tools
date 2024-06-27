@@ -5,8 +5,7 @@ import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.json.Position
 import kotlinx.serialization.json.JsonObject
 
-public abstract class BaseEntity
-internal constructor(json: EntityJson) : Entity {
+public abstract class BaseEntity(json: EntityJson) : Entity {
     override var position: Position = json.position
     override var direction: Direction = json.direction
     override var tags: JsonObject? = json.tags
@@ -22,5 +21,6 @@ internal constructor(json: EntityJson) : Entity {
         return createEntityJson(entityNumber)
             .apply { exportToJson(this) }
     }
+
     protected abstract fun exportToJson(json: EntityJson)
 }

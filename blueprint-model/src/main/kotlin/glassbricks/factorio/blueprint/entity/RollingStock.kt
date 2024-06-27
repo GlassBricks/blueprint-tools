@@ -25,8 +25,7 @@ internal fun getSchedule(
         .orEmpty()
 }
 
-public class CargoWagon
-internal constructor(
+public class CargoWagon(
     override val prototype: CargoWagonPrototype,
     json: EntityJson,
 ) : BaseEntity(json),
@@ -47,8 +46,7 @@ internal constructor(
     }
 }
 
-public class Locomotive
-internal constructor(
+public class Locomotive(
     override val prototype: LocomotivePrototype,
     json: EntityJson,
     blueprint: BlueprintJson?,
@@ -69,7 +67,7 @@ internal constructor(
     }
 }
 
-public class OtherRollingStock internal constructor(
+public class OtherRollingStock(
     override val prototype: RollingStockPrototype,
     json: EntityJson,
 ) : BaseEntity(json),

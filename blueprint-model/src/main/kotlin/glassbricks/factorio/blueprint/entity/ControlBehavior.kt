@@ -23,13 +23,14 @@ public abstract class GenericOnOffControlBehavior(
     public val connectToLogisticNetwork: Boolean get() = logisticCondition != null
 
     protected open fun exportToJson(): ControlBehaviorJson? {
-        if(circuitCondition == null && logisticCondition == null) return null
+        if (circuitCondition == null && logisticCondition == null) return null
         return ControlBehaviorJson(
             circuit_condition = circuitCondition,
             logistic_condition = logisticCondition,
             connect_to_logistic_network = logisticCondition != null
         )
     }
+
     protected fun copyTo(target: GenericOnOffControlBehavior) {
         target.circuitCondition = circuitCondition?.copy()
         target.logisticCondition = logisticCondition?.copy()

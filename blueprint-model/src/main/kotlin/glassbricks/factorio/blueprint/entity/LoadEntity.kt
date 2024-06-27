@@ -3,10 +3,10 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
 
 internal fun createEntityFromPrototype(
-    prototype: EntityWithOwnerPrototype, 
+    prototype: EntityWithOwnerPrototype,
     source: EntityJson,
     blueprint: BlueprintJson?,
-    ): Entity {
+): Entity {
     return getConstructorForPrototype(prototype)(prototype, source, blueprint)
 }
 

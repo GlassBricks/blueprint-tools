@@ -10,8 +10,7 @@ public sealed interface TransportBeltConnectable : Entity {
     override val prototype: TransportBeltConnectablePrototype
 }
 
-public class TransportBelt
-internal constructor(
+public class TransportBelt(
     override val prototype: TransportBeltPrototype,
     json: EntityJson,
 ) : BaseEntity(json), TransportBeltConnectable, CircuitConnectable {
@@ -52,8 +51,7 @@ public class TransportBeltControlBehavior(
     }
 }
 
-public class UndergroundBelt
-internal constructor(
+public class UndergroundBelt(
     override val prototype: UndergroundBeltPrototype,
     json: EntityJson,
 ) : BaseEntity(json), TransportBeltConnectable {
@@ -63,8 +61,7 @@ internal constructor(
     }
 }
 
-public class Splitter
-internal constructor(
+public class Splitter(
     override val prototype: SplitterPrototype,
     json: EntityJson,
 ) : BaseEntity(json), TransportBeltConnectable {
@@ -79,8 +76,7 @@ internal constructor(
     }
 }
 
-public class Loader
-internal constructor(
+public class Loader(
     override val prototype: LoaderPrototype,
     json: EntityJson,
 ) : BaseEntity(json),

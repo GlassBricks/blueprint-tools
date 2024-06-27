@@ -8,12 +8,10 @@ import glassbricks.factorio.prototypes.LogisticContainerPrototype
 import glassbricks.factorio.blueprint.json.InfinityFilter as InfinityFilterJson
 import glassbricks.factorio.blueprint.json.LogisticFilter as LogisticFilterJson
 
-public open class Container
-internal constructor(
+public open class Container(
     prototype_: ContainerPrototype,
     json: EntityJson,
-) : BaseEntity(json),
-    WithBar, WithItemFilters {
+) : BaseEntity(json), WithBar, WithItemFilters {
     override val prototype: ContainerPrototype = prototype_
     public override val filters: Array<String?> = json.filters.toFilters(prototype_.inventory_size.toInt())
     public override var bar: Int? = json.bar
@@ -26,8 +24,7 @@ internal constructor(
     }
 }
 
-public open class LogisticContainer
-internal constructor(
+public open class LogisticContainer(
     prototype_: LogisticContainerPrototype,
     json: EntityJson,
 ) : Container(prototype_, json) {
@@ -51,8 +48,7 @@ public data class LogisticRequest(
     val count: Int,
 )
 
-public class InfinityContainer
-internal constructor(
+public class InfinityContainer(
     prototype_: InfinityContainerPrototype,
     json: EntityJson,
 ) : LogisticContainer(prototype_, json) {
@@ -63,12 +59,10 @@ internal constructor(
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
-        json.infinity_settings = InfinitySettings(
-            remove_unfiltered_items = removeUnfilteredItems,
+        json.infinity_settings = InfinitySettings(remove_unfiltered_items = removeUnfilteredItems,
             filters = infinityFilters.mapIndexedNotNull { index, filter ->
                 filter?.let { InfinityFilterJson(name = it.name, count = it.count, mode = it.mode, index = index + 1) }
-            }
-        )
+            })
     }
 }
 
@@ -83,8 +77,7 @@ private fun List<LogisticFilterJson>?.toLogiFilters(size: Int): Array<LogisticRe
         this?.forEach { filter ->
             if (filter.index - 1 in filters.indices) {
                 filters[filter.index - 1] = LogisticRequest(
-                    item = filter.name,
-                    count = filter.count
+                    item = filter.name, count = filter.count
                 )
             }
         }
@@ -95,9 +88,7 @@ private fun List<InfinityFilterJson>?.toInfinityFilters(size: Int): Array<Infini
         this?.forEach { filter ->
             if (filter.index - 1 in filters.indices) {
                 filters[filter.index - 1] = InfinityFilter(
-                    name = filter.name,
-                    count = filter.count,
-                    mode = filter.mode
+                    name = filter.name, count = filter.count, mode = filter.mode
                 )
             }
         }

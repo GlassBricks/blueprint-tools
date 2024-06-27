@@ -16,8 +16,7 @@ public sealed class CraftingMachine(json: EntityJson) : BaseEntity(json), WithMo
 }
 
 
-public open class AssemblingMachine
-internal constructor(
+public open class AssemblingMachine(
     override val prototype: AssemblingMachinePrototype,
     json: EntityJson,
 ) : CraftingMachine(json) {
@@ -29,8 +28,7 @@ internal constructor(
     }
 }
 
-public class RocketSilo
-internal constructor(
+public class RocketSilo(
     override val prototype: RocketSiloPrototype,
     json: EntityJson,
 ) : AssemblingMachine(prototype, json) {
@@ -42,8 +40,7 @@ internal constructor(
     }
 }
 
-public class Furnace
-internal constructor(
+public class Furnace(
     override val prototype: FurnacePrototype,
     json: EntityJson,
 ) : CraftingMachine(json)

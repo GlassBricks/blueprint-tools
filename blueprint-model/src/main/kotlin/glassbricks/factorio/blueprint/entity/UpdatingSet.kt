@@ -9,11 +9,12 @@ internal abstract class UpdatingSet<T : Any> : AbstractMutableSet<T>() {
     override fun iterator(): MutableIterator<T> = Iterator(inner.iterator())
 
     override val size: Int get() = inner.size
-    override fun add(element: T): Boolean = 
+    override fun add(element: T): Boolean =
         onAdd(element) && inner.add(element)
 
     override fun remove(element: T): Boolean = inner.remove(element)
         .also { if (it) onRemove(element) }
+
     override fun contains(element: T): Boolean = inner.contains(element)
     override fun clear() {
         for (element in inner) onRemove(element)

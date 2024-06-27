@@ -5,7 +5,7 @@ import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-public class UnknownEntity internal constructor(
+public class UnknownEntity(
     override val prototype: EntityWithOwnerPrototype,
     json: EntityJson,
 ) : Entity,
@@ -47,13 +47,6 @@ public fun UnknownEntity(
 
 private fun EntityJson.getJson(): EntityJson {
     val json = this
-        ?: EntityJson(
-            entity_number = EntityNumber(1),
-            name = this.name,
-            position = this.position,
-            direction = this.direction,
-            tags = this.tags,
-        )
     return json.deepCopy()
 }
 

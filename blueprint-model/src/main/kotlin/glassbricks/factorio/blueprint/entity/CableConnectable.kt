@@ -44,8 +44,7 @@ private class CableConnectionSetImpl(override val parent: CableConnectionPoint) 
     override fun toString(): String = "CableConnectionSet(parent=$parent)"
 }
 
-public class ElectricPole
-internal constructor(
+public class ElectricPole(
     override val prototype: ElectricPolePrototype,
     json: EntityJson,
 ) : BaseEntity(json), CableConnectionPoint, CircuitConnectable {
@@ -59,8 +58,7 @@ internal constructor(
     }
 }
 
-public class PowerSwitch
-internal constructor(
+public class PowerSwitch(
     override val prototype: PowerSwitchPrototype,
     json: EntityJson,
 ) : BaseEntity(json), CircuitConnectable, PowerSwitchConnectionPoints {
