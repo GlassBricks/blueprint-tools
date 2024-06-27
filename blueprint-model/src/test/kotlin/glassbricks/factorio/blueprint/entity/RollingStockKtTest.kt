@@ -7,7 +7,7 @@ import kotlin.test.assertTrue
 
 class RollingStockKtTest {
     @Test
-    fun `can load a cargo wagon`() {
+    fun `can load and save a cargo wagon`() {
         val wagon = loadEntity("cargo-wagon") {
             orientation = 0.5
             inventory = Inventory(
