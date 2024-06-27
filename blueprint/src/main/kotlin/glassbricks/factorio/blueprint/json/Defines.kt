@@ -46,8 +46,8 @@ public value class CircuitModeOfOperation(public val rawValue: Int) {
 
     public fun asInserter(): InserterModeOfOperation = InserterModeOfOperation.entries[rawValue]
     public fun asLamp(): LampModeOfOperation = LampModeOfOperation.entries[rawValue]
-    public fun asLogisticContainer(): LogisticChestModeOfOperation =
-        LogisticChestModeOfOperation.entries[rawValue]
+    public fun asLogisticContainer(): LogisticContainerModeOfOperation =
+        LogisticContainerModeOfOperation.entries[rawValue]
 
     public fun from(value: CircuitModeOption): CircuitModeOfOperation = CircuitModeOfOperation(value.ordinal)
     public fun equalsOption(value: CircuitModeOption): Boolean = rawValue == value.ordinal
@@ -73,7 +73,7 @@ public enum class LampModeOfOperation : CircuitModeOption {
     UseColors
 }
 
-public enum class LogisticChestModeOfOperation : CircuitModeOption {
+public enum class LogisticContainerModeOfOperation : CircuitModeOption {
     SendContents,
     SetRequests
 }

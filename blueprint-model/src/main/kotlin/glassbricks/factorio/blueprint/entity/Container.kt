@@ -2,6 +2,8 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.InfinityFilterMode
 import glassbricks.factorio.blueprint.json.InfinitySettings
+import glassbricks.factorio.blueprint.json.LogisticContainerModeOfOperation
+import glassbricks.factorio.blueprint.json.asMode
 import glassbricks.factorio.prototypes.ContainerPrototype
 import glassbricks.factorio.prototypes.InfinityContainerPrototype
 import glassbricks.factorio.prototypes.LogisticContainerPrototype
@@ -34,12 +36,30 @@ public open class LogisticContainer(
     )
     public val requestFromBuffers: Boolean = json.request_from_buffers
 
+    public val controlBehavior: LogisticContainerControlBehavior =
+        LogisticContainerControlBehavior(json.control_behavior)
+
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
         json.request_filters = requestFilters.mapIndexedNotNull { index, request ->
             request?.let { LogisticFilterJson(name = it.item, count = it.count, index = index + 1) }
         }
         json.request_from_buffers = requestFromBuffers
+        json.control_behavior = controlBehavior.exportToJson()
+    }
+}
+
+public class LogisticContainerControlBehavior(
+    json: ControlBehaviorJson?,
+) : ControlBehavior {
+    public var modeOfOperation: LogisticContainerModeOfOperation = json?.circuit_mode_of_operation
+        ?.asLogisticContainer() ?: LogisticContainerModeOfOperation.SendContents
+
+    override fun exportToJson(): ControlBehaviorJson? {
+        if (modeOfOperation == LogisticContainerModeOfOperation.SendContents) return null
+        return ControlBehaviorJson(
+            circuit_mode_of_operation = modeOfOperation.asMode(),
+        )
     }
 }
 

@@ -1,9 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.json.InfinityFilter
-import glassbricks.factorio.blueprint.json.InfinityFilterMode
-import glassbricks.factorio.blueprint.json.InfinitySettings
-import glassbricks.factorio.blueprint.json.LogisticFilter
 import kotlin.test.Test
 
 class ContainerTest {
@@ -27,6 +25,11 @@ class ContainerTest {
                 LogisticFilter(name = "copper-plate", count = 2, index = 5)
             )
             request_from_buffers = true
+        }
+        testSaveLoad<LogisticContainer>("logistic-chest-requester") {
+            control_behavior = ControlBehaviorJson(
+                circuit_mode_of_operation = LogisticContainerModeOfOperation.SetRequests.asMode()
+            )
         }
     }
 
