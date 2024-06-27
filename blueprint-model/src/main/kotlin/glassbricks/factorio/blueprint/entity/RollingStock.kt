@@ -40,8 +40,6 @@ internal constructor(
     override fun copy(): CargoWagon = CargoWagon(prototype, copyInit(this))
 }
 
-public typealias WithSchedule = Locomotive
-
 public class Locomotive
 internal constructor(
     override val prototype: LocomotivePrototype,

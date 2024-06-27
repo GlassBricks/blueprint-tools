@@ -4,23 +4,21 @@ import glassbricks.factorio.blueprint.json.CircuitID
 import glassbricks.factorio.blueprint.json.CircuitID.First
 import glassbricks.factorio.blueprint.json.CircuitID.Second
 import glassbricks.factorio.blueprint.json.ConnectionData
-import glassbricks.factorio.blueprint.json.EntityNumber
 
 /**
  * An entity that can be connected with circuit wires.
- *
- * This may or may not have a second connection point; see [CircuitConnectable2].
+ * 
+ * Has 1 or 2 [CircuitConnectionPoint]s.
  */
-public interface CircuitConnectable {
+public interface CircuitConnectable : Entity {
     public val connectionPoint1: CircuitConnectionPoint
-    
-    public val connectionPoint2: CircuitConnectionPoint?
-        get() = (this as? CircuitConnectable2)?.connectionPoint2
+
+    public val connectionPoint2: CircuitConnectionPoint? get() = null
 }
 
 /**
- * A [CircuitConnectable] guaranteed to have a second connection point.
- * 
+ * A [CircuitConnectable] with a second connection point.
+ *
  * This currently only includes decider and arithmetic combinators.
  */
 public interface CircuitConnectable2 : CircuitConnectable {
@@ -40,28 +38,31 @@ public fun CircuitConnectable2.getConnectionPoint(circuitID: CircuitID): Circuit
 
 public fun CircuitConnectable.isEmpty(): Boolean = connectionPoint1.isEmpty() && connectionPoint2?.isEmpty() ?: true
 
-// import/export handled separately in ImportExport.kt
-internal class CircuitConnectable1Mixin : CircuitConnectable {
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(First)
-}
-
-internal class CircuitConnectable2Mixin : CircuitConnectable2 {
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(First)
-    override val connectionPoint2: CircuitConnectionPoint = CircuitConnectionPoint(Second)
-}
-
-
 public enum class WireColor { Red, Green }
 
+public sealed interface CircuitConnectionSet : MutableSet<CircuitConnectionPoint> {
+    public val color: WireColor
+}
+
 /**
- * Represents a connection point on a circuit entity.
+ * A connection point on an entity.
+ *
+ * Can be connected to other [CircuitConnectionPoint]s.
+ *
+ * Provides [red] and [green] sets, from where you can connect to other connection points.
+ * Adding or removing connections will also update the connected points' sets.
+ *
+ * This class's equals and hashCode are based on reference equality; so two connection points with the same connections are not equal.
  */
-public class CircuitConnectionPoint(public val circuitID: CircuitID) {
+public class CircuitConnectionPoint(
+    public val parent: CircuitConnectable,
+    public val circuitID: CircuitID = First,
+) {
 
-    public val red: ConnectionSet = ConnectionSet(WireColor.Red)
-    public val green: ConnectionSet = ConnectionSet(WireColor.Green)
+    public val red: CircuitConnectionSet = ConnectionSetImpl(WireColor.Red)
+    public val green: CircuitConnectionSet = ConnectionSetImpl(WireColor.Green)
 
-    public operator fun get(color: WireColor): CircuitConnectionPoint.ConnectionSet = when (color) {
+    public operator fun get(color: WireColor): CircuitConnectionSet = when (color) {
         WireColor.Red -> red
         WireColor.Green -> green
     }
@@ -72,48 +73,26 @@ public class CircuitConnectionPoint(public val circuitID: CircuitID) {
         green.clear()
     }
 
-    /**
-     * A set of other points this point is connected to.
-     *
-     * Modifying this set will also update the connected points' sets as well.
-     */
-    public inner class ConnectionSet
-    internal constructor(public val color: WireColor) : AbstractMutableSet<CircuitConnectionPoint>() {
-        private val inner = mutableSetOf<CircuitConnectionPoint>()
-        override fun iterator(): MutableIterator<CircuitConnectionPoint> = Iterator(inner.iterator())
-        private inner class Iterator(val iterator: MutableIterator<CircuitConnectionPoint>) :
-            MutableIterator<CircuitConnectionPoint> {
-            private var last: CircuitConnectionPoint? = null
-            override fun hasNext(): Boolean = iterator.hasNext()
-            override fun next(): CircuitConnectionPoint = iterator.next().also { last = it }
-            override fun remove() {
-                iterator.remove()
-                last!![color].inner.remove(last)
-            }
+    internal inner class ConnectionSetImpl(override val color: WireColor) : UpdatingSet<CircuitConnectionPoint>(),
+        CircuitConnectionSet {
+        override fun onAdd(element: CircuitConnectionPoint) {
+            (element[color] as ConnectionSetImpl).inner.add(this@CircuitConnectionPoint)
         }
 
-        override val size: Int get() = inner.size
-        override fun add(element: CircuitConnectionPoint): Boolean = inner.add(element)
-            .also { if (it) element[color].inner.add(this@CircuitConnectionPoint) }
-
-        override fun remove(element: CircuitConnectionPoint): Boolean = inner.remove(element)
-            .also { if (it) element[color].inner.remove(this@CircuitConnectionPoint) }
-
-        override fun contains(element: CircuitConnectionPoint): Boolean = inner.contains(element)
-        override fun clear() {
-            for (element in inner) element[color].inner.remove(this@CircuitConnectionPoint)
-            inner.clear()
+        override fun onRemove(element: CircuitConnectionPoint) {
+            (element[color] as ConnectionSetImpl).inner.remove(this@CircuitConnectionPoint)
         }
 
-        internal fun export(parentMap: Map<CircuitConnectionPoint, EntityNumber>): List<ConnectionData>? = if (isEmpty()) null else mapNotNull {
-            val entityNumber = parentMap[it] ?: return@mapNotNull null
-            ConnectionData(entityNumber, it.circuitID)
-        }.takeIf { it.isNotEmpty() }
+        fun export(parentMap: Map<Entity, EntityJson>): List<ConnectionData>? =
+            if (isEmpty()) null else mapNotNull {
+                val other = parentMap[it.parent] ?: return@mapNotNull null
+                ConnectionData(other.entity_number, it.circuitID)
+            }.takeIf { it.isNotEmpty() }
     }
 
-    internal fun export(parentMap: Map<CircuitConnectionPoint, EntityNumber>): ConnectionPointJson? {
-        val red = red.export(parentMap)
-        val green = green.export(parentMap)
+    internal fun export(parentMap: Map<Entity, EntityJson>): ConnectionPointJson? {
+        val red = (red as ConnectionSetImpl).export(parentMap)
+        val green = (green as ConnectionSetImpl).export(parentMap)
         return if (red != null || green != null) ConnectionPointJson(red, green) else null
     }
 }

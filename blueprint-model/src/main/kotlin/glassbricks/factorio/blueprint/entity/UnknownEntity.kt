@@ -1,9 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.Color
-import glassbricks.factorio.blueprint.json.Direction
-import glassbricks.factorio.blueprint.json.EntityNumber
-import glassbricks.factorio.blueprint.json.Position
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -12,7 +9,7 @@ public class UnknownEntity internal constructor(
     override val prototype: EntityWithOwnerPrototype,
     init: EntityInit<UnknownEntity>,
 ) : Entity,
-    CircuitConnectable2 by CircuitConnectable2Mixin(),
+    CircuitConnectable2,
     WithColor,
     WithBar,
     WithItemFilters {
@@ -24,6 +21,9 @@ public class UnknownEntity internal constructor(
     override var color: Color? by json::color
     override var bar: Int? by json::bar
     override val filters: Array<String?> = init.self?.filters ?: json.filters.toFilters(128)
+
+    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.First)
+    override val connectionPoint2: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.Second)
 
     override fun toJsonIsolated(entityNumber: EntityNumber): EntityJson = json.copy(
         entity_number = entityNumber,
