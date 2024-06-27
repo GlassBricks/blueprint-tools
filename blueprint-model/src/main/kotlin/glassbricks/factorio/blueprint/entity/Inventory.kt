@@ -2,6 +2,9 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.ItemFilter
 
+public interface WithBar {
+    public var bar: Int?
+}
 
 /**
  * Represents item filters.
@@ -20,11 +23,9 @@ public class WithItemFiltersMixin(
     override val filters: Array<String?> = arrayOfNulls(numFilters)
 
     init {
-        if (source != null) {
-            for (filter in source) {
-                if (filter.index - 1 in filters.indices) {
-                    filters[filter.index - 1] = filter.name
-                }
+        if (source != null) for (filter in source) {
+            if (filter.index - 1 in filters.indices) {
+                filters[filter.index - 1] = filter.name
             }
         }
     }

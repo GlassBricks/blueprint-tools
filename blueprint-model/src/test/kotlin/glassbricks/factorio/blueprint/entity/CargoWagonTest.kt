@@ -57,7 +57,7 @@ class RollingStockKtTest {
     @Test
     fun `can save a locomotive`() {
         val (_, loco) = setupLocomotive()
-        val blueprint: BlueprintJson = BlueprintJson(icons = listOf())
+        val blueprint: BlueprintJson = emptyBlueprint()
         loco.orientation = 0.25
         loco.color = Color(3.0, 2.0, 1.0)
         val schedule2 = listOf(
@@ -77,7 +77,8 @@ class RollingStockKtTest {
                     locomotives = listOf(
                         EntityNumber(1),
                         EntityNumber(2)
-                    ), schedule = schedule2
+                    ),
+                    schedule = schedule2
                 )
             )
         )

@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 // Icons are empty, which would be invalid in a real blueprint.
 fun emptyBlueprint() = BlueprintJson(icons = emptyList())
 
-class LoadEntityKtTest {
+class ImportExportKtTest {
     @Test
     fun `can create simple entity`() {
         val entityJson = EntityJson(

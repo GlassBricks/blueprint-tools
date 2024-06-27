@@ -25,9 +25,5 @@ public abstract class BaseEntity(source: EntityProps) : Entity {
     }
     protected abstract fun configure(json: EntityJson)
 
-    override fun configureConnections(json: EntityJson, entityAssignment: Map<Entity, EntityJson>) {
-        // no-op; overridden in subclasses if needed
-    }
-    
     public abstract fun copy(): BaseEntity
 }

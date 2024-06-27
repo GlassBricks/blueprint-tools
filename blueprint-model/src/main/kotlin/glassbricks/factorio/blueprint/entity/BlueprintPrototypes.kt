@@ -7,7 +7,7 @@ import java.io.InputStream
 
 /**
  * @property placeableBy A map of entity names to the item that can place them.
- * If a entity requires multiple items to be placed (via placeable_by), this only contains the first item. Will be present for every entity in [prototypes].
+ * If an entity requires multiple items to be placed (via placeable_by), this only contains the first item. Will be present for every entity in [prototypes].
  */
 public class BlueprintPrototypes internal constructor(
     public val prototypes: Map<String, EntityWithOwnerPrototype>,

@@ -17,10 +17,6 @@ public interface Entity : EntityProps {
     public override var tags: JsonObject?
 
     public fun toJsonIsolated(entityNumber: EntityNumber): EntityJson
-    public fun configureConnections(
-        json: EntityJson,
-        entityAssignment: Map<Entity, EntityJson>,
-    )
 }
 
 public interface WithSchedule : Entity {
@@ -58,11 +54,11 @@ public class FromJson(
 
 internal fun EntityProps.asJson(): EntityJson? = (this as? FromJson)?.json
 internal fun EntityProps.asFromJson(): FromJson? = this as? FromJson
-internal fun EntityProps.basicToJson(): EntityJson = asJson()?.copy(
+internal fun EntityProps.copyToJson(): EntityJson = asJson()?.copy(
     connections = null,
     neighbours = null,
 ) ?: EntityJson(
-    entity_number = EntityNumber(0),
+    entity_number = EntityNumber(1),
     name = name,
     position = position,
     direction = direction,

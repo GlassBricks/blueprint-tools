@@ -23,7 +23,7 @@ inline fun buildEntityJson(
     position = Position.ZERO,
 ).apply(build)
 
-inline fun loadEntity(
+internal inline fun loadEntity(
     name: String,
     blueprint: BlueprintJson? = null,
     build: EntityJson.() -> Unit = {},
