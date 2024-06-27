@@ -3,12 +3,14 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.json.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class RollingStockKtTest {
     @Test
     fun `can load and save a cargo wagon`() {
-        val wagon = loadEntity("cargo-wagon") {
+        
+        
+        
+        val wagon = testSaveLoad<CargoWagon>("cargo-wagon") {
             orientation = 0.5
             inventory = Inventory(
                 bar = 1,
@@ -18,7 +20,6 @@ class RollingStockKtTest {
                 )
             )
         }
-        assertTrue(wagon is CargoWagon)
         assertEquals(wagon.orientation, 0.5)
         assertEquals(wagon.bar, 1)
         assertEquals(
@@ -46,16 +47,7 @@ class RollingStockKtTest {
     }
 
     @Test
-    fun `can load a locomotive`() {
-        val (schedule, loco) = setupLocomotive()
-        assertEquals(loco.orientation, 0.5)
-        assertEquals(loco.color, Color(1.0, 2.0, 3.0))
-        assertEquals(loco.schedule, schedule)
-        assertEquals(loco.itemRequests, mapOf("coal" to 1))
-    }
-
-    @Test
-    fun `can save a locomotive`() {
+    fun `can save and load a locomotive`() {
         val (_, loco) = setupLocomotive()
         val blueprint: BlueprintJson = emptyBlueprint()
         loco.orientation = 0.25
@@ -96,13 +88,12 @@ class RollingStockKtTest {
             icons = listOf(),
             schedules = listOf(Schedule(locomotives = listOf(EntityNumber(1)), schedule = schedule))
         )
-        val loco = loadEntity("locomotive", blueprint) {
+        val loco = testSaveLoad<Locomotive>("locomotive", blueprint) {
             entity_number = EntityNumber(1)
             orientation = 0.5
             color = Color(1.0, 2.0, 3.0)
             items = mapOf("coal" to 1)
         }
-        assertTrue(loco is Locomotive)
         return Pair(schedule, loco)
     }
 

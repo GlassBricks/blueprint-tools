@@ -1,6 +1,5 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.json.Position
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -51,27 +50,16 @@ class CableConnectionPointTest {
 class ElectricPoleTest {
     @Test
     fun `can create ElectricPole`() {
-        val pole = loadEntity("small-electric-pole")
-        assert(pole is ElectricPole)
+        testSaveLoad<ElectricPole>("small-electric-pole")
     }
 }
 
 class PowerSwitchTest {
     @Test
     fun `can create PowerSwitch`() {
-        val powerSwitch = loadEntity("power-switch")
-        assert(powerSwitch is PowerSwitch)
-    }
-
-    @Test
-    fun `can save switch state`() {
-        val powerSwitch = loadEntity("power-switch") {
-            switch_state = true
-        } as PowerSwitch
-        assertTrue(powerSwitch.switchState)
-        powerSwitch.switchState = false
-        val json = powerSwitch.toJsonIsolated(EntityNumber(1))
-        assert(json.switch_state == false)
+        testSaveLoad<PowerSwitch>("power-switch") {
+            switch_state  = true
+        }
     }
 
     @Test
