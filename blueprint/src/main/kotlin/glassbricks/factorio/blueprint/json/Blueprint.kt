@@ -1,7 +1,7 @@
 @file:Suppress("PropertyName")
 @file:OptIn(ExperimentalSerializationApi::class)
 
-package glassbricks.factorio.blueprint
+package glassbricks.factorio.blueprint.json
 
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi

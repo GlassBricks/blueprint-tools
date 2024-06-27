@@ -1,5 +1,7 @@
 package glassbricks.factorio.blueprint
 
+import glassbricks.factorio.blueprint.json.*
+import glassbricks.factorio.blueprint.json.bpJson
 import kotlinx.serialization.encodeToString
 import java.io.File
 import kotlin.test.Test

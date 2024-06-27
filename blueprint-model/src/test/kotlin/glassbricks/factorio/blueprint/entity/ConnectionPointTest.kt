@@ -1,9 +1,10 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.*
+import glassbricks.factorio.blueprint.json.Position
+import glassbricks.factorio.blueprint.json.*
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.*
-import glassbricks.factorio.blueprint.ConnectionPoint as ConnectionPointJson
+import glassbricks.factorio.blueprint.json.ConnectionPoint as ConnectionPointJson
 
 class ConnectionPointTest {
     lateinit var point1: ConnectionPoint

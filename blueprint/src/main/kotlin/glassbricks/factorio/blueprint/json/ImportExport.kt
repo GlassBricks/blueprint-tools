@@ -1,4 +1,4 @@
-package glassbricks.factorio.blueprint
+package glassbricks.factorio.blueprint.json
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer

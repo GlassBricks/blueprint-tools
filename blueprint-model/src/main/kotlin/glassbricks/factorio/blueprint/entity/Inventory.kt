@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.ItemFilter
+import glassbricks.factorio.blueprint.json.ItemFilter
 
 public interface WithBar {
     public var bar: Int?

@@ -1,11 +1,11 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.CircuitID
-import glassbricks.factorio.blueprint.CircuitID.First
-import glassbricks.factorio.blueprint.CircuitID.Second
-import glassbricks.factorio.blueprint.ConnectionData
-import glassbricks.factorio.blueprint.EntityNumber
-import glassbricks.factorio.blueprint.ConnectionPoint as ConnectionPointJson
+import glassbricks.factorio.blueprint.json.CircuitID
+import glassbricks.factorio.blueprint.json.CircuitID.First
+import glassbricks.factorio.blueprint.json.CircuitID.Second
+import glassbricks.factorio.blueprint.json.ConnectionData
+import glassbricks.factorio.blueprint.json.EntityNumber
+import glassbricks.factorio.blueprint.json.ConnectionPoint as ConnectionPointJson
 
 /**
  * An entity that can be connected with circuit wires.

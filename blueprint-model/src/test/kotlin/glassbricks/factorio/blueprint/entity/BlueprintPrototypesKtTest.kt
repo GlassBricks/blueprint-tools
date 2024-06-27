@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.EntityNumber
-import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.json.EntityNumber
+import glassbricks.factorio.blueprint.json.Position
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals

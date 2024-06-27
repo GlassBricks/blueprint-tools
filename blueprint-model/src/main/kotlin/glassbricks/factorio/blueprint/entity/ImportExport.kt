@@ -1,8 +1,9 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.*
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
-import glassbricks.factorio.blueprint.ConnectionPoint as ConnectionPointJson
+import glassbricks.factorio.blueprint.json.ConnectionPoint as ConnectionPointJson
 
 
 public fun createEntityFromPrototype(prototype: EntityWithOwnerPrototype, source: EntityProps): Entity {

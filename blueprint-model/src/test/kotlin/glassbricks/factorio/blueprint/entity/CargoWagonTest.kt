@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.*
+import glassbricks.factorio.blueprint.json.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -51,7 +51,6 @@ class RollingStockKtTest {
         assertEquals(loco.orientation, 0.5)
         assertEquals(loco.color, Color(1.0, 2.0, 3.0))
         assertEquals(loco.schedule, schedule)
-
     }
 
     @Test

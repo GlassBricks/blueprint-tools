@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.model
 
-import glassbricks.factorio.blueprint.Blueprint
-import glassbricks.factorio.blueprint.importBlueprintFromFile
+import glassbricks.factorio.blueprint.json.Blueprint
+import glassbricks.factorio.blueprint.json.importBlueprintFromFile
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.io.File
 import kotlin.test.Test

@@ -1,4 +1,4 @@
-package glassbricks.factorio.blueprint
+package glassbricks.factorio.blueprint.json
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -59,8 +59,9 @@ internal object DoubleAsIntSerializer : KSerializer<Double> {
         }
     }
 }
+
 /** A double that is serialized as an integer if it can be represented as such. */
-public typealias DoubleAsInt = @Serializable(with = DoubleAsIntSerializer::class) Double
+internal typealias DoubleAsInt = @Serializable(with = DoubleAsIntSerializer::class) Double
 
 internal fun getSerialName(
     clazz: KClass<*>

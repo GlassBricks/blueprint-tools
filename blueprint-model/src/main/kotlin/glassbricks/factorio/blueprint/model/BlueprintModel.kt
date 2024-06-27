@@ -1,6 +1,7 @@
 package glassbricks.factorio.blueprint.model
 
-import glassbricks.factorio.blueprint.*
+import glassbricks.factorio.blueprint.json.TilePosition
+import glassbricks.factorio.blueprint.json.*
 
 public class BlueprintModel
 private constructor(

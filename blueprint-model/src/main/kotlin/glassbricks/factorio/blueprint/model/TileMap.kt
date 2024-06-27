@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.model
 
-import glassbricks.factorio.blueprint.Tile
-import glassbricks.factorio.blueprint.TilePosition
+import glassbricks.factorio.blueprint.json.Tile
+import glassbricks.factorio.blueprint.json.TilePosition
 
 /**
  * A map from blueprint positions to tile names.

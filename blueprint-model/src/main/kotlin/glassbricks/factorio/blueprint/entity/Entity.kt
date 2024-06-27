@@ -1,10 +1,11 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.*
+import glassbricks.factorio.blueprint.json.Position
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
 
-public typealias EntityJson = glassbricks.factorio.blueprint.Entity
+public typealias EntityJson = glassbricks.factorio.blueprint.json.Entity
 public typealias BlueprintJson = Blueprint
 
 public interface Entity : EntityProps {

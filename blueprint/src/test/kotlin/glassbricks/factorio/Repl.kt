@@ -1,7 +1,7 @@
 package glassbricks.factorio
 
-import glassbricks.factorio.blueprint.bpJson
-import glassbricks.factorio.blueprint.importBlueprint
+import glassbricks.factorio.blueprint.json.bpJson
+import glassbricks.factorio.blueprint.json.importBlueprint
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
