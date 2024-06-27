@@ -9,11 +9,9 @@ class Gen(
 )
 
 val gen = arrayOf(
-    Gen("TransportBelt"),
-    Gen("Splitter", "input_priority", "output_priority", "filter"),
-    Gen("Loader", "filters")
+    Gen("Container", "bar"),
 )
-val superTypes = arrayOf("TransportBeltConnectable")
+val superTypes = arrayOf("WithBar, WithFilters")
 
 fun main() {
     val superTypes = superTypes.joinToString("") {

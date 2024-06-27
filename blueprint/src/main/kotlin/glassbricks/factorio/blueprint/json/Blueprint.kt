@@ -203,9 +203,11 @@ public data class Entity(
     /** The pickup position the inserter is set to. */
     public var pickup_position: Position? = null,
     /** Used by [Prototype/LogisticContainer](https://wiki.factorio.com/Prototype/LogisticContainer). */
-    public var request_filters: List<LogisticFilter>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var request_filters: List<LogisticFilter> = emptyList(),
     /** Whether this requester chest can request from buffer chests. */
-    public var request_from_buffers: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var request_from_buffers: Boolean = false,
     /** Used by [Programmable speaker](https://wiki.factorio.com/Programmable_speaker). */
     public var parameters: SpeakerParameters? = null,
     /** Used by [Programmable speaker](https://wiki.factorio.com/Programmable_speaker). */
@@ -235,6 +237,7 @@ public enum class IOType {
     @SerialName("output")
     Output,
 }
+
 public fun IOType.flip(): IOType = when (this) {
     IOType.Input -> IOType.Output
     IOType.Output -> IOType.Input
@@ -442,8 +445,9 @@ public data class ItemFilter(
 @Serializable
 public data class InfinitySettings(
     /** Whether the "remove unfiltered items" checkbox is checked. */
-    public val remove_unfiltered_items: Boolean? = null,
+    public val remove_unfiltered_items: Boolean = false,
     /** Filters of the infinity container. */
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val filters: List<InfinityFilter> = emptyList(),
 )
 

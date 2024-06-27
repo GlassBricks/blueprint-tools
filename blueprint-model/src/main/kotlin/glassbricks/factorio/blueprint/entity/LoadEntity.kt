@@ -29,6 +29,9 @@ private val matcherMap = buildMap {
     add(::UndergroundBelt)
     add(::Splitter)
     add(::Loader)
+    add(::Container)
+    add(::LogisticContainer)
+    add(::InfinityContainer)
     add(::UnknownEntity)
 }
 private val constructorCache = hashMapOf<Class<out EntityWithOwnerPrototype>, Constructor>()

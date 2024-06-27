@@ -2,7 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitCondition
 
-public sealed interface ControlBehavior {
+public interface ControlBehavior {
     public fun exportToJson(): ControlBehaviorJson?
     public fun copy(): ControlBehavior
 }
