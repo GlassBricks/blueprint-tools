@@ -51,6 +51,7 @@ class RollingStockKtTest {
         assertEquals(loco.orientation, 0.5)
         assertEquals(loco.color, Color(1.0, 2.0, 3.0))
         assertEquals(loco.schedule, schedule)
+        assertEquals(loco.itemRequests, mapOf("coal" to 1))
     }
 
     @Test
@@ -59,6 +60,8 @@ class RollingStockKtTest {
         val blueprint: BlueprintJson = emptyBlueprint()
         loco.orientation = 0.25
         loco.color = Color(3.0, 2.0, 1.0)
+        loco.itemRequests.clear()
+        loco.itemRequests["iron-plate"] = 2
         val schedule2 = listOf(
             ScheduleRecord("unload2", listOf(WaitCondition(WaitConditionType.Empty))),
             ScheduleRecord("load", listOf(WaitCondition(WaitConditionType.Full))),
@@ -68,6 +71,7 @@ class RollingStockKtTest {
         assertEquals(entityJson.name, "locomotive")
         assertEquals(entityJson.orientation, 0.25)
         assertEquals(entityJson.color, Color(3.0, 2.0, 1.0))
+        assertEquals(entityJson.items, mapOf("iron-plate" to 2))
         blueprint.schedules = null
         blueprint.setEntitiesFrom(listOf(loco, loco.copy()))
         assertEquals(
@@ -96,6 +100,7 @@ class RollingStockKtTest {
             entity_number = EntityNumber(1)
             orientation = 0.5
             color = Color(1.0, 2.0, 3.0)
+            items = mapOf("coal" to 1)
         }
         assertTrue(loco is Locomotive)
         return Pair(schedule, loco)

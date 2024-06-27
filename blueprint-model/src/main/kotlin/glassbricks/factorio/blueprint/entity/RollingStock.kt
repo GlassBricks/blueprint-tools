@@ -2,6 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.Color
 import glassbricks.factorio.blueprint.json.Inventory
+import glassbricks.factorio.blueprint.json.ItemPrototypeName
 import glassbricks.factorio.blueprint.json.ScheduleRecord
 import glassbricks.factorio.prototypes.CargoWagonPrototype
 import glassbricks.factorio.prototypes.LocomotivePrototype
@@ -46,15 +47,17 @@ internal constructor(
     init: EntityInit<Locomotive>,
 ) : BaseEntity(init),
     RollingStock,
-    WithColor
-{
+    WithColor,
+    WithItemRequests {
     override var orientation: Double = init.orientation
     override var color: Color? = init.color
+    public override val itemRequests: MutableMap<ItemPrototypeName, Int> = init.itemRequests
     public var schedule: List<ScheduleRecord> = init.self?.schedule ?: init.getSchedule()
 
     override fun exportToJson(json: EntityJson) {
         json.orientation = orientation
         json.color = color
+        json.items = itemRequests.takeIf { it.isNotEmpty() }
         // schedule handled by blueprint export
     }
 
