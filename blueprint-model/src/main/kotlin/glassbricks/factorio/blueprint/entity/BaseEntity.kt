@@ -6,10 +6,10 @@ import glassbricks.factorio.blueprint.json.Position
 import kotlinx.serialization.json.JsonObject
 
 public abstract class BaseEntity
-internal constructor(init: EntityProps) : Entity {
-    override var position: Position = init.position
-    override var direction: Direction = init.direction
-    override var tags: JsonObject? = init.tags
+internal constructor(json: EntityJson) : Entity {
+    override var position: Position = json.position
+    override var direction: Direction = json.direction
+    override var tags: JsonObject? = json.tags
 
     private fun createEntityJson(entityNumber: EntityNumber): EntityJson = EntityJson(
         entity_number = entityNumber,

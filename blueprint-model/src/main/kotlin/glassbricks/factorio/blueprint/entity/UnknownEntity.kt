@@ -7,14 +7,14 @@ import kotlinx.serialization.json.JsonPrimitive
 
 public class UnknownEntity internal constructor(
     override val prototype: EntityWithOwnerPrototype,
-    init: EntityInit,
+    json: EntityJson,
 ) : Entity,
     CableConnectionPoint,
     CircuitConnectable2,
     WithColor,
     WithBar,
     WithItemFilters {
-    public val json: EntityJson = init.getJson()
+    public val json: EntityJson = json.getJson()
 
     override var position: Position by json::position
     override var tags: JsonObject? by json::tags
@@ -42,11 +42,11 @@ public fun UnknownEntity(
     position: Position,
     direction: Direction = Direction.North,
 ): UnknownEntity {
-    return UnknownEntity(UnknownPrototype(name), propInit(name, position, direction))
+    return UnknownEntity(UnknownPrototype(name), EntityJson(EntityNumber(1), name, position, direction))
 }
 
-private fun EntityInit.getJson(): EntityJson {
-    val json = this.json
+private fun EntityJson.getJson(): EntityJson {
+    val json = this
         ?: EntityJson(
             entity_number = EntityNumber(1),
             name = this.name,

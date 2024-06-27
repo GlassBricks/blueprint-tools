@@ -5,10 +5,10 @@ import glassbricks.factorio.blueprint.json.*
 
 internal fun BlueprintPrototypes.createEntityFromJson(
     json: EntityJson,
-    originalBlueprint: BlueprintJson? = null,
+    blueprint: BlueprintJson? = null,
 ): Entity {
     val prototype = this.prototypes[json.name] ?: UnknownPrototype(json.name)
-    return createEntityFromPrototype(prototype, jsonInit(json, originalBlueprint))
+    return createEntityFromPrototype(prototype, json, blueprint)
 }
 
 

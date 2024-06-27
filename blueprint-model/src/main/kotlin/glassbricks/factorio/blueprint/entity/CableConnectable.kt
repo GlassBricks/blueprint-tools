@@ -47,8 +47,8 @@ private class CableConnectionSetImpl(override val parent: CableConnectionPoint) 
 public class ElectricPole
 internal constructor(
     override val prototype: ElectricPolePrototype,
-    init: EntityInit,
-) : BaseEntity(init), CableConnectionPoint, CircuitConnectable {
+    json: EntityJson,
+) : BaseEntity(json), CableConnectionPoint, CircuitConnectable {
     override val cableConnections: CableConnectionSet = CableConnectionSet(this)
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
 
@@ -62,13 +62,13 @@ internal constructor(
 public class PowerSwitch
 internal constructor(
     override val prototype: PowerSwitchPrototype,
-    init: EntityInit,
-) : BaseEntity(init), CircuitConnectable, PowerSwitchConnectionPoints {
+    json: EntityJson,
+) : BaseEntity(json), CircuitConnectable, PowerSwitchConnectionPoints {
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
     public override val left: CableConnectionPoint = ConnectionPoint()
     public override val right: CableConnectionPoint = ConnectionPoint()
 
-    public var switchState: Boolean = init.json?.switch_state ?: false
+    public var switchState: Boolean = json.switch_state ?: false
 
     override fun exportToJson(json: EntityJson) {
         json.switch_state = switchState

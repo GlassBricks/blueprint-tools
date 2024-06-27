@@ -2,18 +2,30 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
 
-internal fun createEntityFromPrototype(prototype: EntityWithOwnerPrototype, source: EntityInit): Entity {
-    return getConstructorForPrototype(prototype)(prototype, source)
+internal fun createEntityFromPrototype(
+    prototype: EntityWithOwnerPrototype, 
+    source: EntityJson,
+    blueprint: BlueprintJson?,
+    ): Entity {
+    return getConstructorForPrototype(prototype)(prototype, source, blueprint)
 }
 
-private typealias Constructor = (EntityWithOwnerPrototype, EntityInit) -> Entity
+private typealias Constructor = (EntityWithOwnerPrototype, EntityJson, BlueprintJson?) -> Entity
 
 private inline fun <reified T : EntityWithOwnerPrototype>
         MutableMap<Class<out EntityWithOwnerPrototype>, Constructor>.add(
-    noinline constructor: (T, EntityInit) -> Entity,
+    noinline constructor: (T, EntityJson, BlueprintJson?) -> Entity,
 ) {
-    @Suppress("UNCHECKED_CAST")
-    put(T::class.java, constructor as Constructor)
+    put(T::class.java) { prototype, source, blueprint ->
+        constructor(prototype as T, source, blueprint)
+    }
+}
+
+private inline fun <reified T : EntityWithOwnerPrototype>
+        MutableMap<Class<out EntityWithOwnerPrototype>, Constructor>.add(
+    crossinline constructor: (T, EntityJson) -> Entity,
+) {
+    put(T::class.java) { prototype, source, _ -> constructor(prototype as T, source) }
 }
 
 private val matcherMap = buildMap {

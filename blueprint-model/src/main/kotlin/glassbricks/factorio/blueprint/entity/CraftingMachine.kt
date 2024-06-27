@@ -4,11 +4,11 @@ import glassbricks.factorio.blueprint.json.ItemPrototypeName
 import glassbricks.factorio.prototypes.*
 
 
-public sealed class CraftingMachine(init: EntityInit) : BaseEntity(init), WithModules, WithEnergySource {
+public sealed class CraftingMachine(json: EntityJson) : BaseEntity(json), WithModules, WithEnergySource {
     abstract override val prototype: CraftingMachinePrototype
     override val energySource: EnergySource get() = prototype.energy_source
 
-    override val itemRequests: MutableMap<ItemPrototypeName, Int> = init.json?.items.orEmpty().toMutableMap()
+    override val itemRequests: MutableMap<ItemPrototypeName, Int> = json.items.orEmpty().toMutableMap()
 
     override fun exportToJson(json: EntityJson) {
         json.items = itemRequests.takeIf { it.isNotEmpty() }
@@ -19,9 +19,9 @@ public sealed class CraftingMachine(init: EntityInit) : BaseEntity(init), WithMo
 public open class AssemblingMachine
 internal constructor(
     override val prototype: AssemblingMachinePrototype,
-    init: EntityInit,
-) : CraftingMachine(init) {
-    public var recipe: String? = init.json?.recipe
+    json: EntityJson,
+) : CraftingMachine(json) {
+    public var recipe: String? = json.recipe
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
@@ -32,9 +32,9 @@ internal constructor(
 public class RocketSilo
 internal constructor(
     override val prototype: RocketSiloPrototype,
-    init: EntityInit,
-) : AssemblingMachine(prototype, init) {
-    public var autoLaunch: Boolean = init.json?.auto_launch ?: false
+    json: EntityJson,
+) : AssemblingMachine(prototype, json) {
+    public var autoLaunch: Boolean = json.auto_launch ?: false
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
@@ -45,5 +45,5 @@ internal constructor(
 public class Furnace
 internal constructor(
     override val prototype: FurnacePrototype,
-    init: EntityInit,
-) : CraftingMachine(init)
+    json: EntityJson,
+) : CraftingMachine(json)

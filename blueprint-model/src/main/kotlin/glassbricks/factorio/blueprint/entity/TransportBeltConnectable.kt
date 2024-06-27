@@ -13,10 +13,10 @@ public sealed interface TransportBeltConnectable : Entity {
 public class TransportBelt
 internal constructor(
     override val prototype: TransportBeltPrototype,
-    init: EntityInit,
-) : BaseEntity(init), TransportBeltConnectable, CircuitConnectable {
+    json: EntityJson,
+) : BaseEntity(json), TransportBeltConnectable, CircuitConnectable {
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
-    public val controlBehavior: TransportBeltControlBehavior = TransportBeltControlBehavior(init.json?.control_behavior)
+    public val controlBehavior: TransportBeltControlBehavior = TransportBeltControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
         json.control_behavior = controlBehavior.exportToJson()
@@ -55,9 +55,9 @@ public class TransportBeltControlBehavior(
 public class UndergroundBelt
 internal constructor(
     override val prototype: UndergroundBeltPrototype,
-    init: EntityInit,
-) : BaseEntity(init), TransportBeltConnectable {
-    public var ioMode: IOType = init.json?.type ?: IOType.Input
+    json: EntityJson,
+) : BaseEntity(json), TransportBeltConnectable {
+    public var ioMode: IOType = json.type ?: IOType.Input
     override fun exportToJson(json: EntityJson) {
         json.type = ioMode
     }
@@ -66,11 +66,11 @@ internal constructor(
 public class Splitter
 internal constructor(
     override val prototype: SplitterPrototype,
-    init: EntityInit,
-) : BaseEntity(init), TransportBeltConnectable {
-    public var inputPriority: SplitterPriority? = init.json?.input_priority
-    public var outputPriority: SplitterPriority? = init.json?.output_priority
-    public var filter: String? = init.json?.filter
+    json: EntityJson,
+) : BaseEntity(json), TransportBeltConnectable {
+    public var inputPriority: SplitterPriority? = json.input_priority
+    public var outputPriority: SplitterPriority? = json.output_priority
+    public var filter: String? = json.filter
 
     override fun exportToJson(json: EntityJson) {
         json.input_priority = inputPriority
@@ -82,11 +82,11 @@ internal constructor(
 public class Loader
 internal constructor(
     override val prototype: LoaderPrototype,
-    init: EntityInit,
-) : BaseEntity(init),
+    json: EntityJson,
+) : BaseEntity(json),
     TransportBeltConnectable, WithItemFilters {
-    public override val filters: Array<String?> = init.json?.filters.toFilters(prototype.filter_count.toInt())
-    public var ioType: IOType = init.json?.type ?: IOType.Input
+    public override val filters: Array<String?> = json.filters.toFilters(prototype.filter_count.toInt())
+    public var ioType: IOType = json.type ?: IOType.Input
 
     override fun exportToJson(json: EntityJson) {
         json.filters = getFiltersAsList()

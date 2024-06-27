@@ -14,18 +14,29 @@ public sealed interface RollingStock : Entity {
     public var orientation: Double
 }
 
+internal fun getSchedule(
+    json: EntityJson?,
+    originalBlueprint: BlueprintJson?,
+): List<ScheduleRecord> {
+    if (json == null || originalBlueprint == null) return emptyList()
+    return originalBlueprint.schedules
+        ?.firstOrNull { it.locomotives.any { number -> number == json.entity_number } }
+        ?.schedule
+        .orEmpty()
+}
+
 public class CargoWagon
 internal constructor(
     override val prototype: CargoWagonPrototype,
-    init: EntityInit,
-) : BaseEntity(init),
+    json: EntityJson,
+) : BaseEntity(json),
     RollingStock,
     WithBar,
     WithItemFilters {
-    override var orientation: Double = init.json?.orientation ?: 0.0
-    override var bar: Int? = init.json?.inventory?.bar
+    override var orientation: Double = json.orientation ?: 0.0
+    override var bar: Int? = json.inventory?.bar
     override val filters: Array<String?> =
-        init.json?.inventory?.filters.toFilters(prototype.inventory_size.toInt())
+        json.inventory?.filters.toFilters(prototype.inventory_size.toInt())
 
     override fun exportToJson(json: EntityJson) {
         json.orientation = orientation
@@ -39,15 +50,16 @@ internal constructor(
 public class Locomotive
 internal constructor(
     override val prototype: LocomotivePrototype,
-    init: EntityInit,
-) : BaseEntity(init),
+    json: EntityJson,
+    blueprint: BlueprintJson?,
+) : BaseEntity(json),
     RollingStock,
     WithColor,
     WithItemRequests {
-    override var orientation: Double = init.json?.orientation ?: 0.0
-    override var color: Color? = init.json?.color
-    public override val itemRequests: MutableMap<ItemPrototypeName, Int> = init.json?.items.orEmpty().toMutableMap()
-    public var schedule: List<ScheduleRecord> = init.getSchedule()
+    override var orientation: Double = json.orientation ?: 0.0
+    override var color: Color? = json.color
+    public override val itemRequests: MutableMap<ItemPrototypeName, Int> = json.items.orEmpty().toMutableMap()
+    public var schedule: List<ScheduleRecord> = getSchedule(json, blueprint)
 
     override fun exportToJson(json: EntityJson) {
         json.orientation = orientation
@@ -59,10 +71,10 @@ internal constructor(
 
 public class OtherRollingStock internal constructor(
     override val prototype: RollingStockPrototype,
-    init: EntityInit,
-) : BaseEntity(init),
+    json: EntityJson,
+) : BaseEntity(json),
     RollingStock {
-    override var orientation: Double = init.json?.orientation ?: 0.0
+    override var orientation: Double = json.orientation ?: 0.0
 
     override fun exportToJson(json: EntityJson) {
         json.orientation = orientation

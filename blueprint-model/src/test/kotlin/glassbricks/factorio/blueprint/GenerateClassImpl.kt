@@ -26,8 +26,8 @@ fun main() {
 public class $Class
 internal constructor(
     override val prototype: ${Class}Prototype,
-    init: EntityInit<${Class}>,
-) : BaseEntity(init)$superTypes {
+    json: EntityInit<${Class}>,
+) : BaseEntity(json)$superTypes {
     ${props.prependIndent("    ")}
     override fun exportToJson(json: EntityJson) {
         ${exports.prependIndent("        ")}
@@ -44,7 +44,7 @@ private fun getProps(gen: Gen): Pair<String, String> {
             .decapitalize()
         val type = EntityJson::class.declaredMemberProperties
             .find { it.name == prop }!!.returnType
-        "public var $propCamel: $type = init.self?.$propCamel ?: init.json?.$prop" +
+        "public var $propCamel: $type = json.self?.$propCamel ?: json.json?.$prop" +
                 (if (!type.isMarkedNullable) {
                     if (type.classifier == Boolean::class) " ?: false"
                     else " ?: TODO()"

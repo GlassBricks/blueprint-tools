@@ -11,12 +11,12 @@ import glassbricks.factorio.blueprint.json.LogisticFilter as LogisticFilterJson
 public open class Container
 internal constructor(
     prototype_: ContainerPrototype,
-    init: EntityInit,
-) : BaseEntity(init),
+    json: EntityJson,
+) : BaseEntity(json),
     WithBar, WithItemFilters {
     override val prototype: ContainerPrototype = prototype_
-    public override val filters: Array<String?> = init.json?.filters.toFilters(prototype_.inventory_size.toInt())
-    public override var bar: Int? = init.json?.bar
+    public override val filters: Array<String?> = json.filters.toFilters(prototype_.inventory_size.toInt())
+    public override var bar: Int? = json.bar
 
     // containers have control behavior, but it has no settings (always read chest contents)
 
@@ -29,13 +29,13 @@ internal constructor(
 public open class LogisticContainer
 internal constructor(
     prototype_: LogisticContainerPrototype,
-    init: EntityInit,
-) : Container(prototype_, init) {
+    json: EntityJson,
+) : Container(prototype_, json) {
     override val prototype: LogisticContainerPrototype get() = super.prototype as LogisticContainerPrototype
-    public val requestFilters: Array<LogisticRequest?> = init.json?.request_filters.toLogiFilters(
+    public val requestFilters: Array<LogisticRequest?> = json.request_filters.toLogiFilters(
         prototype_.max_logistic_slots?.toInt() ?: prototype_.inventory_size.toInt()
     )
-    public val requestFromBuffers: Boolean = init.json?.request_from_buffers ?: false
+    public val requestFromBuffers: Boolean = json.request_from_buffers
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
@@ -54,11 +54,12 @@ public data class LogisticRequest(
 public class InfinityContainer
 internal constructor(
     prototype_: InfinityContainerPrototype,
-    init: EntityInit,
-) : LogisticContainer(prototype_, init) {
+    json: EntityJson,
+) : LogisticContainer(prototype_, json) {
     override val prototype: InfinityContainerPrototype get() = super.prototype as InfinityContainerPrototype
-    public val infinityFilters: Array<InfinityFilter?> = init.json?.infinity_settings?.filters.toInfinityFilters(prototype.inventory_size.toInt())
-    public val removeUnfilteredItems: Boolean = init.json?.infinity_settings?.remove_unfiltered_items ?: false
+    public val infinityFilters: Array<InfinityFilter?> =
+        json.infinity_settings?.filters.toInfinityFilters(prototype.inventory_size.toInt())
+    public val removeUnfilteredItems: Boolean = json.infinity_settings?.remove_unfiltered_items ?: false
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
