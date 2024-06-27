@@ -8,6 +8,7 @@ public data class Position(
     public val x: DoubleAsInt,
     public val y: DoubleAsInt
 ) {
+    public constructor(x: Int, y: Int) : this(x.toDouble(), y.toDouble())
     public operator fun plus(other: Position): Position = Position(x + other.x, y + other.y)
     public operator fun minus(other: Position): Position = Position(x - other.x, y - other.y)
 

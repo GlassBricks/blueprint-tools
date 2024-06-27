@@ -492,7 +492,9 @@ public data class Color(
     public val b: Float,
     /** Alpha, number from 0 to 1. */
     public val a: Float = 1.0f,
-)
+) {
+    public constructor(r: Double, g: Double, b: Double, a: Double = 1.0): this(r.toFloat(), g.toFloat(), b.toFloat(), a.toFloat())
+}
 
 /**
  * ALL fields are optional and depend on the type of the entity.

@@ -1,13 +1,11 @@
 package org.example
 
-import glassbricks.factorio.prototypes.loadFactorioPrototypeDataFromStream
-import kotlinx.serialization.ExperimentalSerializationApi
+import glassbricks.factorio.prototypes.loadFactorioPrototypesFromStream
 
 private val dataRaw get() = object {}.javaClass.classLoader.getResource("data-raw-dump.json")!!
 
-@OptIn(ExperimentalSerializationApi::class)
 fun main() {
-    val prototypeData = loadFactorioPrototypeDataFromStream(
+    val prototypeData = loadFactorioPrototypesFromStream(
         dataRaw.openStream()
     )
     println(prototypeData.item!!.values)
