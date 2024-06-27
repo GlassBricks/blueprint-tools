@@ -64,8 +64,7 @@ private fun EntityInit<UnknownEntity>.getJson(): EntityJson {
 public class UnknownPrototype(override val name: String) : EntityWithOwnerPrototype() {
     init {
         this.fakeInit(
-            JsonObject(mapOf("type" to JsonPrimitive("unknown"))),
-            eager = true
+            JsonObject(mapOf("type" to JsonPrimitive("unknown")))
         )
     }
 }
