@@ -139,7 +139,7 @@ public enum class SignalType {
 
 @Serializable
 @JvmInline
-public value class EntityId(public val id: Int) {
+public value class EntityNumber(public val id: Int) {
     init {
         require(id >= 1) { "EntityId must be a 1-based index" }
     }
@@ -151,7 +151,7 @@ public value class EntityId(public val id: Int) {
 @Serializable
 public data class Entity(
     /** Index of the entity, 1-based. */
-    public var entity_number: EntityId,
+    public var entity_number: EntityNumber,
     /** Prototype name of the entity (e.g. "offshore-pump"). */
     public var name: String,
     /** Position of the entity within the blueprint. */
@@ -164,7 +164,7 @@ public data class Entity(
     /** Circuit connection. */
     public var connections: Connections? = null,
     /** Copper wire connections. */
-    public var neighbours: List<EntityId>? = null,
+    public var neighbours: List<EntityNumber>? = null,
     /** Control behavior of this entity. */
     public var control_behavior: ControlBehavior? = null,
     /** Item requests by this entity. */
@@ -263,7 +263,7 @@ public data class Schedule(
     /** Array of schedule records. */
     public var schedule: List<ScheduleRecord>,
     /** Array of entity numbers of locomotives using this schedule. */
-    public var locomotives: List<EntityId>,
+    public var locomotives: List<EntityNumber>,
 )
 
 /**
@@ -363,7 +363,7 @@ public data class ConnectionPoint(
 @Serializable
 public data class ConnectionData(
     /** ID of the entity this connection is connected with. */
-    public var entity_id: EntityId,
+    public var entity_id: EntityNumber,
     /** The circuit connector id of the entity this connection is connected to. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var circuit_id: CircuitID = CircuitID.First,
