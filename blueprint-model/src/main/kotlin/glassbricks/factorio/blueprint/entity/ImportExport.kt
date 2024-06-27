@@ -26,7 +26,7 @@ public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entit
 
     // connect circuit wires
     fun connectAtColor(
-        set: ConnectionPoint.ConnectionSet,
+        set: CircuitConnectionPoint.ConnectionSet,
         json: List<ConnectionData>?,
     ) {
         if (json.isNullOrEmpty()) return
@@ -40,7 +40,7 @@ public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entit
     }
 
     fun connectAtPoint(
-        point: ConnectionPoint,
+        point: CircuitConnectionPoint,
         json: ConnectionPointJson,
     ) {
         connectAtColor(point.red, json.red)
@@ -63,7 +63,7 @@ public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entit
 
 public fun BlueprintJson.setEntitiesFrom(entities: Iterable<Entity>) {
     val schedules = mutableMapOf<List<ScheduleRecord>, MutableList<EntityNumber>>()
-    val connectionPointMap = mutableMapOf<ConnectionPoint, EntityNumber>()
+    val connectionPointMap = mutableMapOf<CircuitConnectionPoint, EntityNumber>()
     val circuitConnectableEntities = mutableListOf<CircuitConnectable>()
 
     var nextId = 1

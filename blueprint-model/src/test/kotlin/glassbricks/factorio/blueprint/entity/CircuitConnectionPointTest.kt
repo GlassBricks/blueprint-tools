@@ -6,16 +6,16 @@ import org.junit.jupiter.api.BeforeEach
 import kotlin.test.*
 import glassbricks.factorio.blueprint.json.ConnectionPoint as ConnectionPointJson
 
-class ConnectionPointTest {
-    lateinit var point1: ConnectionPoint
-    lateinit var point2: ConnectionPoint
-    lateinit var point3: ConnectionPoint
+class CircuitConnectionPointTest {
+    lateinit var point1: CircuitConnectionPoint
+    lateinit var point2: CircuitConnectionPoint
+    lateinit var point3: CircuitConnectionPoint
 
     @BeforeEach
     fun setUp() {
-        point1 = ConnectionPoint(CircuitID.First)
-        point2 = ConnectionPoint(CircuitID.Second)
-        point3 = ConnectionPoint(CircuitID.First)
+        point1 = CircuitConnectionPoint(CircuitID.First)
+        point2 = CircuitConnectionPoint(CircuitID.Second)
+        point3 = CircuitConnectionPoint(CircuitID.First)
     }
 
     @Test
