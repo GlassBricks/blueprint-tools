@@ -195,7 +195,8 @@ public data class Entity(
     /** Filters of the filter inserter or loader. */
     public var filters: List<ItemFilter>? = null,
     /** Filter mode of the filter inserter. Either "whitelist" or "blacklist". */
-    public var filter_mode: FilterMode? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var filter_mode: FilterMode = FilterMode.Whitelist,
     /** The stack size the inserter is set to. */
     public var override_stack_size: UByte? = null,
     /** The drop position the inserter is set to. */
@@ -609,12 +610,14 @@ public data class ControlBehavior(
     /** [SignalID] to output the wall-gate proximity sensor / accumulator charge on. */
     public var output_signal: SignalID? = null,
     /** Whether to read this belts content or inserters hand. */
-    public var circuit_read_hand_contents: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var circuit_read_hand_contents: Boolean = false,
     public var circuit_contents_read_mode: TransportBeltContentReadMode? = null,
     public var circuit_mode_of_operation: CircuitModeOfOperation? = null,
     public var circuit_hand_read_mode: InserterHandReadMode? = null,
     /** Whether to set inserters stack size from a circuit signal. */
-    public var circuit_set_stack_size: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var circuit_set_stack_size: Boolean = false,
     /** [SignalID] to use to set the inserters stack size. */
     public var stack_control_input_signal: SignalID? = null,
     /** whether this miner should output its remaining resource amounts to the circuit network. */

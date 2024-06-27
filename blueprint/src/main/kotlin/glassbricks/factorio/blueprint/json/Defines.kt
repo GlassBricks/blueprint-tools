@@ -44,10 +44,10 @@ public value class CircuitModeOfOperation(public val rawValue: Int) {
         require(rawValue in 0..4) { "CircuitModeOfOperation must be in range 0..4" }
     }
 
-    public fun asInserter(): InserterCircuitMode = InserterCircuitMode.entries[rawValue]
-    public fun asLamp(): LampCircuitMode = LampCircuitMode.entries[rawValue]
-    public fun asLogisticContainer(): LogisticContainerCircuitMode =
-        LogisticContainerCircuitMode.entries[rawValue]
+    public fun asInserter(): InserterModeOfOperation = InserterModeOfOperation.entries[rawValue]
+    public fun asLamp(): LampModeOfOperation = LampModeOfOperation.entries[rawValue]
+    public fun asLogisticContainer(): LogisticChestModeOfOperation =
+        LogisticChestModeOfOperation.entries[rawValue]
 
     public fun from(value: CircuitModeOption): CircuitModeOfOperation = CircuitModeOfOperation(value.ordinal)
     public fun equalsOption(value: CircuitModeOption): Boolean = rawValue == value.ordinal
@@ -57,21 +57,23 @@ public sealed interface CircuitModeOption {
     public val ordinal: Int
 }
 
-public fun CircuitModeOption.mode(): CircuitModeOfOperation = CircuitModeOfOperation(ordinal)
+public fun CircuitModeOption.asMode(): CircuitModeOfOperation = CircuitModeOfOperation(ordinal)
 
-public enum class InserterCircuitMode : CircuitModeOption {
+public enum class InserterModeOfOperation : CircuitModeOption {
     EnableDisable,
     SetFilters,
-    ReadHandContents,
+    /** This is not actually used. */
+    ReadHandContents, 
     None,
-    SetStackSize
+    /** This is not actually used. */
+    SetStackSize 
 }
 
-public enum class LampCircuitMode : CircuitModeOption {
+public enum class LampModeOfOperation : CircuitModeOption {
     UseColors
 }
 
-public enum class LogisticContainerCircuitMode : CircuitModeOption {
+public enum class LogisticChestModeOfOperation : CircuitModeOption {
     SendContents,
     SetRequests
 }

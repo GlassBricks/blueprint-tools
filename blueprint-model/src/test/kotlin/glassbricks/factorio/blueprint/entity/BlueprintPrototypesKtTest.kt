@@ -28,12 +28,15 @@ internal inline fun loadEntity(
 
 internal inline fun <reified T : Entity> testSaveLoad(
     json: EntityJson,
+    modify: T.() -> Unit = {},
     blueprint: BlueprintJson?,
 ): T {
     json.entity_number = EntityNumber(1)
     val entity = blueprintPrototypes.createEntityFromJson(json, blueprint)
     assertTrue(entity is T, "Expected ${T::class.java} but got ${entity.javaClass}")
     assertEquals(entity.javaClass, T::class.java, "Expected exactly, ${T::class.java} but got subclass ${entity.javaClass}")
+    
+    modify(entity)
 
     val backToJson = entity.toJsonIsolated(EntityNumber(1))
     assertEquals(json, backToJson)
@@ -42,10 +45,11 @@ internal inline fun <reified T : Entity> testSaveLoad(
 internal inline fun <reified T : Entity> testSaveLoad(
     name: String,
     blueprint: BlueprintJson? = null,
+    modify: T.() -> Unit = {},
     build: EntityJson.() -> Unit = {},
 ): T {
     val json = buildEntityJson(name, build)
-    return testSaveLoad(json, blueprint)
+    return testSaveLoad(json, modify, blueprint)
 }
 
 class BlueprintPrototypesKtTest {

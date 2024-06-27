@@ -10,7 +10,7 @@ import glassbricks.factorio.blueprint.json.ConnectionData
  *
  * Has 1 or 2 [CircuitConnectionPoint]s.
  */
-public interface CircuitConnectable : Entity {
+public interface CircuitConnectable {
     public val connectionPoint1: CircuitConnectionPoint
 
     public val connectionPoint2: CircuitConnectionPoint? get() = null
@@ -36,6 +36,9 @@ public fun CircuitConnectable2.getConnectionPoint(circuitID: CircuitID): Circuit
     Second -> connectionPoint2
 }
 
+public fun CircuitConnectable.hasConnections(): Boolean = !connectionPoint1.isEmpty() || 
+        connectionPoint2.let { it != null && !it.isEmpty() }
+
 public fun CircuitConnectable.isEmpty(): Boolean = connectionPoint1.isEmpty() && connectionPoint2?.isEmpty() ?: true
 
 public enum class WireColor { Red, Green }
@@ -55,7 +58,7 @@ public sealed interface CircuitConnectionSet : MutableSet<CircuitConnectionPoint
  * This class's equals and hashCode are based on reference equality; so two connection points with the same connections are not equal.
  */
 public class CircuitConnectionPoint(
-    public val parent: CircuitConnectable,
+    public val parent: Entity,
     public val circuitID: CircuitID = First,
 ) {
 

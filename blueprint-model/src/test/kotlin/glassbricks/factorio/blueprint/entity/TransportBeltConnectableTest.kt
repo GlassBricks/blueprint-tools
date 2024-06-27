@@ -9,7 +9,9 @@ class TransportBeltConnectableTest {
     @Test
     fun `can load transport belt`() {
         testSaveLoad<TransportBelt>("transport-belt") // test with empty
-        val belt = testSaveLoad<TransportBelt>("transport-belt") {
+        val belt = testSaveLoad<TransportBelt>("transport-belt", modify = {
+            connectionPoint1.red.add((loadEntity("Foo") as UnknownEntity).connectionPoint1)
+        }) {
             direction = Direction.East
             control_behavior = ControlBehavior(
                 circuit_enable_disable = true,
@@ -53,7 +55,7 @@ class TransportBeltConnectableTest {
         }
         testSaveLoad<Loader>("loader") {
             type = IOType.Output
-            filters = getItemFilterList("iron-plate", "copper-plate")
+            filters = itemFilterList("iron-plate", "copper-plate")
         }
     }
 }

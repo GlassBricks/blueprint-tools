@@ -50,13 +50,13 @@ public fun WithItemFilters.getFiltersAsList(): List<ItemFilter>? = filters.mapIn
     name?.let { ItemFilter(name = it, index = index + 1) }
 }.takeIf { it.isNotEmpty() }
 
-public fun getItemFilterList(origFilters: List<String?>): List<ItemFilter>? =
+public fun itemFilterList(origFilters: List<String?>): List<ItemFilter>? =
     origFilters.mapIndexedNotNull { index, name ->
         name?.let { ItemFilter(name = it, index = index + 1) }
     }.takeIf { it.isNotEmpty() }
 
 
-public fun getItemFilterList(vararg origFilters: String?): List<ItemFilter>? =
+public fun itemFilterList(vararg origFilters: String?): List<ItemFilter>? =
     origFilters.mapIndexedNotNull { index, name ->
         name?.let { ItemFilter(name = it, index = index + 1) }
     }.takeIf { it.isNotEmpty() }
