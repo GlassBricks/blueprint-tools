@@ -40,11 +40,12 @@ public fun CircuitConnectable2.getConnectionPoint(circuitID: CircuitID): Connect
 
 public fun CircuitConnectable.isEmpty(): Boolean = connectionPoint1.isEmpty() && connectionPoint2?.isEmpty() ?: true
 
-public class CircuitConnectable1Mixin : CircuitConnectable {
+// import/export handled separately in ImportExport.kt
+internal class CircuitConnectable1Mixin : CircuitConnectable {
     override val connectionPoint1: ConnectionPoint = ConnectionPoint(First)
 }
 
-public class CircuitConnectable2Mixin : CircuitConnectable2 {
+internal class CircuitConnectable2Mixin : CircuitConnectable2 {
     override val connectionPoint1: ConnectionPoint = ConnectionPoint(First)
     override val connectionPoint2: ConnectionPoint = ConnectionPoint(Second)
 }

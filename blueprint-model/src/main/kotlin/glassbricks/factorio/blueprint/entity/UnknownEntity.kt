@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.json.Color
 import glassbricks.factorio.blueprint.json.Direction
 import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.json.Position
@@ -7,32 +8,54 @@ import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-// todo: make this implement every trait
-public class UnknownEntity private constructor(
+public class UnknownEntity internal constructor(
     override val prototype: EntityWithOwnerPrototype,
-    public val source: EntityJson,
-) : Entity, CircuitConnectable2 by CircuitConnectable2Mixin() {
-    public constructor(
-        prototype: EntityWithOwnerPrototype,
-        source: EntityProps,
-    ) : this(prototype, source.copyToJson())
-    
-    public constructor(
-        name: String,
-        position: Position,
-        direction: Direction = Direction.North,
-    ): this(UnknownPrototype(name), BasicEntityProps(name, position, direction))
+    init: EntityInit<UnknownEntity>,
+) : Entity,
+    CircuitConnectable2 by CircuitConnectable2Mixin(),
+    WithColor,
+    WithBar,
+    WithItemFilters {
+    public val json: EntityJson = init.getJson()
 
-    override var position: Position by this.source::position
-    override var tags: JsonObject? by this.source::tags
-    override var direction: Direction by this.source::direction
+    override var position: Position by json::position
+    override var tags: JsonObject? by json::tags
+    override var direction: Direction by json::direction
+    override var color: Color? by json::color
+    override var bar: Int? by json::bar
+    override val filters: Array<String?> = init.self?.filters ?: json.filters.toFilters(128)
 
-    override fun toJsonIsolated(entityNumber: EntityNumber): EntityJson = source.copy(
+    override fun toJsonIsolated(entityNumber: EntityNumber): EntityJson = json.copy(
         entity_number = entityNumber,
         connections = null,
         neighbours = null,
+        filters = this.getFiltersAsList(),
     )
+
+    override fun copy(): Entity = UnknownEntity(prototype, copyInit(this))
 }
+
+public fun UnknownEntity(
+    name: String,
+    position: Position,
+    direction: Direction = Direction.North,
+): UnknownEntity {
+    return UnknownEntity(UnknownPrototype(name), propInit(name, position, direction))
+}
+
+private fun EntityInit<UnknownEntity>.getJson(): EntityJson {
+    val json = this.self?.json
+        ?: this.json
+        ?: EntityJson(
+            entity_number = EntityNumber(1),
+            name = this.name,
+            position = this.position,
+            direction = this.direction,
+            tags = this.tags,
+        )
+    return json.deepCopy()
+}
+
 
 public class UnknownPrototype(override val name: String) : EntityWithOwnerPrototype() {
     init {

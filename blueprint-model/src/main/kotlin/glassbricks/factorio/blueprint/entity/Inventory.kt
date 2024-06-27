@@ -16,22 +16,14 @@ public interface WithItemFilters {
     public val numFilters: Int get() = filters.size
 }
 
-public class WithItemFiltersMixin(
-    numFilters: Int,
-    source: List<ItemFilter>? = null,
-) : WithItemFilters {
-    override val filters: Array<String?> = arrayOfNulls(numFilters)
-
-    init {
-        if (source != null) for (filter in source) {
-            if (filter.index - 1 in filters.indices) {
-                filters[filter.index - 1] = filter.name
-            }
+internal fun List<ItemFilter>?.toFilters(size: Int): Array<String?> = arrayOfNulls<String>(size).also { filters ->
+    this?.forEach { filter ->
+        if (filter.index - 1 in filters.indices) {
+            filters[filter.index - 1] = filter.name
         }
     }
-
 }
 
-public fun WithItemFilters.getFiltersAsList(): List<ItemFilter> = filters.mapIndexedNotNull { index, name ->
+public fun WithItemFilters.getFiltersAsList(): List<ItemFilter>? = filters.mapIndexedNotNull { index, name ->
     name?.let { ItemFilter(name = it, index = index + 1) }
-}
+}.takeIf { it.isNotEmpty() }

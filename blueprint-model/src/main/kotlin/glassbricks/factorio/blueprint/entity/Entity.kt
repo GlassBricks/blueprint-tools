@@ -1,24 +1,10 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.*
+import glassbricks.factorio.blueprint.json.Direction
+import glassbricks.factorio.blueprint.json.EntityNumber
+import glassbricks.factorio.blueprint.json.Position
 import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
-
-public interface Entity : EntityProps {
-    public val prototype: EntityWithOwnerPrototype
-    public override val name: String get() = prototype.name
-    public val type: String get() = prototype.type
-
-    public override var position: Position
-    public override var direction: Direction
-    public override var tags: JsonObject?
-
-    public fun toJsonIsolated(entityNumber: EntityNumber): EntityJson
-}
-
-public interface WithSchedule : Entity {
-    public val schedule: List<ScheduleRecord>
-}
 
 public interface EntityProps {
     public val name: String
@@ -27,37 +13,18 @@ public interface EntityProps {
     public val tags: JsonObject?
 }
 
-public class BasicEntityProps(
-    public override val name: String,
-    public override val position: Position,
-    public override val direction: Direction = Direction.North,
-    public override var tags: JsonObject? = null,
-) : EntityProps
+public interface Entity : EntityProps {
+    public val prototype: EntityWithOwnerPrototype
+    public val type: String get() = prototype.type
 
-public class FromJson(
-    public val json: EntityJson,
-    public val originalBlueprint: BlueprintJson? = null,
-) : EntityProps {
-    public override val name: String get() = json.name
-    public override val position: Position get() = json.position
-    public override val direction: Direction get() = json.direction
-    public override var tags: JsonObject? = json.tags
+    public override val name: String get() = prototype.name
+    public override var position: Position
+    public override var direction: Direction
+    public override var tags: JsonObject?
 
-    public fun getSchedule(): List<ScheduleRecord>? =
-        originalBlueprint?.schedules
-            ?.firstOrNull { it.locomotives.any { number -> number == json.entity_number } }
-            ?.schedule
+    public fun toJsonIsolated(entityNumber: EntityNumber): EntityJson
+
+    public fun copy(): Entity
 }
 
-internal fun EntityProps.asJson(): EntityJson? = (this as? FromJson)?.json
-internal fun EntityProps.asFromJson(): FromJson? = this as? FromJson
-internal fun EntityProps.copyToJson(): EntityJson = asJson()?.copy(
-    connections = null,
-    neighbours = null,
-) ?: EntityJson(
-    entity_number = EntityNumber(1),
-    name = name,
-    position = position,
-    direction = direction,
-    tags = tags,
-)
+internal fun EntityJson.deepCopy() = copy() // todo: actually deep copy

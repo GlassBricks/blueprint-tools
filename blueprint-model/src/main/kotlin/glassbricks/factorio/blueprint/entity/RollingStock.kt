@@ -9,69 +9,70 @@ import glassbricks.factorio.prototypes.RollingStockPrototype
 
 
 public sealed interface RollingStock : Entity {
+    override val prototype: RollingStockPrototype
     public var orientation: Double
 }
 
-public class CargoWagon(
+private val EntityInit<RollingStock>.orientation: Double
+    get() = self?.orientation ?: json?.orientation ?: 0.0
+
+public class CargoWagon
+internal constructor(
     override val prototype: CargoWagonPrototype,
-    source: EntityProps,
-) : BaseEntity(source),
+    init: EntityInit<CargoWagon>,
+) : BaseEntity(init),
     RollingStock,
-    WithItemFilters by WithItemFiltersMixin(prototype.inventory_size.toInt(), source.asJson()?.inventory?.filters) {
-    override var orientation: Double = source.asJson()?.orientation ?: 0.0
-    public var bar: Int? = source.asJson()?.inventory?.bar
+    WithBar,
+    WithItemFilters {
+    override var orientation: Double = init.orientation
+    override var bar: Int? = init.self?.bar ?: init.json?.inventory?.bar
+    override val filters: Array<String?> =
+        init.self?.filters?.copyOf() ?: init.json?.inventory?.filters.toFilters(prototype.inventory_size.toInt())
 
-    override fun copy(): CargoWagon = CargoWagon(prototype, this).also {
-        it.orientation = orientation
-        it.bar = bar
-    }
-
-    override fun configure(json: EntityJson) {
+    override fun exportToJson(json: EntityJson) {
         json.orientation = orientation
-
         val filters = this.getFiltersAsList()
-        if (filters.isNotEmpty() || this.bar != null) {
-            json.inventory = Inventory(
-                filters = filters,
-                bar = this.bar,
-            )
+        if (filters != null || bar != null) {
+            json.inventory = Inventory(filters = filters.orEmpty(), bar = bar)
         }
     }
 
+    override fun copy(): CargoWagon = CargoWagon(prototype, copyInit(this))
 }
 
-public class Locomotive(
+public typealias WithSchedule = Locomotive
+
+public class Locomotive
+internal constructor(
     override val prototype: LocomotivePrototype,
-    source: EntityProps,
-) : BaseEntity(source), RollingStock, WithSchedule {
-    override var orientation: Double = source.asJson()?.orientation ?: 0.0
-    public var color: Color? = source.asJson()?.color
-    public override var schedule: List<ScheduleRecord> = source.asFromJson()?.getSchedule().orEmpty()
+    init: EntityInit<Locomotive>,
+) : BaseEntity(init),
+    RollingStock,
+    WithColor
+{
+    override var orientation: Double = init.orientation
+    override var color: Color? = init.color
+    public var schedule: List<ScheduleRecord> = init.self?.schedule ?: init.getSchedule()
 
-    override fun copy(): Locomotive = Locomotive(prototype, this).also {
-        it.orientation = orientation
-        it.color = color
-        it.schedule = schedule
-    }
-
-    override fun configure(json: EntityJson) {
+    override fun exportToJson(json: EntityJson) {
         json.orientation = orientation
         json.color = color
+        // schedule handled by blueprint export
     }
+
+    override fun copy(): Locomotive = Locomotive(prototype, copyInit(this))
 }
 
-public class OtherRollingStock(
+public class OtherRollingStock internal constructor(
     override val prototype: RollingStockPrototype,
-    source: EntityProps,
-) : BaseEntity(source), RollingStock {
-    override var orientation: Double = source.asJson()?.orientation ?: 0.0
+    init: EntityInit<OtherRollingStock>,
+) : BaseEntity(init),
+    RollingStock {
+    override var orientation: Double = init.orientation
 
-    override fun copy(): OtherRollingStock = OtherRollingStock(prototype, this).also {
-        it.orientation = orientation
-    }
-
-    override fun configure(json: EntityJson) {
+    override fun exportToJson(json: EntityJson) {
         json.orientation = orientation
     }
 
+    override fun copy(): OtherRollingStock = OtherRollingStock(prototype, copyInit(this))
 }

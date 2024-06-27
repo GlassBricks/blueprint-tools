@@ -4,20 +4,20 @@ import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
 
 
-public fun createEntityFromPrototype(prototype: EntityWithOwnerPrototype, source: EntityProps): Entity {
-    return getConstructorForPrototype(prototype)(prototype, source)
-}
-
-internal fun BlueprintPrototypes.createEntityFromJson(
+public fun BlueprintPrototypes.createEntityFromJson(
     json: EntityJson,
     originalBlueprint: BlueprintJson? = null,
 ): Entity {
     val prototype = this.prototypes[json.name] ?: UnknownPrototype(json.name)
-    val source = FromJson(json, originalBlueprint)
-    return createEntityFromPrototype(prototype, source)
+    return createEntityFromPrototype(prototype, jsonInit(json, originalBlueprint))
 }
 
-internal fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entity>? {
+internal fun createEntityFromPrototype(prototype: EntityWithOwnerPrototype, source: EntityInit<Nothing>): Entity {
+    return getConstructorForPrototype(prototype)(prototype, source)
+}
+
+
+public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entity>? {
     val jsonEntities = json.entities
     if (jsonEntities.isNullOrEmpty()) return null
 
@@ -38,6 +38,7 @@ internal fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Ent
             set.add(connectionPoint)
         }
     }
+
     fun connectAtPoint(
         point: ConnectionPoint,
         json: ConnectionPointJson,
@@ -56,7 +57,7 @@ internal fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Ent
             entity.connectionPoint2?.let { pt -> connectAtPoint(pt, ptJson) }
         }
     }
-    
+
     return entities
 }
 
@@ -105,11 +106,11 @@ public fun BlueprintJson.setEntitiesFrom(entities: Iterable<Entity>) {
     this.schedules = schedulesJson
 }
 
-private typealias Constructor = (EntityWithOwnerPrototype, EntityProps) -> Entity
+private typealias Constructor = (EntityWithOwnerPrototype, EntityInit<*>) -> Entity
 
 private inline fun <reified T : EntityWithOwnerPrototype>
         MutableMap<Class<out EntityWithOwnerPrototype>, Constructor>.matcher(
-    noinline constructor: (T, EntityProps) -> Entity,
+    noinline constructor: (T, EntityInit<Nothing>) -> Entity,
 ) {
     @Suppress("UNCHECKED_CAST")
     put(T::class.java, constructor as Constructor)

@@ -5,10 +5,11 @@ import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.json.Position
 import kotlinx.serialization.json.JsonObject
 
-public abstract class BaseEntity(source: EntityProps) : Entity {
-    override var position: Position = source.position
-    override var direction: Direction = source.direction
-    override var tags: JsonObject? = source.tags
+public abstract class BaseEntity
+internal constructor(init: EntityProps) : Entity {
+    override var position: Position = init.position
+    override var direction: Direction = init.direction
+    override var tags: JsonObject? = init.tags
 
     private fun createEntityJson(entityNumber: EntityNumber): EntityJson = EntityJson(
         entity_number = entityNumber,
@@ -17,13 +18,9 @@ public abstract class BaseEntity(source: EntityProps) : Entity {
         direction = direction,
     )
 
-
     override fun toJsonIsolated(entityNumber: EntityNumber): EntityJson {
-        val json = createEntityJson(entityNumber)
-        configure(json)
-        return json
+        return createEntityJson(entityNumber)
+            .apply { exportToJson(this) }
     }
-    protected abstract fun configure(json: EntityJson)
-
-    public abstract fun copy(): BaseEntity
+    protected abstract fun exportToJson(json: EntityJson)
 }
