@@ -235,6 +235,10 @@ public enum class IOType {
     @SerialName("output")
     Output,
 }
+public fun IOType.flip(): IOType = when (this) {
+    IOType.Input -> IOType.Output
+    IOType.Output -> IOType.Input
+}
 
 @Serializable
 public enum class SplitterPriority {
@@ -351,7 +355,7 @@ public enum class CompareType {
 @Serializable
 public data class Tile(
     /** Prototype name of the tile (e.g. "concrete"). */
-    public var name: String,
+    public val name: String,
     /** Position of the entity within the blueprint. */
     public var position: TilePosition,
 )
@@ -388,10 +392,10 @@ public data class ConnectionPoint(
 @Serializable
 public data class ConnectionData(
     /** ID of the entity this connection is connected with. */
-    public var entity_id: EntityNumber,
+    public val entity_id: EntityNumber,
     /** The circuit connector id of the entity this connection is connected to. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
-    public var circuit_id: CircuitID = CircuitID.First,
+    public val circuit_id: CircuitID = CircuitID.First,
 )
 
 /**
@@ -399,7 +403,7 @@ public data class ConnectionData(
  */
 @Serializable
 public data class CableConnectionData internal constructor(
-    public var entity_id: EntityNumber,
+    public val entity_id: EntityNumber,
     /** Always 0. */
     public val circuit_id: Int = 0,
 ) {
@@ -427,9 +431,9 @@ public typealias ItemRequests = Map<ItemPrototypeName, Int>
 @Serializable
 public data class ItemFilter(
     /** Name of the item prototype this filter is set to. */
-    public var name: ItemPrototypeName,
+    public val name: ItemPrototypeName,
     /** Index of the filter, 1-based. */
-    public var index: Int,
+    public val index: Int,
 )
 
 /**
@@ -438,9 +442,9 @@ public data class ItemFilter(
 @Serializable
 public data class InfinitySettings(
     /** Whether the "remove unfiltered items" checkbox is checked. */
-    public var remove_unfiltered_items: Boolean? = null,
+    public val remove_unfiltered_items: Boolean? = null,
     /** Filters of the infinity container. */
-    public var filters: List<InfinityFilter> = emptyList(),
+    public val filters: List<InfinityFilter> = emptyList(),
 )
 
 /**
@@ -449,13 +453,13 @@ public data class InfinitySettings(
 @Serializable
 public data class InfinityFilter(
     /** Name of the item prototype the filter is set to. */
-    public var name: ItemPrototypeName,
+    public val name: ItemPrototypeName,
     /** Number the filter is set to. */
-    public var count: Int,
+    public val count: Int,
     /** Mode of the filter. Either "at-least", "at-most", or "exactly". */
-    public var mode: InfinityFilterMode,
+    public val mode: InfinityFilterMode,
     /** Index of the filter, 1-based. */
-    public var index: Int,
+    public val index: Int,
 )
 
 
@@ -477,11 +481,11 @@ public enum class InfinityFilterMode {
 @Serializable
 public data class LogisticFilter(
     /** Name of the item prototype this filter is set to. */
-    public var name: ItemPrototypeName,
+    public val name: ItemPrototypeName,
     /** Index of the filter, 1-based. */
-    public var index: Int,
+    public val index: Int,
     /** Number the filter is set to. */
-    public var count: Int,
+    public val count: Int,
 )
 
 /**
@@ -490,11 +494,11 @@ public data class LogisticFilter(
 @Serializable
 public data class SpeakerParameters(
     /** Volume of the speaker. */
-    public var playback_volume: DoubleAsInt,
+    public val playback_volume: DoubleAsInt,
     /** Whether global playback is enabled. */
-    public var playback_globally: Boolean,
+    public val playback_globally: Boolean,
     /** Whether polyphony is allowed. */
-    public var allow_polyphony: Boolean,
+    public val allow_polyphony: Boolean,
 )
 
 /**
@@ -503,13 +507,13 @@ public data class SpeakerParameters(
 @Serializable
 public data class AlertParameters(
     /** Whether an alert is shown. */
-    public var show_alert: Boolean = false,
+    public val show_alert: Boolean = false,
     /** Whether an alert icon is shown on the map. */
-    public var show_on_map: Boolean = false,
+    public val show_on_map: Boolean = false,
     /** The icon that is displayed with the alert. */
-    public var icon_signal_id: SignalID? = null,
+    public val icon_signal_id: SignalID? = null,
     /** Message of the alert. */
-    public var alert_message: String = "",
+    public val alert_message: String = "",
 )
 
 @Serializable
@@ -547,78 +551,79 @@ public data class Color(
  */
 @Serializable
 public data class ControlBehavior(
-    public val logistic_condition: CircuitCondition? = null,
+    public var logistic_condition: CircuitCondition? = null,
     /** Whether this entity is connected to the logistic network and enables/disables based on logistic_condition. */
-    public val connect_to_logistic_network: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var connect_to_logistic_network: Boolean = false,
     /** Whether this rail signal can be closed by circuit_condition. */
-    public val circuit_close_signal: Boolean? = null,
+    public var circuit_close_signal: Boolean? = null,
     /** Whether or not to read the state of this rail/chain signal. */
-    public val circuit_read_signal: Boolean? = null,
+    public var circuit_read_signal: Boolean? = null,
     /** [SignalID] to use if the rail/chain signal is currently red. */
-    public val red_output_signal: SignalID? = null,
+    public var red_output_signal: SignalID? = null,
     /** [SignalID] to use if the rail/chain signal is currently orange. */
-    public val orange_output_signal: SignalID? = null,
+    public var orange_output_signal: SignalID? = null,
     /** [SignalID] to use if the rail/chain signal is currently green. */
-    public val green_output_signal: SignalID? = null,
+    public var green_output_signal: SignalID? = null,
     /** [SignalID] to use if the rail/chain signal is currently blue. */
-    public val blue_output_signal: SignalID? = null,
-    public val circuit_condition: CircuitCondition? = null,
+    public var blue_output_signal: SignalID? = null,
+    public var circuit_condition: CircuitCondition? = null,
     /** Enable or disable based on circuit_condition. */
-    public val circuit_enable_disable: Boolean? = null,
+    public var circuit_enable_disable: Boolean? = null,
     /** Send circuit values to the train to use in schedule conditions. */
-    public val send_to_train: Boolean? = null,
+    public var send_to_train: Boolean? = null,
     /** Get the currently stopped trains cargo. */
-    public val read_from_train: Boolean? = null,
+    public var read_from_train: Boolean? = null,
     /** Get the currently stopped trains ID. */
-    public val read_stopped_train: Boolean? = null,
+    public var read_stopped_train: Boolean? = null,
     /** [SignalID] to output the train ID on. */
-    public val train_stopped_signal: SignalID? = null,
+    public var train_stopped_signal: SignalID? = null,
     /** Whether this stations train limit will be set through circuit values. */
-    public val set_trains_limit: Boolean? = null,
+    public var set_trains_limit: Boolean? = null,
     /** [SignalID] to use to set the trains limit. */
-    public val trains_limit_signal: SignalID? = null,
+    public var trains_limit_signal: SignalID? = null,
     /** Whether to read this stations currently on route trains count. */
-    public val read_trains_count: Boolean? = null,
+    public var read_trains_count: Boolean? = null,
     /** [SignalID] to output the on route trains count on. */
-    public val trains_count_signal: SignalID? = null,
+    public var trains_count_signal: SignalID? = null,
     /** Whether this roboport should output the contents of its network. */
-    public val read_logistics: Boolean? = null,
+    public var read_logistics: Boolean? = null,
     /** Whether this roboport should output the robot stats of its network. */
-    public val read_robot_stats: Boolean? = null,
+    public var read_robot_stats: Boolean? = null,
     /** [SignalID] to output available logistic robots on. */
-    public val available_logistic_output_signal: SignalID? = null,
+    public var available_logistic_output_signal: SignalID? = null,
     /** [SignalID] to output total count of logistic robots on. */
-    public val total_logistic_output_signal: SignalID? = null,
+    public var total_logistic_output_signal: SignalID? = null,
     /** [SignalID] to output available construction robots on. */
-    public val available_construction_output_signal: SignalID? = null,
+    public var available_construction_output_signal: SignalID? = null,
     /** [SignalID] to output total count of construction robots on. */
-    public val total_construction_output_signal: SignalID? = null,
+    public var total_construction_output_signal: SignalID? = null,
     /** Whether to limit the gate opening with circuit_condition. */
-    public val circuit_open_gate: Boolean? = null,
+    public var circuit_open_gate: Boolean? = null,
     /** Whether to send the wall-gate proximity sensor to the circuit network. */
-    public val circuit_read_sensor: Boolean? = null,
+    public var circuit_read_sensor: Boolean? = null,
     /** [SignalID] to output the wall-gate proximity sensor / accumulator charge on. */
-    public val output_signal: SignalID? = null,
+    public var output_signal: SignalID? = null,
     /** Whether to read this belts content or inserters hand. */
-    public val circuit_read_hand_contents: Boolean? = null,
-    public val circuit_contents_read_mode: TransportBeltContentReadMode? = null,
-    public val circuit_mode_of_operation: CircuitModeOfOperation? = null,
-    public val circuit_hand_read_mode: InserterHandReadMode? = null,
+    public var circuit_read_hand_contents: Boolean? = null,
+    public var circuit_contents_read_mode: TransportBeltContentReadMode? = null,
+    public var circuit_mode_of_operation: CircuitModeOfOperation? = null,
+    public var circuit_hand_read_mode: InserterHandReadMode? = null,
     /** Whether to set inserters stack size from a circuit signal. */
-    public val circuit_set_stack_size: Boolean? = null,
+    public var circuit_set_stack_size: Boolean? = null,
     /** [SignalID] to use to set the inserters stack size. */
-    public val stack_control_input_signal: SignalID? = null,
+    public var stack_control_input_signal: SignalID? = null,
     /** whether this miner should output its remaining resource amounts to the circuit network. */
-    public val circuit_read_resources: Boolean? = null,
-    public val circuit_resource_read_mode: MiningDrillResourceReadMode? = null,
+    public var circuit_read_resources: Boolean? = null,
+    public var circuit_resource_read_mode: MiningDrillResourceReadMode? = null,
     /** Whether this constant combinator is currently on or off. */
-    public val is_on: Boolean? = null,
-    public val filters: List<ConstantCombinatorParameters>? = null,
-    public val arithmetic_conditions: ArithmeticCombinatorParameters? = null,
-    public val decider_conditions: DeciderCombinatorParameters? = null,
-    public val circuit_parameters: ProgrammableSpeakerCircuitParameters? = null,
+    public var is_on: Boolean? = null,
+    public var filters: List<ConstantCombinatorParameters>? = null,
+    public var arithmetic_conditions: ArithmeticCombinatorParameters? = null,
+    public var decider_conditions: DeciderCombinatorParameters? = null,
+    public var circuit_parameters: ProgrammableSpeakerCircuitParameters? = null,
     /** Whether this lamp should use colors or not. */
-    public val use_colors: Boolean? = null,
+    public var use_colors: Boolean? = null,
 )
 
 

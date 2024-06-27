@@ -25,6 +25,10 @@ private val matcherMap = buildMap {
     add(::AssemblingMachine)
     add(::Furnace)
     add(::RocketSilo)
+    add(::TransportBelt)
+    add(::UndergroundBelt)
+    add(::Splitter)
+    add(::Loader)
     add(::UnknownEntity)
 }
 private val constructorCache = hashMapOf<Class<out EntityWithOwnerPrototype>, Constructor>()

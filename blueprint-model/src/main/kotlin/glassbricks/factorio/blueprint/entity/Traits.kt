@@ -44,6 +44,9 @@ public interface WithItemFilters {
     public val numFilters: Int get() = filters.size
 }
 
+internal fun EntityInit<WithItemFilters>.getDirectFilters(size: Int): Array<String?> =
+    self?.filters?.copyOf() ?: json?.filters.toFilters(size)
+
 internal fun List<ItemFilter>?.toFilters(size: Int): Array<String?> = arrayOfNulls<String>(size).also { filters ->
     this?.forEach { filter ->
         if (filter.index - 1 in filters.indices) {
@@ -53,5 +56,14 @@ internal fun List<ItemFilter>?.toFilters(size: Int): Array<String?> = arrayOfNul
 }
 
 public fun WithItemFilters.getFiltersAsList(): List<ItemFilter>? = filters.mapIndexedNotNull { index, name ->
+    name?.let { ItemFilter(name = it, index = index + 1) }
+}.takeIf { it.isNotEmpty() }
+
+public fun getItemFilterList(origFilters: List<String?>): List<ItemFilter>? = origFilters.mapIndexedNotNull { index, name ->
+    name?.let { ItemFilter(name = it, index = index + 1) }
+}.takeIf { it.isNotEmpty() }
+
+
+public fun getItemFilterList(vararg origFilters: String?): List<ItemFilter>? = origFilters.mapIndexedNotNull { index, name ->
     name?.let { ItemFilter(name = it, index = index + 1) }
 }.takeIf { it.isNotEmpty() }
