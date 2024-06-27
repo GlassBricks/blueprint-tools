@@ -144,6 +144,7 @@ public enum class SignalType {
     Virtual
 }
 
+@Suppress("CanBeParameter", "MemberVisibilityCanBePrivate")
 @Serializable
 @JvmInline
 public value class EntityNumber(public val id: Int) {
