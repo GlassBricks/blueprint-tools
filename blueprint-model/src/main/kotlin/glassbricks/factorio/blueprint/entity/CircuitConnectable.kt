@@ -75,8 +75,9 @@ public class CircuitConnectionPoint(
 
     internal inner class ConnectionSetImpl(override val color: WireColor) : UpdatingSet<CircuitConnectionPoint>(),
         CircuitConnectionSet {
-        override fun onAdd(element: CircuitConnectionPoint) {
-            (element[color] as ConnectionSetImpl).inner.add(this@CircuitConnectionPoint)
+        override fun onAdd(element: CircuitConnectionPoint): Boolean {
+            if(element == this@CircuitConnectionPoint) return false
+            return (element[color] as ConnectionSetImpl).inner.add(this@CircuitConnectionPoint)
         }
 
         override fun onRemove(element: CircuitConnectionPoint) {

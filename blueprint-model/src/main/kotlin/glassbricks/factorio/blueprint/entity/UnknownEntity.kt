@@ -9,6 +9,7 @@ public class UnknownEntity internal constructor(
     override val prototype: EntityWithOwnerPrototype,
     init: EntityInit<UnknownEntity>,
 ) : Entity,
+    CableConnectionPoint,
     CircuitConnectable2,
     WithColor,
     WithBar,
@@ -22,8 +23,11 @@ public class UnknownEntity internal constructor(
     override var bar: Int? by json::bar
     override val filters: Array<String?> = init.self?.filters ?: json.filters.toFilters(128)
 
+    override val cableConnections: CableConnectionSet = CableConnectionSet(this)
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.First)
     override val connectionPoint2: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.Second)
+
+    override val entity: Entity get() = this
 
     override fun toJsonIsolated(entityNumber: EntityNumber): EntityJson = json.copy(
         entity_number = entityNumber,

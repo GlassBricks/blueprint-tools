@@ -9,7 +9,7 @@ internal fun createEntityFromPrototype(prototype: EntityWithOwnerPrototype, sour
 private typealias Constructor = (EntityWithOwnerPrototype, EntityInit<*>) -> Entity
 
 private inline fun <reified T : EntityWithOwnerPrototype>
-        MutableMap<Class<out EntityWithOwnerPrototype>, Constructor>.matcher(
+        MutableMap<Class<out EntityWithOwnerPrototype>, Constructor>.add(
     noinline constructor: (T, EntityInit<Nothing>) -> Entity,
 ) {
     @Suppress("UNCHECKED_CAST")
@@ -17,11 +17,12 @@ private inline fun <reified T : EntityWithOwnerPrototype>
 }
 
 private val matcherMap = buildMap {
-    matcher(::CargoWagon)
-    matcher(::Locomotive)
-    matcher(::OtherRollingStock)
-    matcher(::ElectricPole)
-    matcher(::UnknownEntity)
+    add(::CargoWagon)
+    add(::Locomotive)
+    add(::OtherRollingStock)
+    add(::ElectricPole)
+    add(::PowerSwitch)
+    add(::UnknownEntity)
 }
 private val constructorCache = hashMapOf<Class<out EntityWithOwnerPrototype>, Constructor>()
 private fun getConstructorForPrototype(

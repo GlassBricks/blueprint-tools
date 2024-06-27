@@ -64,7 +64,7 @@ internal object DoubleAsIntSerializer : KSerializer<Double> {
 internal typealias DoubleAsInt = @Serializable(with = DoubleAsIntSerializer::class) Double
 
 internal fun getSerialName(
-    clazz: KClass<*>
+    clazz: KClass<*>,
 ): String {
     return (clazz.java.getDeclaredAnnotation(SerialName::class.java))?.value ?: clazz.qualifiedName!!
 }

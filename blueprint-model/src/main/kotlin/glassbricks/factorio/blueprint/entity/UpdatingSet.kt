@@ -3,14 +3,14 @@ package glassbricks.factorio.blueprint.entity
 internal abstract class UpdatingSet<T : Any> : AbstractMutableSet<T>() {
     protected val inner: MutableSet<T> = LinkedHashSet()
 
-    protected abstract fun onAdd(element: T)
+    protected abstract fun onAdd(element: T): Boolean
     protected abstract fun onRemove(element: T)
 
     override fun iterator(): MutableIterator<T> = Iterator(inner.iterator())
 
     override val size: Int get() = inner.size
-    override fun add(element: T): Boolean = inner.add(element)
-        .also { if (it) onAdd(element) }
+    override fun add(element: T): Boolean = 
+        onAdd(element) && inner.add(element)
 
     override fun remove(element: T): Boolean = inner.remove(element)
         .also { if (it) onRemove(element) }

@@ -139,6 +139,84 @@ class ImportExportKtTest {
     }
 
     @Test
+    fun `can load power switch connections`() {
+        val blueprint = emptyBlueprint()
+        blueprint.entities = listOf(
+            buildEntityJson("power-switch") {
+                entity_number = EntityNumber(1)
+                connections = Connections(
+                    `1` = ConnectionPoint(
+                        red = listOf(ConnectionData(EntityNumber(2)))
+                    ),
+                    Cu0 = listOf(
+                        CableConnectionData(EntityNumber(2)),
+                    ),
+                    Cu1 = listOf(
+                        CableConnectionData(EntityNumber(3)),
+                    ),
+                )
+            },
+            buildEntityJson("small-electric-pole") {
+                entity_number = EntityNumber(2)
+                neighbours = listOf(EntityNumber(1))
+            },
+            buildEntityJson("small-electric-pole") {
+                entity_number = EntityNumber(3)
+                neighbours = listOf(EntityNumber(1))
+            }
+        )
+        val entities = blueprintPrototypes.entitiesFromJson(blueprint)
+        assertNotNull(entities)
+        val switch1 = entities[0] as PowerSwitch
+        val pole2 = entities[1] as ElectricPole
+        val pole3 = entities[2] as ElectricPole
+        assertTrue(switch1.left.cableConnections.contains(pole2))
+        assertTrue(switch1.right.cableConnections.contains(pole3))
+        assertTrue(switch1.connectionPoint1.red.contains(pole2.connectionPoint1))
+        assertTrue(pole2.cableConnections.contains(switch1.left))
+        assertTrue(pole3.cableConnections.contains(switch1.right))
+    }
+    
+    @Test
+    fun `can save power switch connections`() {
+        val switch1 = loadEntity("power-switch") as PowerSwitch
+        val pole2 = loadEntity("small-electric-pole") as ElectricPole
+        val pole3 = loadEntity("small-electric-pole") as ElectricPole
+        switch1.left.cableConnections.add(pole2)
+        switch1.right.cableConnections.add(pole3)
+        switch1.connectionPoint1.red.add(pole2.connectionPoint1)
+
+        val blueprint = emptyBlueprint()
+        blueprint.setEntitiesFrom(listOf(switch1, pole2, pole3))
+        val switch1Json = blueprint.entities!![0]
+        assertEquals(
+            Connections(
+                `1` = ConnectionPoint(
+                    red = listOf(ConnectionData(EntityNumber(2)))
+                ),
+                Cu0 = listOf(
+                    CableConnectionData(EntityNumber(2)),
+                ),
+                Cu1 = listOf(
+                    CableConnectionData(EntityNumber(3)),
+                ),
+            ),
+            switch1Json.connections
+        )
+        val pole2Json = blueprint.entities!![1]
+        assertEquals(
+            listOf(EntityNumber(1)),
+            pole2Json.neighbours
+        )
+        val pole3Json = blueprint.entities!![2]
+        assertEquals(
+            listOf(EntityNumber(1)),
+            pole3Json.neighbours
+        )
+    }
+
+
+    @Test
     fun `can load circuit connections`() {
         val blueprint = emptyBlueprint()
         blueprint.entities = listOf(

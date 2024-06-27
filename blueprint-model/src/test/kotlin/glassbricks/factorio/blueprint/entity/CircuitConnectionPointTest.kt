@@ -1,9 +1,10 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.*
+import glassbricks.factorio.blueprint.json.Position
 import org.junit.jupiter.api.BeforeEach
-import kotlin.test.*
-import glassbricks.factorio.blueprint.json.ConnectionPoint as ConnectionPointJson
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 fun testConnectable() = UnknownEntity("test", Position.ZERO)
 
@@ -14,8 +15,9 @@ class CircuitConnectionPointTest {
 
     @BeforeEach
     fun setUp() {
-        point1 = testConnectable().connectionPoint1
-        point2 = testConnectable().connectionPoint2
+        val e1 = testConnectable()
+        point1 = e1.connectionPoint1
+        point2 = e1.connectionPoint2
         point3 = testConnectable().connectionPoint2
     }
 
@@ -37,6 +39,22 @@ class CircuitConnectionPointTest {
         point2.green.add(point1)
         assertTrue(point1.green.contains(point2))
         assertTrue(point1.red.contains(point2))
+    }
+
+    @Test
+    fun `adding a point to itself has no effect`() {
+        point1.red.add(point1)
+        assertFalse(point1.red.contains(point1))
+        
+        point2.red.add(point2)
+        assertFalse(point2.red.contains(point2))
+    }
+    
+    @Test
+    fun `can connect a point to other point on the same entity`() {
+        point1.red.add(point2)
+        assertTrue(point1.red.contains(point2))
+        assertTrue(point2.red.contains(point1))
     }
 
     @Test

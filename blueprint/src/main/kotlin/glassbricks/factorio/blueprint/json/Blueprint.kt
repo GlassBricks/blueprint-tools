@@ -15,14 +15,19 @@ public typealias ItemPrototypeName = String
 public interface BlueprintItem {
     /** The name of the item that was saved */
     public val item: ItemPrototypeName
+
     /** The name of the blueprint set by the user. */
     public val label: String?
+
     /** The color of the label of this blueprint. */
     public val label_color: Color?
+
     /** The icons of the blueprint set by the user. */
     public val icons: List<Icon>
+
     /** The description of the blueprint. */
     public val description: String?
+
     /** The map version of the map the blueprint was created in. */
     public val version: FactorioVersion
 }
@@ -51,7 +56,7 @@ public data class BlueprintBook(
     /** The description of the blueprint book. */
     public override var description: String? = null,
     /** The map version of the map the blueprint was created in. */
-    public override var version: FactorioVersion = FactorioVersion.DEFAULT
+    public override var version: FactorioVersion = FactorioVersion.DEFAULT,
 ) : ImportableBlueprint {
     override fun toString(): String = toStringImpl("BlueprintBook")
 }
@@ -60,7 +65,7 @@ public data class BlueprintBook(
 public data class BlueprintIndex(
     /** 0-based index */
     public val index: Int,
-    public val blueprint: Blueprint
+    public val blueprint: Blueprint,
 )
 
 /**
@@ -95,7 +100,7 @@ public data class Blueprint(
     @SerialName("position-relative-to-grid")
     public var position_relative_to_grid: TilePosition? = null,
     /** The map version of the map the blueprint was created in. */
-    public override var version: FactorioVersion = FactorioVersion.DEFAULT
+    public override var version: FactorioVersion = FactorioVersion.DEFAULT,
 ) : ImportableBlueprint {
     override fun toString(): String = toStringImpl("Blueprint")
 }
@@ -108,7 +113,7 @@ public data class Icon(
     /** Index of the icon, 1-based. */
     public val index: Int,
     /** The icon that is displayed. */
-    public val signal: SignalID
+    public val signal: SignalID,
 )
 
 /**
@@ -123,7 +128,7 @@ public data class SignalID(
      */
     public val name: String?,
     /** Type of the signal. Either "item", "fluid" or "virtual". */
-    public val type: SignalType
+    public val type: SignalType,
 )
 
 
@@ -131,8 +136,10 @@ public data class SignalID(
 public enum class SignalType {
     @SerialName("item")
     Item,
+
     @SerialName("fluid")
     Fluid,
+
     @SerialName("virtual")
     Virtual
 }
@@ -224,6 +231,7 @@ public data class Entity(
 public enum class IOType {
     @SerialName("input")
     Input,
+
     @SerialName("output")
     Output,
 }
@@ -232,6 +240,7 @@ public enum class IOType {
 public enum class SplitterPriority {
     @SerialName("left")
     Left,
+
     @SerialName("right")
     Right,
 }
@@ -240,6 +249,7 @@ public enum class SplitterPriority {
 public enum class FilterMode {
     @SerialName("whitelist")
     Whitelist,
+
     @SerialName("blacklist")
     Blacklist,
 }
@@ -292,26 +302,36 @@ public data class WaitCondition(
     /** Circuit condition, only present when type is "item_count", "circuit" or "fluid_count". */
     public var condition: CircuitCondition? = null,
 )
+
 @Serializable
 public enum class WaitConditionType {
     @SerialName("time")
     Time,
+
     @SerialName("inactivity")
     Inactivity,
+
     @SerialName("full")
     Full,
+
     @SerialName("empty")
     Empty,
+
     @SerialName("item_count")
     ItemCount,
+
     @SerialName("circuit")
     Circuit,
+
     @SerialName("robots_inactive")
     RobotsInactive,
+
     @SerialName("fluid_count")
     FluidCount,
+
     @SerialName("passenger_present")
     PassengerPresent,
+
     @SerialName("passenger_not_present")
     PassengerNotPresent,
 }
@@ -320,6 +340,7 @@ public enum class WaitConditionType {
 public enum class CompareType {
     @SerialName("or")
     Or,
+
     @SerialName("and")
     And,
 }
@@ -344,6 +365,10 @@ public data class Connections(
     public var `1`: ConnectionPoint? = null,
     /** Second connection point. For example, the "output" part of an arithmetic combinator. */
     public var `2`: ConnectionPoint? = null,
+    /** Only used by power switches */
+    public var Cu0: List<CableConnectionData>? = null,
+    /** Only used by power switches */
+    public var Cu1: List<CableConnectionData>? = null,
 )
 
 /**
@@ -368,6 +393,18 @@ public data class ConnectionData(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var circuit_id: CircuitID = CircuitID.First,
 )
+
+/**
+ * Only used when a power switch connects to a pole. Contains the [EntityNumber] of the pole.
+ */
+@Serializable
+public data class CableConnectionData internal constructor(
+    public var entity_id: EntityNumber,
+    /** Always 0. */
+    public val circuit_id: Int = 0,
+) {
+    public constructor(entityId: EntityNumber) : this(entityId, 0)
+}
 
 @Serializable(with = CircuitID.Serializer::class)
 public enum class CircuitID {
@@ -426,8 +463,10 @@ public data class InfinityFilter(
 public enum class InfinityFilterMode {
     @SerialName("at-least")
     AtLeast,
+
     @SerialName("at-most")
     AtMost,
+
     @SerialName("exactly")
     Exactly,
 }
@@ -470,14 +509,14 @@ public data class AlertParameters(
     /** The icon that is displayed with the alert. */
     public var icon_signal_id: SignalID? = null,
     /** Message of the alert. */
-    public var alert_message: String = ""
+    public var alert_message: String = "",
 )
 
 @Serializable
 public data class ProgrammableSpeakerCircuitParameters(
     public val signal_value_is_pitch: Boolean,
     public val instrument_id: Int,
-    public val note_id: Int
+    public val note_id: Int,
 )
 
 
@@ -493,7 +532,12 @@ public data class Color(
     /** Alpha, number from 0 to 1. */
     public val a: Float = 1.0f,
 ) {
-    public constructor(r: Double, g: Double, b: Double, a: Double = 1.0): this(r.toFloat(), g.toFloat(), b.toFloat(), a.toFloat())
+    public constructor(r: Double, g: Double, b: Double, a: Double = 1.0) : this(
+        r.toFloat(),
+        g.toFloat(),
+        b.toFloat(),
+        a.toFloat()
+    )
 }
 
 /**
@@ -574,7 +618,7 @@ public data class ControlBehavior(
     public val decider_conditions: DeciderCombinatorParameters? = null,
     public val circuit_parameters: ProgrammableSpeakerCircuitParameters? = null,
     /** Whether this lamp should use colors or not. */
-    public val use_colors: Boolean? = null
+    public val use_colors: Boolean? = null,
 )
 
 
@@ -629,24 +673,34 @@ public data class ArithmeticCombinatorParameters(
 public enum class ArithmeticOperation {
     @SerialName("*")
     Multiply,
+
     @SerialName("/")
     Divide,
+
     @SerialName("+")
     Add,
+
     @SerialName("-")
     Subtract,
+
     @SerialName("%")
     Modulo,
+
     @SerialName("^")
     Power,
+
     @SerialName("<<")
     ShiftLeft,
+
     @SerialName(">>")
     ShiftRight,
+
     @SerialName("AND")
     And,
+
     @SerialName("OR")
     Or,
+
     @SerialName("XOR")
     Xor
 }
@@ -693,14 +747,19 @@ public data class CircuitCondition(
 public enum class ComparatorString {
     @SerialName("=")
     Equal,
+
     @SerialName(">")
     Greater,
+
     @SerialName("<")
     Less,
+
     @SerialName("≥")
     GreaterOrEqual,
+
     @SerialName("≤")
     LessOrEqual,
+
     @SerialName("≠")
     NotEqual,
 }
@@ -710,7 +769,7 @@ private fun ImportableBlueprint.toStringImpl(name: String) = buildString {
     append('(')
     if (label != null) {
         append('"').append(label).append("\" ")
-    } 
+    }
     if (this@toStringImpl is Blueprint) {
         if (!entities.isNullOrEmpty() || tiles.isNullOrEmpty()) {
             append("with ").append(entities!!.size).append(" entities")
