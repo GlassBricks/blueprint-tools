@@ -45,7 +45,6 @@ public value class CircuitModeOfOperation(public val rawValue: Int) {
     }
 
     public fun asInserter(): InserterModeOfOperation = InserterModeOfOperation.entries[rawValue]
-    public fun asLamp(): LampModeOfOperation = LampModeOfOperation.entries[rawValue]
     public fun asLogisticContainer(): LogisticContainerModeOfOperation =
         LogisticContainerModeOfOperation.entries[rawValue]
 
@@ -67,10 +66,6 @@ public enum class InserterModeOfOperation : CircuitModeOption {
     None,
     /** This is not actually used. */
     SetStackSize 
-}
-
-public enum class LampModeOfOperation : CircuitModeOption {
-    UseColors
 }
 
 public enum class LogisticContainerModeOfOperation : CircuitModeOption {
