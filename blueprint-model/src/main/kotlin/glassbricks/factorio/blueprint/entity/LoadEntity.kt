@@ -53,6 +53,7 @@ private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Construc
     add(::ArithmeticCombinator)
     add(::DeciderCombinator)
     add(::ConstantCombinator)
+    add(::Accumulator)
     add(::UnknownEntity)
 }
 

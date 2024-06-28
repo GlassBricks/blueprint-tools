@@ -31,7 +31,6 @@ public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) 
 }
 
 // todo:
-// accumulator
 // rail_signal
 // rail_chain_signal
 // wall
