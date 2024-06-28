@@ -233,11 +233,11 @@ public data class Entity(
     public var mode: InfinityMode? = null,
 
     /** Used by [electric energy interfaces](https://lua-api.factorio.com/latest/prototypes/ElectricEnergyInterfacePrototype.html). */
-    public var buffer_size: Int? = null,
+    public var buffer_size: Long? = null,
     /** Used by [electric energy interfaces](https://lua-api.factorio.com/latest/prototypes/ElectricEnergyInterfacePrototype.html). */
-    public var power_production: Int? = null,
+    public var power_production: Long? = null,
     /** Used by [electric energy interfaces](https://lua-api.factorio.com/latest/prototypes/ElectricEnergyInterfacePrototype.html). */
-    public var power_usage: Int? = null,
+    public var power_usage: Long? = null,
 
     /** Used by [linked containers](https://lua-api.factorio.com/latest/prototypes/LinkedContainerPrototype.html). */
     public var link_id: Int? = null,

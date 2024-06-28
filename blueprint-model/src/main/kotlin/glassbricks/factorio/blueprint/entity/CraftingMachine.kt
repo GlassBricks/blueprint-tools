@@ -1,12 +1,14 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.ItemPrototypeName
-import glassbricks.factorio.prototypes.*
+import glassbricks.factorio.prototypes.AssemblingMachinePrototype
+import glassbricks.factorio.prototypes.CraftingMachinePrototype
+import glassbricks.factorio.prototypes.FurnacePrototype
+import glassbricks.factorio.prototypes.RocketSiloPrototype
 
 
-public sealed class CraftingMachine(json: EntityJson) : BaseEntity(json), WithModules, WithEnergySource {
+public sealed class CraftingMachine(json: EntityJson) : BaseEntity(json), WithModules {
     abstract override val prototype: CraftingMachinePrototype
-    override val energySource: EnergySource get() = prototype.energy_source
 
     override val itemRequests: MutableMap<ItemPrototypeName, Int> = json.items.orEmpty().toMutableMap()
 

@@ -3,7 +3,6 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.json.Color
 import glassbricks.factorio.blueprint.json.ItemFilter
 import glassbricks.factorio.blueprint.json.ItemPrototypeName
-import glassbricks.factorio.prototypes.EnergySource
 
 public interface WithColor {
     public var color: Color?
@@ -22,10 +21,6 @@ public interface WithModules : WithItemRequests
 
 public interface WithBar {
     public var bar: Int?
-}
-
-public interface WithEnergySource {
-    public val energySource: EnergySource
 }
 
 /**

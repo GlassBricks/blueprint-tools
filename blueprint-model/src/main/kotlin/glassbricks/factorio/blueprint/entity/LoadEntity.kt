@@ -73,6 +73,7 @@ private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Construc
     add(::InfinityPipe)
     add(::HeatInterface)
     add(::SimpleEntityWithOwner)
+    add(::ElectricEnergyInterface)
 
     basic<LandMinePrototype>()
     basic<LabPrototype>()
