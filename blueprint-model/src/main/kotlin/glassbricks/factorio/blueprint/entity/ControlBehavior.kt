@@ -31,7 +31,6 @@ public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) 
 }
 
 // todo:
-// storage_tank
 // train_stop
 // decider_combinator
 // arithmetic_combinator
