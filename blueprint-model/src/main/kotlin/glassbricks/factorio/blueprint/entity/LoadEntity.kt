@@ -61,8 +61,10 @@ private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Construc
     add(::Wall)
     add(::MiningDrill)
     add(::Beacon)
-    add(::UnknownEntity)
     add(::InfinityPipe)
+    add(::HeatInterface)
+
+    add(::UnknownEntity)
 }
 
 private fun getConstructorForPrototype(prototype: EntityWithOwnerPrototype): Constructor =

@@ -226,6 +226,10 @@ public data class Entity(
     public var manual_trains_limit: Int? = null,
     /** The current state of the power switch. */
     public var switch_state: Boolean? = null,
+    /** Temperature of the heat interface. */
+    public var temperature: Int? = null,
+    /** The mode of the heat interface. */
+    public var mode: InfinityMode? = null,
     /** Dictionary of arbitrary data. */
     public var tags: JsonObject? = null,
 )
@@ -443,7 +447,7 @@ public data class ItemFilter(
 
 /**
  * Also contains settings for infinity pipes, which is not documented.
- * 
+ *
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#Infinity_settings_object)
  */
 @Serializable
@@ -455,7 +459,7 @@ public data class InfinitySettings(
     public val filters: List<InfinityFilter> = emptyList(),
 
     /** The mode of the infinity pipe. */
-    public val mode: InfinityFilterMode? = null,
+    public val mode: InfinityMode? = null,
     /** The fluid this infinity pipe is set to. */
     public val name: String? = null,
     public val percentage: Double? = null,
@@ -477,7 +481,6 @@ public data class InfinityFilter(
     public val index: Int,
 )
 
-
 @Serializable
 public enum class InfinityFilterMode {
     @SerialName("at-least")
@@ -488,6 +491,24 @@ public enum class InfinityFilterMode {
 
     @SerialName("exactly")
     Exactly,
+}
+
+@Serializable
+public enum class InfinityMode {
+    @SerialName("at-least")
+    AtLeast,
+
+    @SerialName("at-most")
+    AtMost,
+
+    @SerialName("exactly")
+    Exactly,
+
+    @SerialName("add")
+    Add,
+
+    @SerialName("remove")
+    Remove,
 }
 
 /**
@@ -650,7 +671,7 @@ public data class ControlBehavior(
     public var circuit_parameters: ProgrammableSpeakerCircuitParameters? = null,
     /** Whether this lamp should use colors or not. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
-    public var use_colors: Boolean = false
+    public var use_colors: Boolean = false,
 )
 
 
