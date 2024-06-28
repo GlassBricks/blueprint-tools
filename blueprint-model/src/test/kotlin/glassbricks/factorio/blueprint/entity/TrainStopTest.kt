@@ -24,7 +24,7 @@ class TrainStopTest {
                 circuit_enable_disable = true,
                 circuit_condition = CircuitCondition(
                     first_signal = signalID("signal-A"),
-                    comparator = ComparatorString.GreaterOrEqual,
+                    comparator = CompareOperation.GreaterOrEqual,
                     constant = 5,
                 ),
                 read_stopped_train = true,

@@ -19,7 +19,7 @@ class InserterTest {
         testSaveLoad<Inserter>("long-handed-inserter", connectToNetwork = true) {
             override_stack_size = 3U
             control_behavior = ControlBehaviorJson(
-                circuit_condition = CircuitCondition(comparator = ComparatorString.Equal),
+                circuit_condition = CircuitCondition(comparator = CompareOperation.Equal),
                 circuit_mode_of_operation = InserterModeOfOperation.EnableDisable.asMode(),
                 circuit_read_hand_contents = false,
             )

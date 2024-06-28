@@ -12,7 +12,7 @@ class LampTest {
             control_behavior = ControlBehaviorJson(
                 circuit_condition = CircuitCondition(
                     first_signal = SignalID(name = "signal-A", type = SignalType.Item),
-                    comparator = ComparatorString.GreaterOrEqual,
+                    comparator = CompareOperation.GreaterOrEqual,
                     constant = 5,
                 ),
                 use_colors = true

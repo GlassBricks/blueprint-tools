@@ -31,7 +31,7 @@ public open class LogisticContainer(
     json: EntityJson,
 ) : Container(prototype_, json) {
     override val prototype: LogisticContainerPrototype get() = super.prototype as LogisticContainerPrototype
-    public val requestFilters: Array<LogisticRequest?> = json.request_filters.toLogiFilters(
+    public val requestFilters: Array<LogisticRequest?> = json.request_filters.toFilterArray(
         prototype_.max_logistic_slots?.toInt() ?: prototype_.inventory_size.toInt()
     )
     public val requestFromBuffers: Boolean = json.request_from_buffers
@@ -41,9 +41,7 @@ public open class LogisticContainer(
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
-        json.request_filters = requestFilters.mapIndexedNotNull { index, request ->
-            request?.let { LogisticFilterJson(name = it.item, count = it.count, index = index + 1) }
-        }
+        json.request_filters = requestFilters.toFilterList()
         json.request_from_buffers = requestFromBuffers
         json.control_behavior = controlBehavior.exportToJson()
     }
@@ -72,15 +70,17 @@ public class InfinityContainer(prototype_: InfinityContainerPrototype, json: Ent
     LogisticContainer(prototype_, json) {
     override val prototype: InfinityContainerPrototype get() = super.prototype as InfinityContainerPrototype
     public val infinityFilters: Array<InfinityFilter?> =
-        json.infinity_settings?.filters.toInfinityFilters(prototype.inventory_size.toInt())
+        json.infinity_settings?.filters.toInfFilterArray(prototype.inventory_size.toInt())
     public val removeUnfilteredItems: Boolean = json.infinity_settings?.remove_unfiltered_items ?: false
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
-        json.infinity_settings = InfinitySettings(remove_unfiltered_items = removeUnfilteredItems,
-            filters = infinityFilters.mapIndexedNotNull { index, filter ->
-                filter?.let { InfinityFilterJson(name = it.name, count = it.count, mode = it.mode, index = index + 1) }
-            })
+        val filters = infinityFilters.toInfFilterList()
+
+        json.infinity_settings = InfinitySettings(
+            remove_unfiltered_items = removeUnfilteredItems,
+            filters = filters
+        )
     }
 }
 
@@ -90,24 +90,12 @@ public data class InfinityFilter(
     val mode: InfinityFilterMode,
 )
 
-private fun List<LogisticFilterJson>?.toLogiFilters(size: Int): Array<LogisticRequest?> =
-    arrayOfNulls<LogisticRequest>(size).also { filters ->
-        this?.forEach { filter ->
-            if (filter.index - 1 in filters.indices) {
-                filters[filter.index - 1] = LogisticRequest(
-                    item = filter.name, count = filter.count
-                )
-            }
-        }
-    }
+private fun List<LogisticFilterJson>?.toFilterArray(size: Int): Array<LogisticRequest?> =
+    indexedToArray(size, LogisticFilterJson::index) { LogisticRequest(it.name, it.count) }
+private fun Array<LogisticRequest?>.toFilterList(): List<LogisticFilterJson> =
+    arrayToIndexedList { index, request -> LogisticFilterJson(name = request.item, count = request.count, index = index) }
 
-private fun List<InfinityFilterJson>?.toInfinityFilters(size: Int): Array<InfinityFilter?> =
-    arrayOfNulls<InfinityFilter>(size).also { filters ->
-        this?.forEach { filter ->
-            if (filter.index - 1 in filters.indices) {
-                filters[filter.index - 1] = InfinityFilter(
-                    name = filter.name, count = filter.count, mode = filter.mode
-                )
-            }
-        }
-    }
+private fun List<InfinityFilterJson>?.toInfFilterArray(size: Int): Array<InfinityFilter?> =
+    indexedToArray(size, InfinityFilterJson::index) { InfinityFilter(it.name, it.count, it.mode) }
+private fun Array<InfinityFilter?>.toInfFilterList(): List<InfinityFilterJson> =
+    arrayToIndexedList { index, filter -> InfinityFilterJson(name = filter.name, count = filter.count, mode = filter.mode, index = index) }

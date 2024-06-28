@@ -22,7 +22,7 @@ class TransportBeltConnectableTest {
             control_behavior = ControlBehavior(
                 circuit_enable_disable = true,
                 circuit_condition = CircuitCondition(
-                    comparator = ComparatorString.Equal,
+                    comparator = CompareOperation.Equal,
                     constant = 1
                 ),
                 circuit_read_hand_contents = true,

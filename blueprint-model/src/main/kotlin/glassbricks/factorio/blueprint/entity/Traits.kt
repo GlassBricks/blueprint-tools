@@ -38,25 +38,31 @@ public interface WithItemFilters {
     public val numFilters: Int get() = filters.size
 }
 
-internal fun List<ItemFilter>?.toFilters(size: Int): Array<String?> = arrayOfNulls<String>(size).also { filters ->
-    this?.forEach { filter ->
-        if (filter.index - 1 in filters.indices) {
-            filters[filter.index - 1] = filter.name
+internal fun List<ItemFilter>?.toFilters(size: Int): Array<String?> =
+    this.indexedToArray(size, ItemFilter::index, ItemFilter::name)
+
+internal inline fun <T, reified R> List<T>?.indexedToArray(
+    size: Int,
+    getIndex: (T) -> Int,
+    getValue: (T) -> R,
+): Array<R?> = arrayOfNulls<R>(size).also { array ->
+    this?.forEach { item ->
+        val zeroIndex = getIndex(item) - 1
+        if (zeroIndex in array.indices) {
+            array[zeroIndex] = getValue(item)
         }
     }
 }
 
-public fun WithItemFilters.getFiltersAsList(): List<ItemFilter>? = filters.mapIndexedNotNull { index, name ->
-    name?.let { ItemFilter(name = it, index = index + 1) }
-}.takeIf { it.isNotEmpty() }
+internal inline fun <T, R> Array<out R?>.arrayToIndexedList(getValue: (Int, R) -> T): List<T> =
+    this.mapIndexedNotNull { index, item ->
+        item?.let { getValue(index + 1, it) }
+    }
 
-public fun itemFilterList(origFilters: List<String?>): List<ItemFilter>? =
-    origFilters.mapIndexedNotNull { index, name ->
-        name?.let { ItemFilter(name = it, index = index + 1) }
-    }.takeIf { it.isNotEmpty() }
+public fun WithItemFilters.getFiltersAsList(): List<ItemFilter>? =
+    filters.arrayToIndexedList { index, name -> ItemFilter(name = name, index = index) }
+        .takeIf { it.isNotEmpty() }
 
-
-public fun itemFilterList(vararg origFilters: String?): List<ItemFilter>? =
-    origFilters.mapIndexedNotNull { index, name ->
-        name?.let { ItemFilter(name = it, index = index + 1) }
-    }.takeIf { it.isNotEmpty() }
+internal fun itemFilterList(vararg origFilters: String?): List<ItemFilter>? =
+    origFilters.arrayToIndexedList { index, name -> ItemFilter(name = name, index = index) }
+        .takeIf { it.isNotEmpty() }

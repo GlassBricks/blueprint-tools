@@ -31,10 +31,6 @@ public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) 
 }
 
 // todo:
-// train_stop
-// decider_combinator
-// arithmetic_combinator
-// constant_combinator
 // accumulator
 // rail_signal
 // rail_chain_signal

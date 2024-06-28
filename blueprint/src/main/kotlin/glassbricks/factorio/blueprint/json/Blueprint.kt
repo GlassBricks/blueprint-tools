@@ -632,13 +632,16 @@ public data class ControlBehavior(
     public var circuit_read_resources: Boolean? = null,
     public var circuit_resource_read_mode: MiningDrillResourceReadMode? = null,
     /** Whether this constant combinator is currently on or off. */
-    public var is_on: Boolean? = null,
-    public var filters: List<ConstantCombinatorParameters>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var is_on: Boolean = true,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var filters: List<ConstantCombinatorParameters> = emptyList(),
     public var arithmetic_conditions: ArithmeticCombinatorParameters? = null,
     public var decider_conditions: DeciderCombinatorParameters? = null,
     public var circuit_parameters: ProgrammableSpeakerCircuitParameters? = null,
     /** Whether this lamp should use colors or not. */
-    public var use_colors: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var use_colors: Boolean = false
 )
 
 
@@ -739,7 +742,7 @@ public data class DeciderCombinatorParameters(
     public val constant: Int = 0,
     /** Specifies how the inputs should be compared. If not specified, defaults to "<". */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
-    public val comparator: ComparatorString = ComparatorString.Less,
+    public val comparator: CompareOperation = CompareOperation.Less,
     /** Defaults to blank. */
     public val output_signal: SignalID? = null,
     /** Defaults to `true`. When `false`, will output a value of `1` for the given [output_signal]. */
@@ -750,7 +753,7 @@ public data class DeciderCombinatorParameters(
 public data class CircuitCondition(
     /** Specifies how the inputs should be compared. If not specified, defaults to "<". */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
-    public val comparator: ComparatorString = ComparatorString.Less,
+    public val comparator: CompareOperation = CompareOperation.Less,
     /** Defaults to blank. */
     public val first_signal: SignalID? = null,
     /** What to compare [first_signal] to. If not specified, [first_signal] will be compared to [constant]. */
@@ -768,7 +771,7 @@ public data class CircuitCondition(
 }
 
 @Serializable
-public enum class ComparatorString {
+public enum class CompareOperation {
     @SerialName("=")
     Equal,
 
