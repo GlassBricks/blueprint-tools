@@ -50,7 +50,7 @@ public class ElectricPole(
 ) : BaseEntity(json), CableConnectionPoint, CircuitConnectable {
     override val cableConnections: CableConnectionSet = CableConnectionSet(this)
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
-    override val controlBehavior: ControlBehavior? get() =null
+    override val controlBehavior: Nothing? get() =null
 
     override val entity: Entity get() = this
 

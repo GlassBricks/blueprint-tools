@@ -7,7 +7,7 @@ public class StorageTank(
     json: EntityJson,
 ) : BaseEntity(json), CircuitConnectable {
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
-    override val controlBehavior: ControlBehavior? get() = null
+    override val controlBehavior: Nothing? get() = null
 
     override fun exportToJson(json: EntityJson) {
     }
