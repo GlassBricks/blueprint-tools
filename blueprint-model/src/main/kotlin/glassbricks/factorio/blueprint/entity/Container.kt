@@ -68,10 +68,8 @@ public data class LogisticRequest(
     val count: Int,
 )
 
-public class InfinityContainer(
-    prototype_: InfinityContainerPrototype,
-    json: EntityJson,
-) : LogisticContainer(prototype_, json) {
+public class InfinityContainer(prototype_: InfinityContainerPrototype, json: EntityJson) :
+    LogisticContainer(prototype_, json) {
     override val prototype: InfinityContainerPrototype get() = super.prototype as InfinityContainerPrototype
     public val infinityFilters: Array<InfinityFilter?> =
         json.infinity_settings?.filters.toInfinityFilters(prototype.inventory_size.toInt())

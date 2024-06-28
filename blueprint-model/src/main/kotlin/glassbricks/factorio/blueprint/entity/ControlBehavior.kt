@@ -11,7 +11,6 @@ public interface ControlBehavior {
  * Note that circuit_enable_disable is not always used; subclasses must handle that themselves.
  */
 public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) {
-    protected abstract val parent: CircuitConnectable
     /** If this is not null, sets enable_disable to true. */
     public var circuitCondition: CircuitCondition? = source?.circuit_condition?.copy()
         ?.takeIf { 
@@ -24,14 +23,11 @@ public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) 
         ?.takeIf { source.connect_to_logistic_network }
     public val connectToLogisticNetwork: Boolean get() = logisticCondition != null
 
-    protected fun baseExportToJson(): ControlBehaviorJson? {
-        if(!parent.hasConnections()) return null
-        return ControlBehaviorJson(
-            circuit_condition = circuitCondition,
-            logistic_condition = logisticCondition,
-            connect_to_logistic_network = logisticCondition != null
-        )
-    }
+    protected fun baseExportToJson(): ControlBehaviorJson = ControlBehaviorJson(
+        circuit_condition = circuitCondition,
+        logistic_condition = logisticCondition,
+        connect_to_logistic_network = logisticCondition != null
+    )
 }
 
 // todo:

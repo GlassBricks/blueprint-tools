@@ -36,7 +36,7 @@ public fun CircuitConnectable2.getConnectionPoint(circuitID: CircuitID): Circuit
     Second -> connectionPoint2
 }
 
-public fun CircuitConnectable.hasConnections(): Boolean = !connectionPoint1.isEmpty() || 
+public fun CircuitConnectable.hasCircuitConnections(): Boolean = !connectionPoint1.isEmpty() || 
         connectionPoint2.let { it != null && !it.isEmpty() }
 
 public fun CircuitConnectable.isEmpty(): Boolean = connectionPoint1.isEmpty() && connectionPoint2?.isEmpty() ?: true

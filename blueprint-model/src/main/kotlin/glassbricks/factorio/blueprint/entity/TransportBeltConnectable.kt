@@ -15,15 +15,14 @@ public class TransportBelt(
     json: EntityJson,
 ) : BaseEntity(json), TransportBeltConnectable, CircuitConnectable {
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
-    public val controlBehavior: TransportBeltControlBehavior = TransportBeltControlBehavior(this, json.control_behavior)
+    public val controlBehavior: TransportBeltControlBehavior = TransportBeltControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
-        json.control_behavior = controlBehavior.exportToJson()
+        if(this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
 }
 
 public class TransportBeltControlBehavior(
-    override val parent: TransportBelt,
     source: ControlBehaviorJson? = null,
 ) : GenericOnOffControlBehavior(source), ControlBehavior {
     public val enableDisable: Boolean get() = circuitCondition != null
@@ -35,7 +34,7 @@ public class TransportBeltControlBehavior(
 
     public val readHandContents: Boolean get() = readContentsMode != null
 
-    override fun exportToJson(): ControlBehaviorJson? = baseExportToJson()?.apply {
+    override fun exportToJson(): ControlBehaviorJson = baseExportToJson().apply {
         circuit_enable_disable = enableDisable
         circuit_read_hand_contents = readContentsMode != null
         circuit_contents_read_mode = readContentsMode

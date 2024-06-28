@@ -28,7 +28,7 @@ private inline fun <reified T : EntityWithOwnerPrototype>
     put(T::class.java) { prototype, source, _ -> constructor(prototype as T, source) }
 }
 
-private val matcherMap = buildMap {
+private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Constructor>().apply {
     add(::CargoWagon)
     add(::Locomotive)
     add(::OtherRollingStock)
@@ -45,18 +45,16 @@ private val matcherMap = buildMap {
     add(::LogisticContainer)
     add(::InfinityContainer)
     add(::Inserter)
+    add(::ProgrammableSpeaker)
     add(::UnknownEntity)
 }
-private val constructorCache = hashMapOf<Class<out EntityWithOwnerPrototype>, Constructor>()
-private fun getConstructorForPrototype(
-    prototype: EntityWithOwnerPrototype,
-): Constructor = constructorCache.getOrPut(prototype::class.java) {
-    var clazz: Class<*>? = prototype.javaClass
-    while (clazz != null) {
-        matcherMap[clazz]?.let {
-            return@getOrPut it
-        }
-        clazz = clazz.superclass
-    }
-    throw AssertionError("All prototypes should be caught by UnknownEntity")
+
+private fun getConstructorForPrototype(prototype: EntityWithOwnerPrototype): Constructor = getConstructorForClass(prototype.javaClass)
+
+private fun getConstructorForClass(class_: Class<out EntityWithOwnerPrototype>): Constructor = matcherMap.getOrPut(class_) {
+    @Suppress("UNCHECKED_CAST")
+    val superclass = class_.superclass as? Class<out EntityWithOwnerPrototype>
+        ?: throw AssertionError("All prototypes should be caught by UnknownEntity")
+
+    getConstructorForClass(superclass)
 }
