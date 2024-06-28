@@ -41,8 +41,6 @@ public fun CircuitConnectable2.getConnectionPoint(circuitID: CircuitID): Circuit
 public fun CircuitConnectable.hasCircuitConnections(): Boolean = !connectionPoint1.isEmpty() || 
         connectionPoint2.let { it != null && !it.isEmpty() }
 
-public fun CircuitConnectable.isEmpty(): Boolean = connectionPoint1.isEmpty() && connectionPoint2?.isEmpty() ?: true
-
 public enum class WireColor { Red, Green }
 
 public sealed interface CircuitConnectionSet : MutableSet<CircuitConnectionPoint> {
