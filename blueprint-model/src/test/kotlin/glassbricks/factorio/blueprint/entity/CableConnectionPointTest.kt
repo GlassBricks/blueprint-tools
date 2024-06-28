@@ -1,5 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.json.CircuitCondition
+import glassbricks.factorio.blueprint.json.CompareOperation
 import glassbricks.factorio.blueprint.json.Position
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -56,10 +58,21 @@ class ElectricPoleTest {
 
 class PowerSwitchTest {
     @Test
-    fun `can create PowerSwitch`() {
+    fun `can create a power switch`() {
         testSaveLoad<PowerSwitch>("power-switch") {
-            switch_state  = true
+            switch_state = true
         }
+        testSaveLoad<PowerSwitch>("power-switch", connectToNetwork = true) {
+            switch_state = false
+            control_behavior = ControlBehaviorJson(
+                circuit_condition = CircuitCondition(
+                    first_signal = signalId("signal-A"),
+                    comparator = CompareOperation.Less,
+                    constant = 5
+                ),
+            )
+        }
+
     }
 
     @Test
