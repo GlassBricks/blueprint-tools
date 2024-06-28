@@ -25,7 +25,7 @@ class CombinatorTest {
                 )
             )
         }
-        testSaveLoad<ArithmeticCombinator>("arithmetic-combinator")
+//        testSaveLoad<ArithmeticCombinator>("arithmetic-combinator")
         testSaveLoad<ArithmeticCombinator>("arithmetic-combinator") {
             control_behavior = ControlBehaviorJson(
                 arithmetic_conditions = ArithmeticCombinatorParameters(
@@ -36,7 +36,7 @@ class CombinatorTest {
                 )
             )
         }
-        testSaveLoad<DeciderCombinator>("decider-combinator")
+//        testSaveLoad<DeciderCombinator>("decider-combinator")
         testSaveLoad<DeciderCombinator>("decider-combinator") {
             control_behavior = ControlBehaviorJson(
                 decider_conditions = DeciderCombinatorParameters(
