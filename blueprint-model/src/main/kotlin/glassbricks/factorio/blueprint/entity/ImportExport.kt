@@ -11,6 +11,15 @@ internal fun BlueprintPrototypes.createEntityFromJson(
     return createEntityFromPrototype(prototype, json, blueprint)
 }
 
+internal fun BlueprintPrototypes.createEntity(
+    name: String,
+    position: Position,
+    direction: Direction = Direction.North,
+): Entity {
+    val json = EntityJson(EntityNumber(1), name, position, direction)
+    return createEntityFromJson(json)
+}
+
 
 internal fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entity>? {
     val jsonEntities = json.entities
