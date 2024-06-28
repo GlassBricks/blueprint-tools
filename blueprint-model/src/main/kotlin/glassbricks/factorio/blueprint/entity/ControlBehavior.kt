@@ -29,7 +29,3 @@ public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) 
         connect_to_logistic_network = logisticCondition != null
     )
 }
-
-// todo:
-// wall
-// mining_drill

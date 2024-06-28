@@ -57,6 +57,7 @@ private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Construc
     add(::RailSignal)
     add(::RailChainSignal)
     add(::Wall)
+    add(::MiningDrill)
     add(::UnknownEntity)
 }
 
