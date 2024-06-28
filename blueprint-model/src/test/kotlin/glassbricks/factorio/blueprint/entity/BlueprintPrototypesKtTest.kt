@@ -28,28 +28,36 @@ internal inline fun loadEntity(
 
 internal inline fun <reified T : Entity> testSaveLoad(
     json: EntityJson,
-    modify: T.() -> Unit = {},
+    connectToNetwork: Boolean,
     blueprint: BlueprintJson?,
 ): T {
     json.entity_number = EntityNumber(1)
     val entity = blueprintPrototypes.createEntityFromJson(json, blueprint)
     assertTrue(entity is T, "Expected ${T::class.java} but got ${entity.javaClass}")
-    assertEquals(entity.javaClass, T::class.java, "Expected exactly, ${T::class.java} but got subclass ${entity.javaClass}")
-    
-    modify(entity)
+    assertEquals(
+        entity.javaClass,
+        T::class.java,
+        "Expected exactly, ${T::class.java} but got subclass ${entity.javaClass}"
+    )
+
+    if (connectToNetwork) {
+        val other = UnknownEntity("foo", Position.ZERO).connectionPoint1
+        (entity as CircuitConnectable).connectionPoint1.red.add(other)
+    }
 
     val backToJson = entity.toJsonIsolated(EntityNumber(1))
     assertEquals(json, backToJson)
     return entity
 }
+
 internal inline fun <reified T : Entity> testSaveLoad(
     name: String,
     blueprint: BlueprintJson? = null,
-    modify: T.() -> Unit = {},
+    connectToNetwork: Boolean = false,
     build: EntityJson.() -> Unit = {},
 ): T {
     val json = buildEntityJson(name, build)
-    return testSaveLoad(json, modify, blueprint)
+    return testSaveLoad(json, connectToNetwork, blueprint)
 }
 
 class BlueprintPrototypesKtTest {

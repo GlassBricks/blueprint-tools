@@ -12,7 +12,7 @@ public class Inserter(override val prototype: InserterPrototype, json: EntityJso
     public var pickupPosition: Position? = json.pickup_position
 
     public override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
-    public val controlBehavior: InserterControlBehavior = InserterControlBehavior(json.control_behavior)
+    public override val controlBehavior: InserterControlBehavior = InserterControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
         json.filters = getFiltersAsList()

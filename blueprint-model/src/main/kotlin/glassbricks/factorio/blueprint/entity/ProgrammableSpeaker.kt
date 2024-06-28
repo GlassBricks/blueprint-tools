@@ -20,7 +20,7 @@ public class ProgrammableSpeaker(
     public var showAlert: Boolean = json.alert_parameters?.show_alert ?: false
     public var showOnMap: Boolean = json.alert_parameters?.show_on_map ?: true
 
-    public val controlBehavior: ProgrammableSpeakerControlBehavior =
+    public override val controlBehavior: ProgrammableSpeakerControlBehavior =
         ProgrammableSpeakerControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {

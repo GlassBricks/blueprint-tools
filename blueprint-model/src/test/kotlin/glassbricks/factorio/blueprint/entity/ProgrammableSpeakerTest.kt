@@ -9,10 +9,9 @@ import org.junit.jupiter.api.Test
 class ProgrammableSpeakerTest {
     @Test
     fun `can load programmable speaker`() {
-        testSaveLoad<ProgrammableSpeaker>("programmable-speaker",
-            modify = {
-                (loadEntity("unknown") as UnknownEntity).connectionPoint1.red.add(this.connectionPoint1)
-            }
+        testSaveLoad<ProgrammableSpeaker>(
+            "programmable-speaker",
+            connectToNetwork = true
         ) {
             control_behavior = ControlBehaviorJson(
                 circuit_condition = CircuitCondition(),

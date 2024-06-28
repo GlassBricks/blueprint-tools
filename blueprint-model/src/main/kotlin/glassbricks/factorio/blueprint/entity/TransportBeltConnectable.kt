@@ -15,7 +15,7 @@ public class TransportBelt(
     json: EntityJson,
 ) : BaseEntity(json), TransportBeltConnectable, CircuitConnectable {
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
-    public val controlBehavior: TransportBeltControlBehavior = TransportBeltControlBehavior(json.control_behavior)
+    public override val controlBehavior: TransportBeltControlBehavior = TransportBeltControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
         if(this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()

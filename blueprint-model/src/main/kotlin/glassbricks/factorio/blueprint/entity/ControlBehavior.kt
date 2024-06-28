@@ -32,17 +32,14 @@ public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) 
 
 // todo:
 // lamp
-// logistic_container
 // roboport
 // storage_tank
 // train_stop
 // decider_combinator
 // arithmetic_combinator
 // constant_combinator
-// transport_belt
 // accumulator
 // rail_signal
 // rail_chain_signal
 // wall
 // mining_drill
-// programmable_speaker

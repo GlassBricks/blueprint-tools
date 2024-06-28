@@ -14,6 +14,8 @@ public interface CircuitConnectable {
     public val connectionPoint1: CircuitConnectionPoint
 
     public val connectionPoint2: CircuitConnectionPoint? get() = null
+    
+    public val controlBehavior: ControlBehavior?
 }
 
 /**

@@ -50,6 +50,7 @@ public class ElectricPole(
 ) : BaseEntity(json), CableConnectionPoint, CircuitConnectable {
     override val cableConnections: CableConnectionSet = CableConnectionSet(this)
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+    override val controlBehavior: ControlBehavior? get() =null
 
     override val entity: Entity get() = this
 
@@ -62,9 +63,10 @@ public class PowerSwitch(
     override val prototype: PowerSwitchPrototype,
     json: EntityJson,
 ) : BaseEntity(json), CircuitConnectable, PowerSwitchConnectionPoints {
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
     public override val left: CableConnectionPoint = ConnectionPoint()
     public override val right: CableConnectionPoint = ConnectionPoint()
+    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+    override val controlBehavior: ControlBehavior? get() = null // TODO
 
     public var switchState: Boolean = json.switch_state ?: false
 

@@ -26,6 +26,7 @@ public class UnknownEntity(
     override val cableConnections: CableConnectionSet = CableConnectionSet(this)
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.First)
     override val connectionPoint2: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.Second)
+    override val controlBehavior: ControlBehavior? = null
 
     override val entity: Entity get() = this
 

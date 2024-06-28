@@ -577,19 +577,24 @@ public data class ControlBehavior(
     /** Enable or disable based on circuit_condition. */
     public var circuit_enable_disable: Boolean? = null,
     /** Send circuit values to the train to use in schedule conditions. */
-    public var send_to_train: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var send_to_train: Boolean = false,
     /** Get the currently stopped trains cargo. */
-    public var read_from_train: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var read_from_train: Boolean = false,
     /** Get the currently stopped trains ID. */
-    public var read_stopped_train: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var read_stopped_train: Boolean = false,
     /** [SignalID] to output the train ID on. */
     public var train_stopped_signal: SignalID? = null,
     /** Whether this stations train limit will be set through circuit values. */
-    public var set_trains_limit: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var set_trains_limit: Boolean = false,
     /** [SignalID] to use to set the trains limit. */
     public var trains_limit_signal: SignalID? = null,
     /** Whether to read this stations currently on route trains count. */
-    public var read_trains_count: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var read_trains_count: Boolean = false,
     /** [SignalID] to output the on route trains count on. */
     public var trains_count_signal: SignalID? = null,
     /** Whether this roboport should output the contents of its network. */

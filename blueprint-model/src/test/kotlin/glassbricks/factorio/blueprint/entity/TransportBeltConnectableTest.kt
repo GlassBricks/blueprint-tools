@@ -8,10 +8,16 @@ import kotlin.test.assertEquals
 class TransportBeltConnectableTest {
     @Test
     fun `can load transport belt`() {
-        testSaveLoad<TransportBelt>("transport-belt") // test with empty
-        val belt = testSaveLoad<TransportBelt>("transport-belt", modify = {
-            connectionPoint1.red.add((loadEntity("Foo") as UnknownEntity).connectionPoint1)
-        }) {
+        testSaveLoad<TransportBelt>("transport-belt") 
+        testSaveLoad<TransportBelt>("transport-belt", connectToNetwork = true) {
+            control_behavior = ControlBehavior(
+                circuit_enable_disable = false
+            )
+        }
+        val belt = testSaveLoad<TransportBelt>(
+            "transport-belt",
+            connectToNetwork = true,
+        ) {
             direction = Direction.East
             control_behavior = ControlBehavior(
                 circuit_enable_disable = true,
@@ -37,17 +43,17 @@ class TransportBeltConnectableTest {
             type = IOType.Output
         }
     }
-    
+
     @Test
     fun `can load splitter`() {
-        testSaveLoad<Splitter>("splitter") 
+        testSaveLoad<Splitter>("splitter")
         testSaveLoad<Splitter>("splitter") {
             input_priority = SplitterPriority.Left
             output_priority = SplitterPriority.Right
             filter = "iron-plate"
         }
     }
-    
+
     @Test
     fun `can load loader`() {
         testSaveLoad<Loader>("loader") {
