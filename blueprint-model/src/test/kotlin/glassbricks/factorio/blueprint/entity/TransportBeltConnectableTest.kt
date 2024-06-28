@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 class TransportBeltConnectableTest {
     @Test
     fun `can load transport belt`() {
-        testSaveLoad<TransportBelt>("transport-belt") 
+        testSaveLoad<TransportBelt>("transport-belt")
         testSaveLoad<TransportBelt>("transport-belt", connectToNetwork = true) {
             control_behavior = ControlBehavior(
                 circuit_enable_disable = false
@@ -62,6 +62,17 @@ class TransportBeltConnectableTest {
         testSaveLoad<Loader>("loader") {
             type = IOType.Output
             filters = itemFilterList("iron-plate", "copper-plate")
+        }
+    }
+
+    @Test
+    fun `can load linked belt`() {
+        testSaveLoad<LinkedBelt>("linked-belt") {
+            type = IOType.Output
+        }
+        testSaveLoad<LinkedBelt>("linked-belt") {
+            type = IOType.Input
+            link_id = 4
         }
     }
 }

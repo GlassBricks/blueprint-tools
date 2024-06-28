@@ -15,10 +15,11 @@ public class TransportBelt(
     json: EntityJson,
 ) : BaseEntity(json), TransportBeltConnectable, CircuitConnectable {
     override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
-    public override val controlBehavior: TransportBeltControlBehavior = TransportBeltControlBehavior(json.control_behavior)
+    public override val controlBehavior: TransportBeltControlBehavior =
+        TransportBeltControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
-        if(this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
 }
 
@@ -76,6 +77,18 @@ public class Loader(
 
     override fun exportToJson(json: EntityJson) {
         json.filters = getFiltersAsList()
+        json.type = ioType
+    }
+}
+
+public class LinkedBelt(
+    override val prototype: LinkedBeltPrototype,
+    json: EntityJson,
+) : BaseEntity(json), TransportBeltConnectable {
+    public var linkId: Int? = json.link_id
+    public var ioType: IOType = json.type ?: IOType.Input
+    override fun exportToJson(json: EntityJson) {
+        json.link_id = linkId
         json.type = ioType
     }
 }
