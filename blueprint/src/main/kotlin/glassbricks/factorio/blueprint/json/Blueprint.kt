@@ -598,9 +598,11 @@ public data class ControlBehavior(
     /** [SignalID] to output the on route trains count on. */
     public var trains_count_signal: SignalID? = null,
     /** Whether this roboport should output the contents of its network. */
-    public var read_logistics: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var read_logistics: Boolean = true,
     /** Whether this roboport should output the robot stats of its network. */
-    public var read_robot_stats: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var read_robot_stats: Boolean = false,
     /** [SignalID] to output available logistic robots on. */
     public var available_logistic_output_signal: SignalID? = null,
     /** [SignalID] to output total count of logistic robots on. */

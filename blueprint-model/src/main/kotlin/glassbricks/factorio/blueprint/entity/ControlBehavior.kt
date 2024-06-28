@@ -32,7 +32,6 @@ public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) 
 
 // todo:
 // lamp
-// roboport
 // storage_tank
 // train_stop
 // decider_combinator
