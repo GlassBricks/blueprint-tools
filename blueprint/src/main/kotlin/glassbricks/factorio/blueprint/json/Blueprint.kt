@@ -442,6 +442,8 @@ public data class ItemFilter(
 )
 
 /**
+ * Also contains settings for infinity pipes, which is not documented.
+ * 
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#Infinity_settings_object)
  */
 @Serializable
@@ -451,6 +453,13 @@ public data class InfinitySettings(
     /** Filters of the infinity container. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val filters: List<InfinityFilter> = emptyList(),
+
+    /** The mode of the infinity pipe. */
+    public val mode: InfinityFilterMode? = null,
+    /** The fluid this infinity pipe is set to. */
+    public val name: String? = null,
+    public val percentage: Double? = null,
+    public val temperature: Int? = null,
 )
 
 /**
