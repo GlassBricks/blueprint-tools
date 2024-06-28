@@ -761,7 +761,11 @@ public data class CircuitCondition(
      */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val constant: Int = 0,
-)
+) {
+    public companion object {
+        public val DEFAULT: CircuitCondition = CircuitCondition()
+    }
+}
 
 @Serializable
 public enum class ComparatorString {

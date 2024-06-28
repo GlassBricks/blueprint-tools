@@ -48,6 +48,7 @@ private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Construc
     add(::ProgrammableSpeaker)
     add(::TrainStop)
     add(::Roboport)
+    add(::Lamp)
     add(::UnknownEntity)
 }
 

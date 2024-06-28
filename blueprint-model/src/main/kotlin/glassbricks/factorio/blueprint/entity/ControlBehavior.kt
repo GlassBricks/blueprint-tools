@@ -12,14 +12,14 @@ public interface ControlBehavior {
  */
 public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) {
     /** If this is not null, sets enable_disable to true. */
-    public var circuitCondition: CircuitCondition? = source?.circuit_condition?.copy()
+    public var circuitCondition: CircuitCondition? = source?.circuit_condition
         ?.takeIf { 
             source.circuit_enable_disable == true
                     || source.circuit_mode_of_operation?.rawValue == InserterModeOfOperation.EnableDisable.ordinal
         }
 
     /** If this is not null, sets connectedToLogisticNetwork to true. */
-    public var logisticCondition: CircuitCondition? = source?.logistic_condition?.copy()
+    public var logisticCondition: CircuitCondition? = source?.logistic_condition
         ?.takeIf { source.connect_to_logistic_network }
     public val connectToLogisticNetwork: Boolean get() = logisticCondition != null
 
@@ -31,7 +31,6 @@ public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) 
 }
 
 // todo:
-// lamp
 // storage_tank
 // train_stop
 // decider_combinator
