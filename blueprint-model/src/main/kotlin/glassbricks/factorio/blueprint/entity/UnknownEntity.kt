@@ -14,7 +14,7 @@ public class UnknownEntity(
     WithColor,
     WithBar,
     WithItemFilters {
-    public val json: EntityJson = json.getJson()
+    public val json: EntityJson = json.deepCopy()
 
     override var position: Position by json::position
     override var tags: JsonObject? by json::tags

@@ -29,6 +29,7 @@ public class BlueprintPrototypes(
 private fun isBlueprintablePrototype(prototype: Any): Boolean =
     prototype is EntityWithOwnerPrototype && prototype !is UnitPrototype &&
             !(prototype is VehiclePrototype && prototype !is RollingStockPrototype)
+            && prototype !is FlyingRobotPrototype
 
 private fun toBlueprintPrototypes(prototypeData: PrototypeData): BlueprintPrototypes {
     val placeableBy = hashMapOf<String, String>()

@@ -226,10 +226,23 @@ public data class Entity(
     public var manual_trains_limit: Int? = null,
     /** The current state of the power switch. */
     public var switch_state: Boolean? = null,
-    /** Temperature of the heat interface. */
+
+    /** Used by [heat interfaces](https://lua-api.factorio.com/latest/prototypes/HeatInterfacePrototype.html). */
     public var temperature: Int? = null,
-    /** The mode of the heat interface. */
+    /** Used by [heat interfaces](https://lua-api.factorio.com/latest/prototypes/HeatInterfacePrototype.html). */
     public var mode: InfinityMode? = null,
+
+    /** Used by [electric energy interfaces](https://lua-api.factorio.com/latest/prototypes/ElectricEnergyInterfacePrototype.html). */
+    public var buffer_size: Int? = null,
+    /** Used by [electric energy interfaces](https://lua-api.factorio.com/latest/prototypes/ElectricEnergyInterfacePrototype.html). */
+    public var power_production: Int? = null,
+    /** Used by [electric energy interfaces](https://lua-api.factorio.com/latest/prototypes/ElectricEnergyInterfacePrototype.html). */
+    public var power_usage: Int? = null,
+
+    /** Used by [linked containers](https://lua-api.factorio.com/latest/prototypes/LinkedContainerPrototype.html). */
+    public var link_id: Int? = null,
+    /** Used by [linked belts](https://lua-api.factorio.com/latest/prototypes/LinkedBeltPrototype.html). */
+    public var belt_link: Int? = null,
     /** Dictionary of arbitrary data. */
     public var tags: JsonObject? = null,
 )

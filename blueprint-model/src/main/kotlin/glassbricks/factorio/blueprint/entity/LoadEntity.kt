@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
+import glassbricks.factorio.prototypes.*
 
 internal fun createEntityFromPrototype(
     prototype: EntityWithOwnerPrototype,
@@ -28,6 +28,15 @@ private inline fun <reified T : EntityWithOwnerPrototype>
     put(T::class.java) { prototype, source, _ ->
         constructor(prototype as T, source)
     }
+}
+
+private val basicConstructor: Constructor = { prototype, source, _ ->
+    BasicEntity(prototype, source)
+}
+
+private inline fun <reified T : EntityWithOwnerPrototype>
+        MutableMap<Class<out EntityWithOwnerPrototype>, Constructor>.basic() {
+    put(T::class.java, basicConstructor)
 }
 
 private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Constructor>().apply {
@@ -64,6 +73,25 @@ private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Construc
     add(::InfinityPipe)
     add(::HeatInterface)
     add(::SimpleEntityWithOwner)
+
+    basic<LandMinePrototype>()
+    basic<LabPrototype>()
+    basic<SolarPanelPrototype>()
+    basic<GeneratorPrototype>()
+    basic<PipePrototype>()
+    basic<PlayerPortPrototype>()
+    basic<BurnerGeneratorPrototype>()
+    basic<TurretPrototype>()
+    basic<BoilerPrototype>()
+    basic<ArtilleryTurretPrototype>()
+    basic<OffshorePumpPrototype>()
+    basic<PipeToGroundPrototype>()
+    basic<PumpPrototype>()
+    basic<RailPrototype>()
+    basic<HeatPipePrototype>()
+    basic<RadarPrototype>()
+    basic<GatePrototype>()
+    basic<ReactorPrototype>()
 
     add(::UnknownEntity)
 }
