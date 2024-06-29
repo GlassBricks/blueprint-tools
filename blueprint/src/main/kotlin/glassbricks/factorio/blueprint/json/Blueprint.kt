@@ -245,7 +245,9 @@ public data class Entity(
     public var belt_link: Int? = null,
     /** Dictionary of arbitrary data. */
     public var tags: JsonObject? = null,
-)
+) {
+    override fun toString(): String = bpJson.encodeToString(serializer(), this)
+}
 
 
 @Serializable
@@ -685,7 +687,9 @@ public data class ControlBehavior(
     /** Whether this lamp should use colors or not. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var use_colors: Boolean = false,
-)
+) {
+    override fun toString(): String = bpJson.encodeToString(serializer(), this)
+}
 
 
 /**
@@ -720,16 +724,13 @@ public data class ArithmeticCombinatorParameters(
      * Constant to use as the first argument of the operation.
      * Has no effect when [first_signal] is set. Defaults to 0.
      */
-    @EncodeDefault(EncodeDefault.Mode.NEVER)
-    public val first_constant: Int = 0,
+    public val first_constant: Int? = null,
     /**
      * Constant to use as the second argument of the operation.
      * Has no effect when [second_signal] is set. Defaults to 0.
      */
-    @EncodeDefault(EncodeDefault.Mode.NEVER)
-    public val second_constant: Int = 0,
+    public val second_constant: Int? = null,
     /** When not specified, defaults to "*". */
-    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val operation: ArithmeticOperation = ArithmeticOperation.Multiply,
     /** Specifies the signal to output. */
     public val output_signal: SignalID? = null,
@@ -781,10 +782,8 @@ public data class DeciderCombinatorParameters(
      */
     public val second_signal: SignalID? = null,
     /** Constant to use as the second argument of operation. Defaults to 0. */
-    @EncodeDefault(EncodeDefault.Mode.NEVER)
-    public val constant: Int = 0,
+    public val constant: Int? = null,
     /** Specifies how the inputs should be compared. If not specified, defaults to "<". */
-    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val comparator: CompareOperation = CompareOperation.Less,
     /** Defaults to blank. */
     public val output_signal: SignalID? = null,
