@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.EntityNumber
-import glassbricks.factorio.blueprint.json.Position
+import glassbricks.factorio.blueprint.Position
 import java.io.File
 import kotlin.test.*
 
@@ -100,7 +100,7 @@ class BlueprintPrototypesKtTest {
             }
 
         if (unknownKeys.isNotEmpty()) {
-            val classList = unknownKeys.joinToString("\n") { 
+            val classList = unknownKeys.joinToString("\n") {
                 "  ${it.key}: ${it.value.type}, ${it.value.flags}"
             }
             fail("The following prototypes are not matched:\n$classList")

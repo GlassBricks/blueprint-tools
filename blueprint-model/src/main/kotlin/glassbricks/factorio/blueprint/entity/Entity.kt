@@ -2,7 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.Direction
 import glassbricks.factorio.blueprint.json.EntityNumber
-import glassbricks.factorio.blueprint.json.Position
+import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.prototypes.EntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
 

@@ -3,6 +3,8 @@
 
 package glassbricks.factorio.blueprint.json
 
+import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.TilePosition
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -34,7 +36,9 @@ public interface BlueprintItem {
 
 
 @Serializable(with = BlueprintItemSerializer::class)
-public sealed interface ImportableBlueprint : BlueprintItem
+public sealed interface ImportableBlueprint : BlueprintItem {
+    public companion object
+}
 
 /**
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#Blueprint_book_object)

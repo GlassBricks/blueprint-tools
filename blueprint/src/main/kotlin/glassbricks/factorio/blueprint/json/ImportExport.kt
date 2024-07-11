@@ -62,9 +62,7 @@ public fun exportBlueprintToStream(bp: ImportableBlueprint, stream: OutputStream
         }
 }
 
-private fun skipWhitespaceTillFirstChar(
-    bytes: InputStream,
-): Char {
+private fun skipWhitespaceTillFirstChar(bytes: InputStream): Char {
     while (true) {
         val byte = bytes.read()
         if (byte == -1) throw SerializationException("Unexpected end of stream")

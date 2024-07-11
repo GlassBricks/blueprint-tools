@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.Position
+import glassbricks.factorio.blueprint.Position
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 import kotlin.test.assertFalse
@@ -45,11 +45,11 @@ class CircuitConnectionPointTest {
     fun `adding a point to itself has no effect`() {
         point1.red.add(point1)
         assertFalse(point1.red.contains(point1))
-        
+
         point2.red.add(point2)
         assertFalse(point2.red.contains(point2))
     }
-    
+
     @Test
     fun `can connect a point to other point on the same entity`() {
         point1.red.add(point2)

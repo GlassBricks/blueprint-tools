@@ -1,11 +1,6 @@
-import org.jetbrains.kotlin.ir.backend.jvm.jvmLibrariesProvidedByDefault
-
 plugins {
     kotlin("jvm")
 }
-
-group = "glassbricks.factorio"
-version = "unspecified"
 
 repositories {
     mavenCentral()

@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.*
 import org.junit.jupiter.api.Assertions
 import kotlin.test.Test
@@ -176,7 +177,7 @@ class ImportExportKtTest {
         assertTrue(pole2.cableConnections.contains(switch1.left))
         assertTrue(pole3.cableConnections.contains(switch1.right))
     }
-    
+
     @Test
     fun `can save power switch connections`() {
         val switch1 = loadEntity("power-switch") as PowerSwitch

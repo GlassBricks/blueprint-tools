@@ -2,7 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.json.CompareOperation
-import glassbricks.factorio.blueprint.json.Position
+import glassbricks.factorio.blueprint.Position
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach

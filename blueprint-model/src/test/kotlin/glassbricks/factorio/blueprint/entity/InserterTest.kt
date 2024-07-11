@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.*
 import kotlin.test.Test
 
