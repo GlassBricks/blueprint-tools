@@ -54,17 +54,17 @@ public object BoundingBoxShorthandSerializer : KSerializer<BoundingBox> {
 
     override fun deserialize(decoder: Decoder): BoundingBox {
         decoder as JsonDecoder
-        val leftTop: JsonObject
-        val rightBottom: JsonObject
+        val leftTop: JsonElement
+        val rightBottom: JsonElement
         when (val element = decoder.decodeJsonElement()) {
             is JsonObject -> {
-                leftTop = element["left_top"]?.jsonObject ?: error("Expected left_top in bounding box")
-                rightBottom = element["right_bottom"]?.jsonObject ?: error("Expected right_bottom in bounding box")
+                leftTop = element["left_top"] ?: error("Expected left_top in bounding box")
+                rightBottom = element["right_bottom"] ?: error("Expected right_bottom in bounding box")
             }
 
             is JsonArray -> {
-                leftTop = element.getOrNull(0)?.jsonObject ?: error("Expected left_top in bounding box tuple")
-                rightBottom = element.getOrNull(1)?.jsonObject ?: error("Expected right_bottom in bounding box tuple")
+                leftTop = element.getOrNull(0) ?: error("Expected left_top in bounding box tuple")
+                rightBottom = element.getOrNull(1) ?: error("Expected right_bottom in bounding box tuple")
             }
 
             else -> throw SerializationException("Unexpected json for BoundingBox: $element")

@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "2.0.0"
-    kotlin("plugin.serialization") version "2.0.0"
+    kotlin("jvm") version "2.0.0" apply false
+    kotlin("plugin.serialization") version "2.0.0" apply false
 }
 
 repositories {
@@ -8,14 +8,3 @@ repositories {
 }
 
 group = "glassbricks.factorio"
-
-dependencies {
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-kotlin {
-    jvmToolchain(17)
-}

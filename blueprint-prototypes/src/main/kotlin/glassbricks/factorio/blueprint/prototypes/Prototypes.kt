@@ -10,6 +10,7 @@
 
 package glassbricks.factorio.blueprint.prototypes
 
+import glassbricks.factorio.blueprint.BoundingBox
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers

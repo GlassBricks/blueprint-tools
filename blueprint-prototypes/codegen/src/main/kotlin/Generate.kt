@@ -37,7 +37,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         setupFile()
         generatePrototypes()
         generateConcepts()
-        generateAllPrototypeClass()
+        generateDataRaw()
 
         return file.build()
     }
@@ -115,9 +115,9 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         return alreadyGenerated
     }
 
-    private fun generateAllPrototypeClass() {
-        val allPrototypes = TypeSpec.classBuilder("AllPrototypes").apply {
-            addKdoc("All prototypes, aka the `data` object. Only contains the subset of prototypes used by this library.")
+    private fun generateDataRaw() {
+        val allPrototypes = TypeSpec.classBuilder("DataRaw").apply {
+            addKdoc("All prototypes, aka [data.raw](https://wiki.factorio.com/Data.raw). Only contains the subset of objects this library uses.")
             addAnnotation(Serializable::class)
 
             val constructorBuilder = FunSpec.constructorBuilder()

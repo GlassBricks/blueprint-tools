@@ -5,4 +5,5 @@ rootProject.name = "factorio-tools"
 
 include("blueprint")
 include("blueprint-model")
-include("prototype-codegen")
+include("blueprint-prototypes")
+include("blueprint-prototypes:codegen")

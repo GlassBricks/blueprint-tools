@@ -19,7 +19,7 @@ fun main() {
         }
         .let { PrototypeDeclarationsGenerator(it).generate() }
         .apply {
-            val directory = File("blueprint-model/src/main/kotlin")
+            val directory = File("blueprint-prototypes/src/main/kotlin")
                 .absoluteFile
                 .normalize()
             println("writing to $directory")
