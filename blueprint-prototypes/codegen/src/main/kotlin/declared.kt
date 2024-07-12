@@ -88,6 +88,15 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         }
         blueprintable("RocketSilo")
         blueprintable("Furnace")
+        blueprintable("ElectricEnergyInterface")
+        blueprintable("ElectricPole") {
+            +"supply_area_distance"
+            +"maximum_wire_distance"
+        }
+        blueprintable("Gate")
+        blueprintable("Generator")
+        blueprintable("HeatInterface")
+        blueprintable("HeatPipe")
     }
 
     concepts {

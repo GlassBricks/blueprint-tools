@@ -422,6 +422,43 @@ public open class ContainerPrototype : EntityWithOwnerPrototype() {
 public class DeciderCombinatorPrototype : CombinatorPrototype()
 
 /**
+ * Entity with electric energy source with that can have some of its values changed runtime. Useful
+ * for modding in energy consumers/producers.
+ */
+@Serializable
+@SerialName("electric-energy-interface")
+public class ElectricEnergyInterfacePrototype : EntityWithOwnerPrototype() {
+    public lateinit var energy_source: ElectricEnergySource
+        private set
+}
+
+/**
+ * An electric pole - part of the [electric system](https://wiki.factorio.com/Electric_system).
+ */
+@Serializable
+@SerialName("electric-pole")
+public class ElectricPolePrototype : EntityWithOwnerPrototype() {
+    /**
+     * The "radius" of this pole's supply area. Corresponds to *half* of the "supply area" in the
+     * item tooltip. If this is 3.5, the pole will have a 7x7 supply area.
+     *
+     * Max value is 64.
+     */
+    public var supply_area_distance: Double = 0.0
+        private set
+
+    /**
+     * The maximum distance between this pole and any other connected pole - if two poles are
+     * farther apart than this, they cannot be connected together directly. Corresponds to "wire reach"
+     * in the item tooltip.
+     *
+     * Max value is 64.
+     */
+    public var maximum_wire_distance: Double? = null
+        private set
+}
+
+/**
  * A furnace. Normal furnaces only process "smelting" category recipes, but you can make furnaces
  * that process other [recipe categories](prototype:RecipeCategory). The difference to assembling
  * machines is that furnaces automatically choose their recipe based on input.
@@ -429,6 +466,44 @@ public class DeciderCombinatorPrototype : CombinatorPrototype()
 @Serializable
 @SerialName("furnace")
 public class FurnacePrototype : CraftingMachinePrototype()
+
+/**
+ * A [gate](https://wiki.factorio.com/Gate).
+ */
+@Serializable
+@SerialName("gate")
+public class GatePrototype : EntityWithOwnerPrototype()
+
+/**
+ * An entity that produces power from fluids, for example a [steam
+ * engine](https://wiki.factorio.com/Steam_engine).
+ */
+@Serializable
+@SerialName("generator")
+public class GeneratorPrototype : EntityWithOwnerPrototype() {
+    public lateinit var energy_source: ElectricEnergySource
+        private set
+
+    /**
+     * This must have a filter if `max_power_output` is not defined.
+     */
+    public lateinit var fluid_box: FluidBox
+        private set
+}
+
+/**
+ * This entity produces or consumes heat. Its heat settings can be changed runtime.
+ */
+@Serializable
+@SerialName("heat-interface")
+public class HeatInterfacePrototype : EntityWithOwnerPrototype()
+
+/**
+ * A [heat pipe](https://wiki.factorio.com/Heat_pipe).
+ */
+@Serializable
+@SerialName("heat-pipe")
+public class HeatPipePrototype : EntityWithOwnerPrototype()
 
 /**
  * A generic container, such as a chest, that interacts with the logistics network.
@@ -919,4 +994,10 @@ public class DataRaw(
     public val `assembling-machine`: Map<String, AssemblingMachinePrototype>,
     public val `rocket-silo`: Map<String, RocketSiloPrototype>,
     public val furnace: Map<String, FurnacePrototype>,
+    public val `electric-energy-interface`: Map<String, ElectricEnergyInterfacePrototype>,
+    public val `electric-pole`: Map<String, ElectricPolePrototype>,
+    public val gate: Map<String, GatePrototype>,
+    public val generator: Map<String, GeneratorPrototype>,
+    public val `heat-interface`: Map<String, HeatInterfacePrototype>,
+    public val `heat-pipe`: Map<String, HeatPipePrototype>,
 )
