@@ -12,17 +12,14 @@ fun readDocs(): PrototypeApiDocs {
     return json.decodeFromStream<PrototypeApiDocs>(stream)
 }
 
-fun main() {
+fun main(args: Array<String>) {
+    val outPath = requireNotNull(args.firstOrNull()) { "output path required" }
     readDocs()
         .let {
             GeneratedPrototypesBuilder(it).apply { getGeneratedClasses() }.build()
         }
         .let { PrototypeDeclarationsGenerator(it).generate() }
         .apply {
-            val directory = File("blueprint-prototypes/src/main/kotlin")
-                .absoluteFile
-                .normalize()
-            println("writing to $directory")
-            writeTo(directory)
+            writeTo(File(outPath))
         }
 }

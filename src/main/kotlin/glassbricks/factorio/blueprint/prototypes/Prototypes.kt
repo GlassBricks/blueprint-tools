@@ -11,6 +11,8 @@
 package glassbricks.factorio.blueprint.prototypes
 
 import glassbricks.factorio.blueprint.BoundingBox
+import glassbricks.factorio.blueprint.Direction
+import glassbricks.factorio.blueprint.Position
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
@@ -191,11 +193,58 @@ public class BeaconPrototype : EntityWithOwnerPrototype() {
 }
 
 /**
+ * A [boiler](https://wiki.factorio.com/Boiler). It heats fluid and optionally outputs it as a
+ * different fluid.
+ */
+@Serializable
+@SerialName("boiler")
+public class BoilerPrototype : EntityWithOwnerPrototype() {
+    public lateinit var energy_source: EnergySource
+        private set
+
+    /**
+     * The input fluid box.
+     *
+     * If `mode` is `"heat-water-inside"`, the fluid is heated up directly in this fluidbox.
+     */
+    public lateinit var fluid_box: FluidBox
+        private set
+
+    /**
+     * The output fluid box.
+     *
+     * If `mode` is `"output-to-separate-pipe"` and this has a [filter](prototype:FluidBox::filter),
+     * the heated input fluid is converted to the output fluid that is set in the filter (in a 1:1
+     * ratio).
+     *
+     * If `mode` is `"heat-water-inside"`, this fluidbox is unused.
+     */
+    public lateinit var output_fluid_box: FluidBox
+        private set
+}
+
+/**
  * The abstract base of all [EnergySources](prototype:EnergySource). Specifies the way an entity
  * gets its energy.
  */
 @Serializable
 public sealed class BaseEnergySource
+
+@Serializable
+@SerialName("burner")
+public data class BurnerEnergySource(
+    /**
+     * The energy source can be used with fuel from this [fuel category](prototype:FuelCategory).
+     * For a list of built-in categories, see [here](https://wiki.factorio.com/Data.raw#fuel-category).
+     *
+     * Only loaded if `fuel_categories` is not defined.
+     */
+    public val fuel_category: FuelCategoryID?,
+    /**
+     * The energy source can be used with fuel from these [fuel categories](prototype:FuelCategory).
+     */
+    public val fuel_categories: List<FuelCategoryID>?,
+) : BaseEnergySource()
 
 /**
  * Every entry in the array is a specification of one layer the object collides with or a special
@@ -244,6 +293,12 @@ public typealias EffectTypeLimitation = ItemOrArray<EffectType>
 @Serializable
 @SerialName("electric")
 public data object ElectricEnergySource : BaseEnergySource(), EVEnergySource
+
+/**
+ * Loaded as one of the [BaseEnergySource](prototype:BaseEnergySource) extensions, based on the
+ * value of the `type` key.
+ */
+public typealias EnergySource = BaseEnergySource
 
 @Serializable
 public enum class EntityPrototypeFlag {
@@ -387,6 +442,87 @@ public enum class EntityPrototypeFlag {
 public typealias EntityPrototypeFlags = List<EntityPrototypeFlag>
 
 /**
+ * Used to set the fluid amount an entity can hold, as well as the connection points for pipes
+ * leading into and out of the entity.
+ *
+ * Entities can have multiple fluidboxes. These can be part of a
+ * [FluidEnergySource](prototype:FluidEnergySource), or be specified directly in the entity prototype.
+ *
+ * A fluidbox can store only one type of fluid at a time. However, a fluid system (ie. multiple
+ * connected fluid boxes) can contain multiple different fluids, see [Fluid
+ * mixing](https://wiki.factorio.com/Fluid_system#Fluid_mixing).
+ */
+@Serializable
+public data class FluidBox(
+    /**
+     * Connection points to connect to other fluidboxes. This is also marked as blue arrows in alt
+     * mode. Fluid may flow in or out depending on the `type` field of each connection.
+     *
+     * Connection points may depend on the direction the entity is facing. These connection points
+     * cannot share positions with one another or the connection points of another fluid box belonging
+     * to the same entity.
+     *
+     * Can't have more than 255 connections.
+     */
+    public val pipe_connections: List<PipeConnectionDefinition>,
+    /**
+     * Can be used to specify which fluid is allowed to enter this fluid box. See
+     * [here](https://forums.factorio.com/viewtopic.php?f=28&t=46302).
+     */
+    public val filter: FluidID?,
+    public val production_type: ProductionType?,
+)
+
+@Serializable
+@SerialName("fluid")
+public data class FluidEnergySource(
+    /**
+     * All standard fluid box configurations are acceptable, but the type must be `"input"` or
+     * `"input-output"` to function correctly. `scale_fluid_usage = true`, `fluid_usage_per_tick`, or a
+     * filter on the fluidbox must be set to be able to calculate the fluid usage of the energy source.
+     */
+    public val fluid_box: FluidBox,
+) : BaseEnergySource()
+
+/**
+ * The name of a [FluidPrototype](prototype:FluidPrototype).
+ */
+public typealias FluidID = String
+
+/**
+ * The name of a [FuelCategory](prototype:FuelCategory).
+ */
+public typealias FuelCategoryID = String
+
+/**
+ * Defines the connections for [HeatEnergySource](prototype:HeatEnergySource) and
+ * [HeatBuffer](prototype:HeatBuffer).
+ */
+@Serializable
+public data class HeatConnection(
+    /**
+     * The location of the heat pipe connection, relative to the center of the entity in the
+     * north-facing direction.
+     */
+    public val position: MapPosition,
+    /**
+     * The "outward" direction of this heat connection. For a connection to succeed, the other heat
+     * connection must face the opposite direction (a south-facing connection needs a north-facing
+     * connection to succeed). A connection rotates with the entity.
+     */
+    public val direction: Direction,
+)
+
+@Serializable
+@SerialName("heat")
+public data class HeatEnergySource(
+    /**
+     * May contain up to 32 connections.
+     */
+    public val connections: List<HeatConnection>?,
+) : BaseEnergySource()
+
+/**
  * The name of an [ItemPrototype](prototype:ItemPrototype).
  */
 public typealias ItemID = String
@@ -410,6 +546,15 @@ public data class ItemToPlace(
 )
 
 /**
+ * Coordinates of a tile in a map. Positive x goes towards east, positive y goes towards south, and
+ * x is the first dimension in the array format.
+ *
+ * The coordinates are saved as a fixed-size 32 bit integer, with 8 bits reserved for decimal
+ * precision, meaning the smallest value step is `1/2^8 = 0.00390625` tiles.
+ */
+public typealias MapPosition = Position
+
+/**
  * The number of module slots in this entity, and their icon positions.
  */
 @Serializable
@@ -419,6 +564,44 @@ public data class ModuleSpecification(
      */
     public val module_slots: ItemStackIndex?,
 )
+
+@Serializable
+public enum class InputOutputType {
+    input,
+    `input-output`,
+    output,
+}
+
+@Serializable
+public data class PipeConnectionDefinition(
+    /**
+     * Where pipes can connect to this fluidbox regardless the directions of entity.
+     */
+    public val position: Vector?,
+    /**
+     * Only loaded, and mandatory if `position` is not defined.
+     *
+     * Where pipes can connect to this fluidbox, depending on the entity direction.
+     *
+     * Table must have 4 members, which are 4 explicit positions corresponding to the 4 directions
+     * of entity. Positions must correspond to directions going one after another.
+     */
+    public val positions: List<Vector>?,
+    /**
+     * `0` means not underground.
+     */
+    public val max_underground_distance: UInt?,
+    public val type: InputOutputType?,
+)
+
+@Serializable
+public enum class ProductionType {
+    None,
+    none,
+    input,
+    `input-output`,
+    output,
+}
 
 @Serializable
 public enum class SignalType {
@@ -437,12 +620,19 @@ public data class SignalIDConnector(
 )
 
 /**
+ * A vector is a two-element array or dictionary containing the x and y components. Positive x goes
+ * east, positive y goes south.
+ */
+public typealias Vector = Position
+
+/**
  * Void energy sources provide unlimited free energy.
  */
 @Serializable
 @SerialName("void")
 public data object VoidEnergySource : BaseEnergySource(), EVEnergySource
 
+@Serializable
 public sealed interface EVEnergySource
 
 /**
@@ -454,4 +644,5 @@ public class DataRaw(
     public val accumulator: Map<String, AccumulatorPrototype>,
     public val `artillery-turret`: Map<String, ArtilleryTurretPrototype>,
     public val beacon: Map<String, BeaconPrototype>,
+    public val boiler: Map<String, BoilerPrototype>,
 )

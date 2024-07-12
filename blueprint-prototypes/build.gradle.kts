@@ -23,3 +23,21 @@ kotlin {
     explicitApi()
     jvmToolchain(21)
 }
+
+val generatedDir = layout.buildDirectory.dir("generated").get()
+sourceSets {
+    main {
+        kotlin.srcDir(generatedDir)
+    }
+}
+
+tasks.register<JavaExec>("prototypeCodegen") {
+    mainClass = "glassbricks.factorio.MainKt"
+    classpath = project("codegen").sourceSets["main"].runtimeClasspath
+    args = listOf(generatedDir.asFile.absolutePath)
+    outputs.dir(generatedDir)
+}
+
+tasks.compileKotlin {
+    dependsOn("prototypeCodegen")
+}

@@ -33,13 +33,13 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
                 tryAddProperty("energy_source")
                 tryAddProperty("fluid_box")
                 tryAddProperty("output_fluid_box")
+                tryAddProperty("circuit_wire_max_distance")
                 block()
             }
         }
 
         // all blueprint-able prototypes...
         blueprintable("AccumulatorPrototype") {
-            +"circuit_wire_max_distance"
             +"default_output_signal"
         }
         blueprintable("ArtilleryTurretPrototype")
@@ -50,6 +50,15 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             +"allowed_effects"
         }
         blueprintable("BoilerPrototype")
+        blueprintable("BurnerGeneratorPrototype") {
+            +"burner"
+        }
+        blueprintable("CombinatorPrototype")
+        blueprintable("ArithmeticCombinatorPrototype")
+        blueprintable("DeciderCombinatorPrototype")
+        blueprintable("ConstantCombinatorPrototype") {
+            +"item_slot_count"
+        }
     }
 
     concepts {
