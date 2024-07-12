@@ -113,7 +113,6 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         generateClass(
             prototype,
             prototype.inner.name,
-            prototype.includedProperties.values
         ) {
             val typeName = prototype.inner.typename
             if (typeName != null) {
@@ -128,7 +127,6 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     private fun generateClass(
         value: GeneratedValue,
         name: String,
-        properties: Collection<GeneratedProperty>,
         block: TypeSpec.Builder.() -> Unit = {}
     ): TypeSpec =
         TypeSpec.classBuilder(name).apply {
@@ -146,14 +144,14 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             // supertypes
             val parent = value.inner.parent
             if (parent != null) {
-                check(parent in input.prototypes) {
+                check(parent in input.prototypes || parent in input.concepts) {
                     "Parent prototype not found: $parent"
                 }
                 superclass(ClassName(PACKAGE_NAME, parent))
             }
 
             // properties
-            for (property in properties.sortedBy { it.property.order }) {
+            for (property in value.includedProperties.values.sortedBy { it.inner.order }) {
                 addProperty(generateProperty(value, property, initByMutate = true))
             }
 
@@ -169,15 +167,11 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         concept: GeneratedConcept,
         name: String,
     ): TypeSpec {
-        if (concept.inner.canBeDataClass()) {
-            return generateDataClass(concept, name)
+        return if (concept.inner.canBeDataClass()) {
+            generateDataClass(concept, name)
+        } else {
+            generateClass(concept, name)
         }
-
-        return generateClass(
-            concept,
-            name,
-            concept.inner.properties!!.map { GeneratedProperty(it) }
-        )
     }
 
     private fun generateDataClass(
@@ -188,11 +182,11 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         addModifiers(KModifier.DATA)
         addAnnotation(Serializable::class)
 
-        val properties = concept.inner.properties!!.sortedBy { it.order }
+        val properties = concept.includedProperties
         val constructorBuilder = FunSpec.constructorBuilder()
-        for (property in properties) {
-            val propertySpec = generateProperty(concept, GeneratedProperty(property), initByMutate = false) {
-                initializer(property.name)
+        for (property in properties.values.sortedBy { it.inner.order }) {
+            val propertySpec = generateProperty(concept, property, initByMutate = false) {
+                initializer(property.inner.name)
             }
             addProperty(propertySpec)
             constructorBuilder.addParameter(propertySpec.name, propertySpec.type)
@@ -254,22 +248,23 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         initByMutate: Boolean,
         block: PropertySpec.Builder.() -> Unit = {}
     ): PropertySpec {
-        val property = genProperty.property
+        val property = genProperty.inner
         val nullable = property.optional || property.default != null
 
-        val type = mapTypeDefinition(property.type, context, genProperty, true)
-            .putType()
-            .copy(nullable = nullable)
+        val basicType =
+            genProperty.overrideType ?: mapTypeDefinition(property.type, context, genProperty, true).putType()
+        val type =
+            basicType.copy(nullable = nullable)
 
         return PropertySpec.builder(property.name, type).apply {
             if (initByMutate) {
                 mutable()
                 if (!nullable) {
                     addModifiers(KModifier.LATEINIT)
-                    setter(FunSpec.setterBuilder().addModifiers(KModifier.PRIVATE).build())
                 } else {
                     initializer("null")
                 }
+                setter(FunSpec.setterBuilder().addModifiers(KModifier.PRIVATE).build())
             }
             if (property.description.isNotBlank()) {
                 addKdoc(property.description)
@@ -338,12 +333,14 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         is TupleType -> error("TupleType not supported")
         is UnionType -> tryGetEnumOptions(type)?.let { options ->
             val name = if (context is GeneratedConcept) {
-                if (isRoot && property == null) {
-                    context.inner.name
-                } else if (!isRoot && property == null) {
-                    context.innerEnumName ?: error("Inner enum name not specified for ${context.inner.name}")
+                if (property == null) {
+                    if (isRoot) {
+                        context.inner.name
+                    } else {
+                        context.innerEnumName ?: error("Inner enum name not specified for ${context.inner.name}")
+                    }
                 } else {
-                    error("todo")
+                    context.inner.name + property.inner.name.capitalize()
                 }
             } else {
                 error("todo")
@@ -354,6 +351,9 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             ClassName(PACKAGE_NAME, "ItemOrArray")
                 .parameterizedBy(mapTypeDefinition(item, context, property).putType())
                 .toGenType()
-        } ?: error("UnionType not supported")
+        } ?: run {
+            println("UnionType $type not supported")
+            Any::class.asClassName().toGenType()
+        }
     }
 }

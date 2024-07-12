@@ -10,50 +10,73 @@ class GeneratedPrototypes(
 
 sealed interface GeneratedValue {
     val inner: ProtoOrConcept
+    val includedProperties: Map<String, GeneratedProperty>
 }
 
 class GeneratedPrototype(
     override val inner: Prototype,
-    val includedProperties: Map<String, GeneratedProperty>
-): GeneratedValue
+    override val includedProperties: Map<String, GeneratedProperty>
+) : GeneratedValue
 
 class GeneratedConcept(
     override val inner: Concept,
     val overrideType: TypeName?,
-    val innerEnumName: String?
-): GeneratedValue
+    val innerEnumName: String?,
+    override val includedProperties: Map<String, GeneratedProperty>
+) : GeneratedValue
 
-class GeneratedProperty(val property: Property)
+class GeneratedProperty(
+    val inner: Property,
+    val overrideType: TypeName? = null
+)
 
 @DslMarker
 annotation class GeneratedPrototypesDsl
 
-
 @GeneratedPrototypesDsl
 class GeneratedPrototypesBuilder(private val docs: PrototypeApiDocs) {
     private val origPrototypes = docs.prototypes.associateBy { it.name }
+    private val origConcepts = docs.types.associateBy { it.name }
     private val prototypes = mutableMapOf<String, GeneratedPrototype>()
     private val concepts = mutableMapOf<String, GeneratedConcept>()
 
-    fun prototype(
-        name: String,
-        block: GeneratedPrototypeBuilder.() -> Unit
-    ) {
-        val prototype = origPrototypes[name] ?: error("Prototype $name not found")
-        prototypes[name] = GeneratedPrototypeBuilder(prototype).apply(block).build(prototype)
+    @GeneratedPrototypesDsl
+    inner class Prototypes {
+        fun prototype(
+            name: String,
+            block: GeneratedPrototypeBuilder.() -> Unit
+        ) = this@GeneratedPrototypesBuilder.apply {
+            val prototype = origPrototypes[name] ?: error("Prototype $name not found")
+            prototypes[name] = GeneratedPrototypeBuilder(prototype).apply(block).build(prototype)
+        }
+
+        operator fun String.invoke(block: GeneratedPrototypeBuilder.() -> Unit) {
+            prototype(this, block)
+        }
     }
 
-    operator fun String.invoke(block: GeneratedPrototypeBuilder.() -> Unit) {
-        prototype(this, block)
+    inline fun prototypes(block: Prototypes.() -> Unit) = Prototypes().block()
+
+    fun findConcept(name: String): Concept {
+        return origConcepts[name] ?: error("Concept $name not found")
     }
 
-    fun concept(
-        name: String,
-        block: GeneratedConceptBuilder.() -> Unit = {}
-    ) {
-        val concept = docs.types.find { it.name == name } ?: error("Concept $name not found")
-        concepts[name] = GeneratedConceptBuilder(concept).apply(block).build()
+    fun addConcept(name: String, concept: GeneratedConcept) {
+        concepts[name] = concept
     }
+
+    @GeneratedPrototypesDsl
+    inner class Concepts {
+        operator fun String.invoke(block: GeneratedConceptBuilder.() -> Unit) {
+            this@GeneratedPrototypesBuilder.addConcept(
+                this, GeneratedConceptBuilder(
+                    this@GeneratedPrototypesBuilder.findConcept(this)
+                ).apply(block).build()
+            )
+        }
+    }
+
+    inline fun concepts(block: Concepts.() -> Unit) = Concepts().block()
 
     fun build(): GeneratedPrototypes {
         for (genPrototype in prototypes.values) {
@@ -97,18 +120,38 @@ class GeneratedPrototypeBuilder(val prototype: Prototype) {
 class GeneratedConceptBuilder(private val concept: Concept) {
     var overrideType: TypeName? = null
     var innerEnumName: String? = null
+    private val properties: MutableMap<String, GeneratedProperty> = mutableMapOf()
+
+    fun property(
+        name: String,
+        block: PropertyOptionsBuilder.() -> Unit
+    ) {
+        if (name in properties) error("Property $name already defined")
+        val property = concept.properties?.find { it.name == name } ?: error("Property $name not found")
+        properties[name] = PropertyOptionsBuilder(property).apply(block).build()
+    }
+
+    operator fun String.invoke(block: PropertyOptionsBuilder.() -> Unit) {
+        property(this, block)
+    }
 
     fun build(): GeneratedConcept {
+        for (property in concept.properties.orEmpty()) {
+            if (property.name !in properties) {
+                properties[property.name] = PropertyOptionsBuilder(property).build()
+            }
+        }
         return GeneratedConcept(
             concept,
             overrideType = overrideType,
-            innerEnumName = innerEnumName
+            innerEnumName = innerEnumName,
+            properties
         )
     }
 }
 
 @GeneratedPrototypesDsl
 class PropertyOptionsBuilder(val property: Property) {
-    // more stuff here maybe later
-    fun build() = GeneratedProperty(property)
+    var overrideType: TypeName? = null
+    fun build() = GeneratedProperty(property, overrideType = overrideType)
 }

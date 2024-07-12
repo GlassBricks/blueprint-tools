@@ -14,6 +14,8 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 
 
+public typealias UnknownStringLiteral = String
+
 public typealias ItemOrArray<T> = @Serializable(with = ItemOrArraySerializer::class) List<T>
 
 public object PositionShorthandSerializer : KSerializer<Position> {

@@ -11,6 +11,7 @@
 package glassbricks.factorio.blueprint.prototypes
 
 import glassbricks.factorio.blueprint.BoundingBox
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 
@@ -59,13 +60,16 @@ public abstract class EntityPrototype : PrototypeBase() {
    * poles/inserters etc.
    */
   public var collision_box: BoundingBox? = null
+    private set
 
   /**
    * Two entities can collide only if they share a layer from the collision mask.
    */
   public var collision_mask: CollisionMask? = null
+    private set
 
   public var flags: EntityPrototypeFlags? = null
+    private set
 
   /**
    * Supported values are 1 (for 1x1 grid) and 2 (for 2x2 grid, like rails).
@@ -75,6 +79,7 @@ public abstract class EntityPrototype : PrototypeBase() {
    * [TrainStopPrototype](prototype:TrainStopPrototype).
    */
   public var build_grid_size: UByte? = null
+    private set
 
   /**
    * Item that when placed creates this entity. Determines which item is picked when "Q" (smart
@@ -84,6 +89,7 @@ public abstract class EntityPrototype : PrototypeBase() {
    * The item count specified here can't be larger than the stack size of that item.
    */
   public var placeable_by: ItemOrArray<ItemToPlace>? = null
+    private set
 
   /**
    * Used to determine how the center of the entity should be positioned when building (unless the
@@ -93,8 +99,10 @@ public abstract class EntityPrototype : PrototypeBase() {
    * center is on the tile transition.
    */
   public var tile_width: UInt? = null
+    private set
 
   public var tile_height: UInt? = null
+    private set
 }
 
 /**
@@ -112,6 +120,61 @@ public abstract class EntityWithHealthPrototype : EntityPrototype()
 public abstract class EntityWithOwnerPrototype : EntityWithHealthPrototype()
 
 /**
+ * Entity with energy source with specialised animation for charging/discharging. Used for the
+ * [accumulator](https://wiki.factorio.com/Accumulator) entity.
+ */
+@Serializable
+@SerialName("accumulator")
+public class AccumulatorPrototype : EntityWithOwnerPrototype() {
+  /**
+   * The capacity of the energy source buffer specifies the capacity of the accumulator.
+   */
+  public lateinit var energy_source: ElectricEnergySource
+    private set
+
+  /**
+   * The maximum circuit wire distance for this entity.
+   */
+  public var circuit_wire_max_distance: Double? = null
+    private set
+
+  /**
+   * The name of the signal that is the default for when an accumulator is connected to the circuit
+   * network.
+   */
+  public var default_output_signal: SignalIDConnector? = null
+    private set
+}
+
+/**
+ * The abstract base of all [EnergySources](prototype:EnergySource). Specifies the way an entity
+ * gets its energy.The abstract base of all [EnergySources](prototype:EnergySource). Specifies the way
+ * an entity gets its energy.
+ */
+@Serializable
+public abstract class BaseEnergySource {
+  /**
+   * The pollution an entity emits per minute at full energy consumption. This is exactly the value
+   * that is shown in the entity tooltip.
+   */
+  public var emissions_per_minute: Double? = null
+    private set
+
+  /**
+   * Whether to render the "no power" icon if the entity is low on power. Also applies to the "no
+   * fuel" icon when using burner energy sources.
+   */
+  public var render_no_power_icon: Boolean? = null
+    private set
+
+  /**
+   * Whether to render the "no network" icon if the entity is not connected to an electric network.
+   */
+  public var render_no_network_icon: Boolean? = null
+    private set
+}
+
+/**
  * Every entry in the array is a specification of one layer the object collides with or a special
  * collision option. Supplying an empty table means that no layers and no collision options are set.
  *
@@ -126,6 +189,109 @@ public abstract class EntityWithOwnerPrototype : EntityWithHealthPrototype()
  * control other aspects of collision.
  */
 public typealias CollisionMask = List<String>
+
+@Serializable
+public class ElectricEnergySource : BaseEnergySource() {
+  /**
+   * This is only loaded, and mandatory if the energy source can be loaded as multiple energy source
+   * types.
+   */
+  public var type: UnknownStringLiteral? = null
+    private set
+
+  /**
+   * How much energy this entity can hold.
+   */
+  public var buffer_capacity: Energy? = null
+    private set
+
+  public lateinit var usage_priority: ElectricUsagePriority
+    private set
+
+  /**
+   * The rate at which energy can be taken, from the network, to refill the energy buffer. `0` means
+   * no transfer.
+   */
+  public var input_flow_limit: Energy? = null
+    private set
+
+  /**
+   * The rate at which energy can be provided, to the network, from the energy buffer. `0` means no
+   * transfer.
+   */
+  public var output_flow_limit: Energy? = null
+    private set
+
+  /**
+   * How much energy (per second) will be continuously removed from the energy buffer. In-game, this
+   * is shown in the tooltip as "Min. [Minimum] Consumption". Applied as a constant
+   * consumption-per-tick, even when the entity has the property [active](runtime:LuaEntity::active)
+   * set to `false`.
+   */
+  public var drain: Energy? = null
+    private set
+}
+
+/**
+ * Used to specify priority of energy usage in the [electric
+ * system](https://wiki.factorio.com/Electric_system).
+ */
+public enum class ElectricUsagePriority {
+  /**
+   * Used for the most important machines, for example laser turrets.
+   */
+  `primary-input`,
+  `primary-output`,
+  /**
+   * Used for all other machines.
+   */
+  `secondary-input`,
+  /**
+   * Used in steam generators.
+   */
+  `secondary-output`,
+  /**
+   * As input/output used for accumulators, to collect the overproduction or provide energy when
+   * neither primary/secondary output can't.
+   */
+  tertiary,
+  /**
+   * Can only be used by [SolarPanelPrototype](prototype:SolarPanelPrototype), will be ignored
+   * otherwise.
+   */
+  solar,
+  /**
+   * Can only be used by [LampPrototype](prototype:LampPrototype), will be ignored otherwise.
+   */
+  lamp,
+}
+
+/**
+ * Specifies an amount of electric energy in joules, or electric energy per time in watts.
+ *
+ * Internally, the input in `Watt` or `Joule/second` is always converted into `Joule/tick`, where 1
+ * second is equal to 60 ticks. This means it uses the following formula: `Power in Joule/tick = Power
+ * in Watt / 60`. See [Power](https://wiki.factorio.com/Units#Power).
+ *
+ * Supported Multipliers:
+ *
+ * - `k/K`: 10^3, or 1 000
+ *
+ * - `M`: 10^6
+ *
+ * - `G`: 10^9
+ *
+ * - `T`: 10^12
+ *
+ * - `P`: 10^15
+ *
+ * - `E`: 10^18
+ *
+ * - `Z`: 10^21
+ *
+ * - `Y`: 10^24
+ */
+public typealias Energy = String
 
 public enum class EntityPrototypeFlag {
   /**
@@ -286,4 +452,19 @@ public data class ItemToPlace(
    * of the item.
    */
   public val count: UInt,
+)
+
+public enum class SignalIDConnectorType {
+  virtual,
+  item,
+  fluid,
+}
+
+@Serializable
+public data class SignalIDConnector(
+  public val type: SignalIDConnectorType,
+  /**
+   * Name of the signal that shows this color.
+   */
+  public val name: String,
 )
