@@ -2,6 +2,7 @@ package glassbricks.factorio.blueprint.prototypes
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.test.Test
 
 
@@ -12,7 +13,9 @@ class LoadKtTest {
         val dataRawFile = this.javaClass.classLoader.getResourceAsStream("data-raw-dump.json")!!
         val dataRaw = dataRawJson.decodeFromStream(DataRaw.serializer(), dataRawFile)
         println(dataRaw)
-        val saved = dataRawJson.encodeToString(DataRaw.serializer(), dataRaw)
-        println(saved)
+        dataRawJson.encodeToJsonElement(DataRaw.serializer(), dataRaw)
+        val pipe = dataRaw.`pipe-to-ground`.values.first()
+        val pipeStr = dataRawJson.encodeToJsonElement(pipe)
+        println(pipeStr)
     }
 }

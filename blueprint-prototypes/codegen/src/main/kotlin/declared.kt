@@ -7,6 +7,7 @@ import com.squareup.kotlinpoet.asClassName
 
 fun GeneratedPrototypesBuilder.getGeneratedClasses() {
     extraSealedIntf("EVEnergySource", "ElectricEnergySource", "VoidEnergySource")
+    extraSealedIntf("EHFVEnergySource", "ElectricEnergySource", "HeatEnergySource", "FluidEnergySource", "VoidEnergySource")
 
     prototypes {
         "PrototypeBase" {
@@ -34,6 +35,9 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
                 tryAddProperty("fluid_box")
                 tryAddProperty("output_fluid_box")
                 tryAddProperty("circuit_wire_max_distance")
+                tryAddProperty("allowed_effects")
+                tryAddProperty("base_productivity")
+                tryAddProperty("module_specification")
                 block()
             }
         }
@@ -46,8 +50,6 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         blueprintable("Beacon") {
             +"supply_area_distance"
             +"distribution_effectivity"
-            +"module_specification"
-            +"allowed_effects"
         }
         blueprintable("Boiler")
         blueprintable("BurnerGenerator") {
@@ -78,9 +80,6 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             +"crafting_speed"
             +"crafting_categories"
             +"fluid_boxes"
-            +"allowed_effects"
-            +"base_productivity"
-            +"module_specification"
         }
         blueprintable("AssemblingMachine") {
             +"fixed_recipe"
@@ -97,10 +96,102 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         blueprintable("Generator")
         blueprintable("HeatInterface")
         blueprintable("HeatPipe")
+        blueprintable("Inserter") {
+            +"insert_position"
+            +"pickup_position"
+            +"filter_count"
+        }
+        blueprintable("Lab") {
+            +"inputs"
+        }
+        blueprintable("Lamp")
+        blueprintable("LandMine")
+        blueprintable("LinkedContainer") {
+            +"inventory_size"
+            "inventory_type" {
+                innerEnumName = "InventoryType"
+            }
+        }
+        blueprintable("MiningDrill") {
+            +"vector_to_place_result"
+            +"resource_categories"
+        }
+        blueprintable("OffshorePump") {
+            +"fluid"
+        }
+        blueprintable("Pipe")
+        blueprintable("InfinityPipe")
+        blueprintable("PipeToGround")
+        blueprintable("PowerSwitch")
+        blueprintable("ProgrammableSpeaker") {
+            +"maximum_polyphony"
+            +"instruments"
+        }
+        blueprintable("Pump")
+        blueprintable("Radar") {
+            +"max_distance_of_sector_revealed"
+            +"max_distance_of_nearby_sector_revealed"
+        }
+        blueprintable("Rail")
+        blueprintable("StraightRail")
+        blueprintable("RailSignalBase") {
+            +"default_red_output_signal"
+            +"default_orange_output_signal"
+            +"default_green_output_signal"
+        }
+        blueprintable("RailChainSignal") {
+            +"default_blue_output_signal"
+        }
+        blueprintable("RailSignal")
+        blueprintable("Reactor")
+        blueprintable("Roboport") {
+            +"logistics_radius"
+            +"construction_radius"
+            +"default_available_logistic_output_signal"
+            +"default_total_logistic_output_signal"
+            +"default_available_construction_output_signal"
+            +"default_total_construction_output_signal"
+            +"logistics_connection_distance"
+        }
+        blueprintable("SimpleEntityWithOwner")
+        blueprintable("SimpleEntityWithForce")
+        blueprintable("SolarPanel")
+        blueprintable("StorageTank") {
+            +"two_direction_only"
+        }
+        blueprintable("TrainStop") {
+            +"default_train_stopped_signal"
+            +"default_trains_count_signal"
+            +"default_trains_limit_signal"
+        }
+        blueprintable("TransportBeltConnectable") {
+            +"speed"
+        }
+        blueprintable("LinkedBelt") {
+            +"allow_clone_connection"
+            +"allow_blueprint_connection"
+            +"allow_side_loading"
+        }
+        blueprintable("Loader") {
+            +"filter_count"
+        }
+        blueprintable("Loader1x1")
+        blueprintable("Loader1x2")
+        blueprintable("Splitter")
+        blueprintable("TransportBelt") {
+            +"related_underground_belt"
+        }
+        blueprintable("UndergroundBelt") {
+            +"max_distance"
+        }
+        blueprintable("Turret")
+        blueprintable("AmmoTurret")
+        blueprintable("Wall")
     }
 
     concepts {
         "ItemID" {}
+        "EntityID" {}
         "ItemToPlace" {}
 
         "Vector" {
@@ -138,6 +229,7 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
 
         "RecipeID" {}
         "RecipeCategoryID" {}
+        "ResourceCategoryID" {}
         "ProductionType" {}
 
         "FluidID" {}
@@ -182,6 +274,12 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         "ElectricEnergySource" {
             includeAllProperties = false
             +"type"
+        }
+
+        "ProgrammableSpeakerInstrument" {}
+        "ProgrammableSpeakerNote" {
+            includeAllProperties = false
+            +"name"
         }
     }
 }

@@ -169,7 +169,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
 
     private fun Documentable.Builder<*>.addDescription(description: String?) {
         if (!description.isNullOrBlank()) {
-            addKdoc(description)
+            addKdoc("%L", description)
         }
     }
 
@@ -345,9 +345,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                 }
                 setter(FunSpec.setterBuilder().addModifiers(KModifier.PRIVATE).build())
             }
-            if (property.description.isNotBlank()) {
-                addKdoc(property.description)
-            }
+            addDescription(property.description)
             block()
         }.build()
     }
@@ -361,12 +359,23 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             null
         }
 
+    private val existingEnums = mutableMapOf<Set<String>, String>()
+
     private fun generateEnumType(
         name: String,
         options: List<LiteralType>,
         block: TypeSpec.Builder.() -> Unit = {}
-    ): TypeSpec =
-        TypeSpec.enumBuilder(name).apply {
+    ): TypeSpec? {
+        val stringOptions = options.map { it.value.content }.toSet()
+        if (stringOptions in existingEnums) {
+            require(existingEnums[stringOptions] == name) {
+                "Enum with same options but different name already exists: ${existingEnums[stringOptions]}"
+            }
+            return null
+        }
+        existingEnums[stringOptions] = name
+
+        return TypeSpec.enumBuilder(name).apply {
             addAnnotation(Serializable::class)
 
             for (option in options) {
@@ -380,6 +389,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
 
             block()
         }.build()
+    }
 
 
     private fun tryGetItemOrArrayValue(
@@ -488,8 +498,8 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                 .toGenType()
         } ?: tryGetExtraSealedIntfName(type)?.toGenType()
         ?: run {
-            println("UnionType $type not supported")
-            Any::class.asClassName().toGenType()
+            error("UnionType $type not supported")
+//            Any::class.asClassName().toGenType()
         }
     }
 }

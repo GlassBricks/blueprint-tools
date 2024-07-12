@@ -150,6 +150,21 @@ public class AccumulatorPrototype : EntityWithOwnerPrototype() {
 }
 
 /**
+ * A turret that needs no extra ammunition. See the children for turrets that need some kind of
+ * ammunition.
+ */
+@Serializable
+@SerialName("turret")
+public open class TurretPrototype : EntityWithOwnerPrototype()
+
+/**
+ * A turret that consumes [ammo items](prototype:AmmoItemPrototype).
+ */
+@Serializable
+@SerialName("ammo-turret")
+public class AmmoTurretPrototype : TurretPrototype()
+
+/**
  * Abstract base type for decider and arithmetic combinators.
  */
 @Serializable
@@ -546,11 +561,656 @@ public open class LogisticContainerPrototype : ContainerPrototype() {
 public class InfinityContainerPrototype : LogisticContainerPrototype()
 
 /**
+ * An entity to transport fluids over a distance and between machines.
+ */
+@Serializable
+@SerialName("pipe")
+public open class PipePrototype : EntityWithOwnerPrototype() {
+    /**
+     * The area of the entity where fluid/gas inputs, and outputs.
+     */
+    public lateinit var fluid_box: FluidBox
+        private set
+}
+
+/**
+ * This entity produces or consumes fluids. Its fluid settings can be changed runtime.
+ */
+@Serializable
+@SerialName("infinity-pipe")
+public class InfinityPipePrototype : PipePrototype()
+
+/**
+ * An [inserter](https://wiki.factorio.com/Inserter).
+ */
+@Serializable
+@SerialName("inserter")
+public class InserterPrototype : EntityWithOwnerPrototype() {
+    public lateinit var insert_position: Vector
+        private set
+
+    public lateinit var pickup_position: Vector
+        private set
+
+    /**
+     * Defines how this inserter gets energy. The emissions set on the energy source are ignored so
+     * inserters cannot produce pollution.
+     */
+    public lateinit var energy_source: EnergySource
+        private set
+
+    /**
+     * How many filters this inserter has. Maximum count of filtered items in inserter is 5.
+     */
+    public var filter_count: UByte? = null
+        private set
+
+    /**
+     * The maximum circuit wire distance for this entity.
+     */
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
+
+/**
+ * A [lab](https://wiki.factorio.com/Lab). It consumes [science packs](prototype:ToolPrototype) to
+ * research [technologies](prototype:TechnologyPrototype).
+ */
+@Serializable
+@SerialName("lab")
+public class LabPrototype : EntityWithOwnerPrototype() {
+    /**
+     * Defines how this lab gets energy.
+     */
+    public lateinit var energy_source: EnergySource
+        private set
+
+    /**
+     * A list of the names of science packs that can be used in this lab.
+     *
+     * If a technology requires other types of science packs, it cannot be researched in this lab.
+     */
+    public lateinit var inputs: List<ItemID>
+        private set
+
+    /**
+     * Sets the [modules](prototype:ModulePrototype) and [beacon](prototype:BeaconPrototype) effects
+     * that are allowed to be used on this lab.
+     */
+    public var allowed_effects: EffectTypeLimitation? = null
+        private set
+
+    /**
+     * Productivity bonus that this machine always has.
+     */
+    public var base_productivity: Float? = null
+        private set
+
+    /**
+     * The number of module slots.
+     */
+    public var module_specification: ModuleSpecification? = null
+        private set
+}
+
+/**
+ * A [lamp](https://wiki.factorio.com/Lamp) to provide light, using energy.
+ */
+@Serializable
+@SerialName("lamp")
+public class LampPrototype : EntityWithOwnerPrototype() {
+    /**
+     * The emissions set on the energy source are ignored so lamps cannot produce pollution.
+     */
+    public lateinit var energy_source: EVEnergySource
+        private set
+
+    /**
+     * The maximum circuit wire distance for this entity.
+     */
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
+
+/**
+ * A [land mine](https://wiki.factorio.com/Land_mine).
+ */
+@Serializable
+@SerialName("land-mine")
+public class LandMinePrototype : EntityWithOwnerPrototype()
+
+/**
+ * Abstract class that anything that is a belt or can connect to belts uses.
+ */
+@Serializable
+public sealed class TransportBeltConnectablePrototype : EntityWithOwnerPrototype() {
+    /**
+     * The speed of the belt: `speed × 480 = x Items/second`.
+     *
+     * The raw value is expressed as the number of tiles traveled by each item on the belt per tick,
+     * relative to the belt's maximum density - e.g. `x items/second ÷ (4 items/lane × 2 lanes/belt ×
+     * 60 ticks/second) = <speed> belts/tick` where a "belt" is the size of one tile. See
+     * [Transport_belts/Physics](https://wiki.factorio.com/Transport_belts/Physics) for more details.
+     *
+     * Must be a positive non-infinite number. The number is a fixed point number with 8 bits
+     * reserved for decimal precision, meaning the smallest value step is `1/2^8 = 0.00390625`. In the
+     * simple case of a non-curved belt, the rate is multiples of `1.875` items/s, even though the
+     * entity tooltip may show a different rate.
+     */
+    public var speed: Double = 0.0
+        private set
+}
+
+/**
+ * A belt that can be connected to a belt anywhere else, including on a different surface. The
+ * linked belts have to be [connected with console
+ * commands](https://wiki.factorio.com/Console#Connect_linked_belts) or runtime scripting in mods or
+ * scenarios. [LuaEntity::connect_linked_belts](runtime:LuaEntity::connect_linked_belts) and other
+ * runtime functions.
+ */
+@Serializable
+@SerialName("linked-belt")
+public class LinkedBeltPrototype : TransportBeltConnectablePrototype() {
+    public var allow_clone_connection: Boolean? = null
+        private set
+
+    public var allow_blueprint_connection: Boolean? = null
+        private set
+
+    public var allow_side_loading: Boolean? = null
+        private set
+}
+
+/**
+ * A container that shares its inventory with containers with the same
+ * [link_id](runtime:LuaEntity::link_id), which can be set via the GUI. The link IDs are per prototype
+ * and force, so only containers with the **same ID**, **same prototype name** and **same force** will
+ * share inventories.
+ */
+@Serializable
+@SerialName("linked-container")
+public class LinkedContainerPrototype : EntityWithOwnerPrototype() {
+    /**
+     * Must be > 0.
+     */
+    public var inventory_size: ItemStackIndex = 0u
+        private set
+
+    /**
+     * Whether the inventory of this container can be filtered (like cargo wagons) or not.
+     */
+    public var inventory_type: InventoryType? = null
+        private set
+
+    /**
+     * The maximum circuit wire distance for this linked container.
+     */
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
+
+/**
+ * Continuously loads and unloads machines, as an alternative to inserters.
+ */
+@Serializable
+public sealed class LoaderPrototype : TransportBeltConnectablePrototype() {
+    /**
+     * How many item filters this loader has. Maximum count of filtered items in loader is 5.
+     */
+    public var filter_count: UByte = 0u
+        private set
+
+    public var energy_source: EHFVEnergySource? = null
+        private set
+}
+
+/**
+ * Continuously loads and unloads machines, as an alternative to inserters.
+ *
+ * This loader type is identical to [Loader1x2Prototype](prototype:Loader1x2Prototype) with the
+ * exception of its hardcoded belt_distance. The belt_distance of the loader determines the distance
+ * between the position of this loader and the tile of the loader's belt target.
+ *
+ * This loader type always has a belt_distance of 0, meaning by default it is 1 tile long in total.
+ * For a loader type with a belt_distance of 0.5, see
+ * [Loader1x2Prototype](prototype:Loader1x2Prototype).
+ */
+@Serializable
+@SerialName("loader-1x1")
+public class Loader1x1Prototype : LoaderPrototype()
+
+/**
+ * Continuously loads and unloads machines, as an alternative to inserters.
+ *
+ * This loader type is identical to [Loader1x1Prototype](prototype:Loader1x1Prototype) with the
+ * exception of its hardcoded belt_distance. The belt_distance of the loader determines the distance
+ * between the position of this loader and the tile of the loader's belt target.
+ *
+ * This loader type always has a belt_distance of 0.5, meaning by default it is 2 tiles long in
+ * total. For a loader type with a belt_distance of 0, see
+ * [Loader1x1Prototype](prototype:Loader1x1Prototype).
+ */
+@Serializable
+@SerialName("loader")
+public class Loader1x2Prototype : LoaderPrototype()
+
+/**
+ * A mining drill for automatically extracting resources from [resource
+ * entities](prototype:ResourceEntityPrototype). This prototype type is used by [burner mining
+ * drill](https://wiki.factorio.com/Burner_mining_drill), [electric mining
+ * drill](https://wiki.factorio.com/Electric_mining_drill) and
+ * [pumpjack](https://wiki.factorio.com/Pumpjack) in vanilla.
+ */
+@Serializable
+@SerialName("mining-drill")
+public class MiningDrillPrototype : EntityWithOwnerPrototype() {
+    /**
+     * The position where any item results are placed, when the mining drill is facing north
+     * (default direction). If the drill does not produce any solid items but uses a fluidbox output
+     * instead (e.g. pumpjacks), a vector of `{0,0}` disables the yellow arrow alt-mode indicator for
+     * the placed item location.
+     */
+    public lateinit var vector_to_place_result: Vector
+        private set
+
+    /**
+     * The energy source of this mining drill.
+     */
+    public lateinit var energy_source: EnergySource
+        private set
+
+    /**
+     * The names of the [ResourceCategory](prototype:ResourceCategory) that can be mined by this
+     * drill. For a list of built-in categories, see
+     * [here](https://wiki.factorio.com/Data.raw#resource-category).
+     *
+     * Note: Categories containing resources which produce items, fluids, or items+fluids may be
+     * combined on the same entity, but may not work as expected. Examples: Miner does not rotate
+     * fluid-resulting resources until depletion. Fluid isn't output (fluid resource change and
+     * fluidbox matches previous fluid). Miner with no `vector_to_place_result` can't output an item
+     * result and halts.
+     */
+    public lateinit var resource_categories: List<ResourceCategoryID>
+        private set
+
+    public var output_fluid_box: FluidBox? = null
+        private set
+
+    /**
+     * Sets the [modules](prototype:ModulePrototype) and [beacon](prototype:BeaconPrototype) effects
+     * that are allowed to be used on this mining drill.
+     */
+    public var allowed_effects: EffectTypeLimitation? = null
+        private set
+
+    /**
+     * The maximum circuit wire distance for this entity.
+     */
+    public var circuit_wire_max_distance: Double? = null
+        private set
+
+    /**
+     * Productivity bonus that this machine always has. Values below `0` are allowed, however the
+     * sum of the resulting effect together with modules and research is limited to be at least 0%, see
+     * [Effect](prototype:Effect).
+     */
+    public var base_productivity: Float? = null
+        private set
+
+    public var module_specification: ModuleSpecification? = null
+        private set
+}
+
+/**
+ * An [offshore pump](https://wiki.factorio.com/Offshore_pump).
+ */
+@Serializable
+@SerialName("offshore-pump")
+public class OffshorePumpPrototype : EntityWithOwnerPrototype() {
+    public lateinit var fluid_box: FluidBox
+        private set
+
+    /**
+     * The name of the fluid that is produced by the pump.
+     */
+    public lateinit var fluid: FluidID
+        private set
+
+    /**
+     * The maximum circuit wire distance for this entity.
+     */
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
+
+/**
+ * A [pipe to ground](https://wiki.factorio.com/Pipe_to_ground).
+ */
+@Serializable
+@SerialName("pipe-to-ground")
+public class PipeToGroundPrototype : EntityWithOwnerPrototype() {
+    public lateinit var fluid_box: FluidBox
+        private set
+}
+
+/**
+ * A [power switch](https://wiki.factorio.com/Power_switch).
+ */
+@Serializable
+@SerialName("power-switch")
+public class PowerSwitchPrototype : EntityWithOwnerPrototype()
+
+/**
+ * A [programmable speaker](https://wiki.factorio.com/Programmable_speaker).
+ */
+@Serializable
+@SerialName("programmable-speaker")
+public class ProgrammableSpeakerPrototype : EntityWithOwnerPrototype() {
+    public lateinit var energy_source: EVEnergySource
+        private set
+
+    public var maximum_polyphony: UInt = 0u
+        private set
+
+    public lateinit var instruments: List<ProgrammableSpeakerInstrument>
+        private set
+
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
+
+/**
+ * The pump is used to transfer fluids between tanks, fluid wagons and pipes.
+ */
+@Serializable
+@SerialName("pump")
+public class PumpPrototype : EntityWithOwnerPrototype() {
+    /**
+     * The area of the entity where fluid inputs and outputs.
+     */
+    public lateinit var fluid_box: FluidBox
+        private set
+
+    /**
+     * The type of energy the pump uses.
+     */
+    public lateinit var energy_source: EnergySource
+        private set
+
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
+
+/**
+ * A [radar](https://wiki.factorio.com/Radar).
+ */
+@Serializable
+@SerialName("radar")
+public class RadarPrototype : EntityWithOwnerPrototype() {
+    /**
+     * The energy source for this radar.
+     */
+    public lateinit var energy_source: EnergySource
+        private set
+
+    /**
+     * The radius of the area this radar can chart, in chunks.
+     */
+    public var max_distance_of_sector_revealed: UInt = 0u
+        private set
+
+    /**
+     * The radius of the area constantly revealed by this radar, in chunks.
+     */
+    public var max_distance_of_nearby_sector_revealed: UInt = 0u
+        private set
+}
+
+/**
+ * The abstract base entity for both rail signals.
+ */
+@Serializable
+public sealed class RailSignalBasePrototype : EntityWithOwnerPrototype() {
+    public var default_red_output_signal: SignalIDConnector? = null
+        private set
+
+    public var default_orange_output_signal: SignalIDConnector? = null
+        private set
+
+    public var default_green_output_signal: SignalIDConnector? = null
+        private set
+
+    /**
+     * The maximum circuit wire distance for this entity.
+     */
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
+
+/**
+ * A [rail chain signal](https://wiki.factorio.com/Rail_chain_signal).
+ */
+@Serializable
+@SerialName("rail-chain-signal")
+public class RailChainSignalPrototype : RailSignalBasePrototype() {
+    public var default_blue_output_signal: SignalIDConnector? = null
+        private set
+}
+
+/**
+ * The abstract base of both rail prototypes.
+ */
+@Serializable
+public sealed class RailPrototype : EntityWithOwnerPrototype()
+
+/**
+ * A [rail signal](https://wiki.factorio.com/Rail_signal).
+ */
+@Serializable
+@SerialName("rail-signal")
+public class RailSignalPrototype : RailSignalBasePrototype()
+
+/**
+ * A [reactor](https://wiki.factorio.com/Reactor).
+ */
+@Serializable
+@SerialName("reactor")
+public class ReactorPrototype : EntityWithOwnerPrototype() {
+    /**
+     * May not be a heat energy source.
+     *
+     * The input energy source, in vanilla it is a burner energy source.
+     */
+    public lateinit var energy_source: EnergySource
+        private set
+}
+
+/**
+ * A [roboport](https://wiki.factorio.com/Roboport).
+ */
+@Serializable
+@SerialName("roboport")
+public class RoboportPrototype : EntityWithOwnerPrototype() {
+    /**
+     * The roboport's energy source.
+     */
+    public lateinit var energy_source: EVEnergySource
+        private set
+
+    /**
+     * Can't be negative.
+     */
+    public var logistics_radius: Float = 0f
+        private set
+
+    /**
+     * Can't be negative.
+     */
+    public var construction_radius: Float = 0f
+        private set
+
+    public var default_available_logistic_output_signal: SignalIDConnector? = null
+        private set
+
+    public var default_total_logistic_output_signal: SignalIDConnector? = null
+        private set
+
+    public var default_available_construction_output_signal: SignalIDConnector? = null
+        private set
+
+    public var default_total_construction_output_signal: SignalIDConnector? = null
+        private set
+
+    /**
+     * The maximum circuit wire distance for this entity.
+     */
+    public var circuit_wire_max_distance: Double? = null
+        private set
+
+    /**
+     * Must be >= `logistics_radius`.
+     */
+    public var logistics_connection_distance: Float? = null
+        private set
+}
+
+/**
  * A [rocket silo](https://wiki.factorio.com/Rocket_silo).
  */
 @Serializable
 @SerialName("rocket-silo")
 public class RocketSiloPrototype : AssemblingMachinePrototype()
+
+/**
+ * Has a force, but unlike
+ * [SimpleEntityWithForcePrototype](prototype:SimpleEntityWithForcePrototype) it is only attacked if
+ * the biters get stuck on it (or if
+ * [EntityWithOwnerPrototype::is_military_target](prototype:EntityWithOwnerPrototype::is_military_target)
+ * set to true to make the two entity types equivalent).
+ *
+ * Can be rotated in 4 directions. `picture` can be used to specify different graphics per
+ * direction.
+ */
+@Serializable
+@SerialName("simple-entity-with-owner")
+public open class SimpleEntityWithOwnerPrototype : EntityWithOwnerPrototype()
+
+/**
+ * By default, this entity will be a priority target for units/turrets, who will choose to attack it
+ * even if it does not block their path. Setting
+ * [EntityWithOwnerPrototype::is_military_target](prototype:EntityWithOwnerPrototype::is_military_target)
+ * to `false` will turn this off, which then makes this type equivalent to
+ * [SimpleEntityWithOwnerPrototype](prototype:SimpleEntityWithOwnerPrototype).
+ */
+@Serializable
+@SerialName("simple-entity-with-force")
+public class SimpleEntityWithForcePrototype : SimpleEntityWithOwnerPrototype()
+
+/**
+ * A [solar panel](https://wiki.factorio.com/Solar_panel).
+ */
+@Serializable
+@SerialName("solar-panel")
+public class SolarPanelPrototype : EntityWithOwnerPrototype() {
+    /**
+     * Sets how this solar panel connects to the energy network. The most relevant property seems to
+     * be the output_priority.
+     */
+    public lateinit var energy_source: ElectricEnergySource
+        private set
+}
+
+/**
+ * A [splitter](https://wiki.factorio.com/Splitter).
+ */
+@Serializable
+@SerialName("splitter")
+public class SplitterPrototype : TransportBeltConnectablePrototype()
+
+/**
+ * A [storage tank](https://wiki.factorio.com/Storage_tank).
+ */
+@Serializable
+@SerialName("storage-tank")
+public class StorageTankPrototype : EntityWithOwnerPrototype() {
+    public lateinit var fluid_box: FluidBox
+        private set
+
+    public var two_direction_only: Boolean? = null
+        private set
+
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
+
+/**
+ * A straight rail.
+ */
+@Serializable
+@SerialName("straight-rail")
+public class StraightRailPrototype : RailPrototype()
+
+/**
+ * A [train stop](https://wiki.factorio.com/Train_stop).
+ */
+@Serializable
+@SerialName("train-stop")
+public class TrainStopPrototype : EntityWithOwnerPrototype() {
+    public var default_train_stopped_signal: SignalIDConnector? = null
+        private set
+
+    public var default_trains_count_signal: SignalIDConnector? = null
+        private set
+
+    public var default_trains_limit_signal: SignalIDConnector? = null
+        private set
+
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
+
+/**
+ * A [transport belt](https://wiki.factorio.com/Transport_belt).
+ */
+@Serializable
+@SerialName("transport-belt")
+public class TransportBeltPrototype : TransportBeltConnectablePrototype() {
+    /**
+     * The maximum circuit wire distance for this entity.
+     */
+    public var circuit_wire_max_distance: Double? = null
+        private set
+
+    /**
+     * The name of the [UndergroundBeltPrototype](prototype:UndergroundBeltPrototype) which is used
+     * in quick-replace fashion when the smart belt dragging behavior is triggered.
+     */
+    public var related_underground_belt: EntityID? = null
+        private set
+}
+
+/**
+ * An [underground belt](https://wiki.factorio.com/Underground_belt).
+ */
+@Serializable
+@SerialName("underground-belt")
+public class UndergroundBeltPrototype : TransportBeltConnectablePrototype() {
+    public var max_distance: UByte = 0u
+        private set
+}
+
+/**
+ * A [wall](https://wiki.factorio.com/Wall).
+ */
+@Serializable
+@SerialName("wall")
+public class WallPrototype : EntityWithOwnerPrototype() {
+    /**
+     * The maximum circuit wire distance for this entity.
+     */
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
 
 /**
  * The abstract base of all [EnergySources](prototype:EnergySource). Specifies the way an entity
@@ -621,13 +1281,18 @@ public typealias EffectTypeLimitation = ItemOrArray<EffectType>
 
 @Serializable
 @SerialName("electric")
-public data object ElectricEnergySource : BaseEnergySource(), EVEnergySource
+public data object ElectricEnergySource : BaseEnergySource(), EVEnergySource, EHFVEnergySource
 
 /**
  * Loaded as one of the [BaseEnergySource](prototype:BaseEnergySource) extensions, based on the
  * value of the `type` key.
  */
 public typealias EnergySource = BaseEnergySource
+
+/**
+ * The name of an [EntityPrototype](prototype:EntityPrototype).
+ */
+public typealias EntityID = String
 
 @Serializable
 public enum class EntityPrototypeFlag {
@@ -811,7 +1476,8 @@ public data class FluidEnergySource(
      * filter on the fluidbox must be set to be able to calculate the fluid usage of the energy source.
      */
     public val fluid_box: FluidBox,
-) : BaseEnergySource()
+) : BaseEnergySource(),
+    EHFVEnergySource
 
 /**
  * The name of a [FluidPrototype](prototype:FluidPrototype).
@@ -849,7 +1515,8 @@ public data class HeatEnergySource(
      * May contain up to 32 connections.
      */
     public val connections: List<HeatConnection>?,
-) : BaseEnergySource()
+) : BaseEnergySource(),
+    EHFVEnergySource
 
 /**
  * The name of an [ItemPrototype](prototype:ItemPrototype).
@@ -932,6 +1599,17 @@ public enum class ProductionType {
     output,
 }
 
+@Serializable
+public data class ProgrammableSpeakerInstrument(
+    public val name: String,
+    public val notes: List<ProgrammableSpeakerNote>,
+)
+
+@Serializable
+public data class ProgrammableSpeakerNote(
+    public val name: String,
+)
+
 /**
  * The name of a [RecipeCategory](prototype:RecipeCategory).
  */
@@ -941,6 +1619,11 @@ public typealias RecipeCategoryID = String
  * The name of a [RecipePrototype](prototype:RecipePrototype).
  */
 public typealias RecipeID = String
+
+/**
+ * The name of a [ResourceCategory](prototype:ResourceCategory).
+ */
+public typealias ResourceCategoryID = String
 
 @Serializable
 public enum class SignalType {
@@ -969,10 +1652,13 @@ public typealias Vector = Position
  */
 @Serializable
 @SerialName("void")
-public data object VoidEnergySource : BaseEnergySource(), EVEnergySource
+public data object VoidEnergySource : BaseEnergySource(), EVEnergySource, EHFVEnergySource
 
 @Serializable
 public sealed interface EVEnergySource
+
+@Serializable
+public sealed interface EHFVEnergySource
 
 /**
  * All prototypes, aka [data.raw](https://wiki.factorio.com/Data.raw). Only contains the subset of
@@ -1000,4 +1686,37 @@ public class DataRaw(
     public val generator: Map<String, GeneratorPrototype>,
     public val `heat-interface`: Map<String, HeatInterfacePrototype>,
     public val `heat-pipe`: Map<String, HeatPipePrototype>,
+    public val inserter: Map<String, InserterPrototype>,
+    public val lab: Map<String, LabPrototype>,
+    public val lamp: Map<String, LampPrototype>,
+    public val `land-mine`: Map<String, LandMinePrototype>,
+    public val `linked-container`: Map<String, LinkedContainerPrototype>,
+    public val `mining-drill`: Map<String, MiningDrillPrototype>,
+    public val `offshore-pump`: Map<String, OffshorePumpPrototype>,
+    public val pipe: Map<String, PipePrototype>,
+    public val `infinity-pipe`: Map<String, InfinityPipePrototype>,
+    public val `pipe-to-ground`: Map<String, PipeToGroundPrototype>,
+    public val `power-switch`: Map<String, PowerSwitchPrototype>,
+    public val `programmable-speaker`: Map<String, ProgrammableSpeakerPrototype>,
+    public val pump: Map<String, PumpPrototype>,
+    public val radar: Map<String, RadarPrototype>,
+    public val `straight-rail`: Map<String, StraightRailPrototype>,
+    public val `rail-chain-signal`: Map<String, RailChainSignalPrototype>,
+    public val `rail-signal`: Map<String, RailSignalPrototype>,
+    public val reactor: Map<String, ReactorPrototype>,
+    public val roboport: Map<String, RoboportPrototype>,
+    public val `simple-entity-with-owner`: Map<String, SimpleEntityWithOwnerPrototype>,
+    public val `simple-entity-with-force`: Map<String, SimpleEntityWithForcePrototype>,
+    public val `solar-panel`: Map<String, SolarPanelPrototype>,
+    public val `storage-tank`: Map<String, StorageTankPrototype>,
+    public val `train-stop`: Map<String, TrainStopPrototype>,
+    public val `linked-belt`: Map<String, LinkedBeltPrototype>,
+    public val `loader-1x1`: Map<String, Loader1x1Prototype>,
+    public val loader: Map<String, Loader1x2Prototype>,
+    public val splitter: Map<String, SplitterPrototype>,
+    public val `transport-belt`: Map<String, TransportBeltPrototype>,
+    public val `underground-belt`: Map<String, UndergroundBeltPrototype>,
+    public val turret: Map<String, TurretPrototype>,
+    public val `ammo-turret`: Map<String, AmmoTurretPrototype>,
+    public val wall: Map<String, WallPrototype>,
 )
