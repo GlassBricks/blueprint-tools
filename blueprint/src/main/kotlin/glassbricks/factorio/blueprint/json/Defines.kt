@@ -3,32 +3,6 @@ package glassbricks.factorio.blueprint.json
 import kotlinx.serialization.Serializable
 
 
-/**
- * The [ordinal] represents the encoded direction.
- */
-@Serializable(with = Direction.Serializer::class)
-public enum class Direction {
-    North,
-    Northeast,
-    East,
-    Southeast,
-    South,
-    Southwest,
-    West,
-    Northwest;
-
-    public companion object {
-        public fun fromByte(byte: Byte): Direction = entries[byte.toInt()]
-    }
-
-    public fun toByte(): Byte = ordinal.toByte()
-
-    public fun oppositeDirection(): Direction = entries[(ordinal + 4) % 8]
-    public val isCardinal: Boolean get() = ordinal % 2 == 0
-
-    internal object Serializer : EnumOrdinalSerializer<Direction>(Direction::class)
-}
-
 @Serializable(with = TransportBeltContentReadMode.Serializer::class)
 public enum class TransportBeltContentReadMode {
     Pulse, Hold;
@@ -62,10 +36,10 @@ public enum class InserterModeOfOperation : CircuitModeOption {
     EnableDisable,
     SetFilters,
     /** This is not actually used. */
-    ReadHandContents, 
+    ReadHandContents,
     None,
     /** This is not actually used. */
-    SetStackSize 
+    SetStackSize
 }
 
 public enum class LogisticContainerModeOfOperation : CircuitModeOption {

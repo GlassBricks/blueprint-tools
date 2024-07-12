@@ -9,8 +9,8 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
 
-private const val PACKAGE_NAME = "glassbricks.factorio.blueprint.prototypes"
-private const val PAR_PACKAGE_NAME = "glassbricks.factorio.blueprint"
+const val PACKAGE_NAME = "glassbricks.factorio.blueprint.prototypes"
+const val PAR_PACKAGE_NAME = "glassbricks.factorio.blueprint"
 
 private val builtins = mapOf(
     "bool" to Boolean::class.asClassName(),
@@ -27,6 +27,7 @@ private val builtins = mapOf(
 )
 val predefined = builtins + mapOf(
     "BoundingBox" to ClassName(PAR_PACKAGE_NAME, "BoundingBox"),
+    "Direction" to ClassName(PAR_PACKAGE_NAME, "Direction"),
 )
 
 class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
@@ -35,7 +36,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     private val hasInheritors = mutableSetOf<String>()
     private val extraSealedSupertypes =
         input.extraSealedIntfs
-            .flatMap { it.key.map { subType -> subType to it.value } }
+            .flatMap { it.subtypes.map { subType -> subType to it.name } }
             .groupBy({ it.first }, { it.second })
 
     fun generate(): FileSpec {
@@ -126,9 +127,13 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     }
 
     private fun generateExtraSealedIntfs() {
-        for ((_, name) in input.extraSealedIntfs) {
-            val type = TypeSpec.interfaceBuilder(name).apply {
+        for (intf in input.extraSealedIntfs) {
+            val type = TypeSpec.interfaceBuilder(intf.name).apply {
+                addAnnotation(Serializable::class)
                 addModifiers(KModifier.SEALED)
+                if (intf.source != null) {
+                    addDescription(intf.source.description)
+                }
             }.build()
             file.addType(type)
         }
@@ -375,7 +380,9 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                         && it.value in input.concepts
             }) return null
         val options = type.options.map { (it as BasicType).value }.toSet()
-        val name = input.extraSealedIntfs[options] ?: return null
+        val name = input.extraSealedIntfs.find {
+            it.subtypes == options
+        }?.name ?: return null
         return ClassName(PACKAGE_NAME, name)
     }
 
@@ -404,7 +411,9 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             if (value in predefined) {
                 predefined[value]!!.toGenType()
             } else {
-                check(value in input.concepts) {
+                check(value in input.concepts
+                        || input.extraSealedIntfs.any { value == it.name }
+                ) {
                     "Type not in generated concepts: $value"
                 }
                 ClassName(PACKAGE_NAME, value).toGenType()

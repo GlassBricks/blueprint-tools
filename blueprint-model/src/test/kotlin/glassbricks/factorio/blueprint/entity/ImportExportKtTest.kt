@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.*
 import org.junit.jupiter.api.Assertions
@@ -61,7 +62,7 @@ class ImportExportKtTest {
             },
             loadEntity("foo2") {
                 position = Position(3.0, 4.0)
-                direction = glassbricks.factorio.blueprint.json.Direction.West
+                direction = Direction.West
             },
         )
         entities.forEach {

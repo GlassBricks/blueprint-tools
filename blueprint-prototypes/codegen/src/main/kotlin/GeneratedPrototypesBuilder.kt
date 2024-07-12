@@ -2,11 +2,16 @@ package glassbricks.factorio
 
 import com.squareup.kotlinpoet.TypeName
 
+class SealedIntf(
+    val name: String,
+    val subtypes: Set<String>,
+    val source: Concept?
+)
 
 class GeneratedPrototypes(
     val prototypes: Map<String, GeneratedPrototype>,
     val concepts: Map<String, GeneratedConcept>,
-    val extraSealedIntfs: Map<Set<String>, String>
+    val extraSealedIntfs: List<SealedIntf>
 )
 
 sealed interface GeneratedValue {
@@ -46,7 +51,7 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
     private val prototypes = mutableMapOf<String, GeneratedPrototype>()
     private val concepts = mutableMapOf<String, GeneratedConcept>()
 
-    private val extraSealedIntfs = mutableMapOf<Set<String>, String>()
+    private val extraSealedIntfs = mutableListOf<SealedIntf>()
 
     @GeneratedPrototypesDsl
     inner class Prototypes {
@@ -87,7 +92,25 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
     inline fun concepts(block: Concepts.() -> Unit) = Concepts().block()
 
     fun extraSealedIntf(name: String, vararg values: String) {
-        extraSealedIntfs[values.toSet()] = name
+        extraSealedIntfs.add(SealedIntf(name, values.toSet(), null))
+    }
+
+    fun definedSealedIntf(name: String) {
+        val concept = findConcept(name)
+        val type = concept.type
+        check(type is UnionType) {
+            "Not a sealed interface type"
+        }
+        val options = type.options
+            .map {
+                ((it.innerType() as? BasicType)?.value ?: error("Union option not a basic type"))
+                    .also {
+                        check(it in origConcepts) {
+                            "Union option is not a concept"
+                        }
+                    }
+            }
+        extraSealedIntfs.add(SealedIntf(name, options.toSet(), concept))
     }
 
     fun build(): GeneratedPrototypes {
@@ -99,7 +122,7 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
                 }
             }
         }
-        for (value in extraSealedIntfs.keys.flatten()) {
+        for (value in extraSealedIntfs.flatMap { it.subtypes }) {
             check(value in prototypes || value in concepts) {
                 "Extra sealed interface value $value not found"
             }
@@ -112,13 +135,21 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
 class GeneratedPrototypeBuilder(val prototype: Prototype) {
     private val properties = mutableMapOf<String, GeneratedProperty>()
 
+    fun tryAddProperty(
+        name: String,
+        block: PropertyOptionsBuilder.() -> Unit = {}
+    ): Boolean {
+        if (name in properties) error("Property $name already defined")
+        val property = prototype.properties.find { it.name == name } ?: return false
+        properties[name] = PropertyOptionsBuilder(property).apply(block).build()
+        return true
+    }
+
     fun property(
         name: String,
         block: PropertyOptionsBuilder.() -> Unit
     ) {
-        if (name in properties) error("Property $name already defined")
-        val property = prototype.properties.find { it.name == name } ?: error("Property $name not found")
-        properties[name] = PropertyOptionsBuilder(property).apply(block).build()
+        if (!tryAddProperty(name, block)) error("Property $name not found")
     }
 
     operator fun String.invoke(block: PropertyOptionsBuilder.() -> Unit) {
@@ -128,7 +159,6 @@ class GeneratedPrototypeBuilder(val prototype: Prototype) {
     operator fun String.unaryPlus() {
         property(this) {}
     }
-
 
     fun build(prototype: Prototype): GeneratedPrototype = GeneratedPrototype(prototype, properties)
 }

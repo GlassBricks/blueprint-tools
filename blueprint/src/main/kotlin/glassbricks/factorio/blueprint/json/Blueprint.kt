@@ -3,6 +3,7 @@
 
 package glassbricks.factorio.blueprint.json
 
+import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.TilePosition
 import kotlinx.serialization.EncodeDefault

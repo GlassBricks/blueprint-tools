@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.json.ControlBehavior
 import kotlin.test.Test
