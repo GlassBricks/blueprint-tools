@@ -16,6 +16,7 @@ import kotlinx.serialization.json.*
 
 public typealias Position = @Serializable(with = PositionShorthandSerializer::class) Position
 public typealias BoundingBox = @Serializable(with = BoundingBoxShorthandSerializer::class) BoundingBox
+public typealias ItemOrArray<T> = @Serializable(with = ItemOrArraySerializer::class) List<T>
 
 public object PositionShorthandSerializer : KSerializer<Position> {
     override val descriptor: SerialDescriptor = ListSerializer(Double.serializer()).descriptor
@@ -75,6 +76,31 @@ public object BoundingBoxShorthandSerializer : KSerializer<BoundingBox> {
     }
 
     override fun serialize(encoder: Encoder, value: BoundingBox) {
-        encoder.encodeSerializableValue(ListSerializer(PositionShorthandSerializer), listOf(value.leftTop, value.rightBottom))
+        encoder.encodeSerializableValue(
+            ListSerializer(PositionShorthandSerializer),
+            listOf(value.leftTop, value.rightBottom)
+        )
+    }
+}
+
+
+public class ItemOrArraySerializer<T>(private val itemSerializer: KSerializer<T>) : KSerializer<ItemOrArray<T>> {
+    private val listSerializer = ListSerializer(itemSerializer)
+    override val descriptor: SerialDescriptor get() = listSerializer.descriptor
+
+    override fun deserialize(decoder: Decoder): ItemOrArray<T> {
+        decoder as JsonDecoder
+        return when (val element = decoder.decodeJsonElement()) {
+            is JsonArray -> decoder.json.decodeFromJsonElement(listSerializer, element)
+            else -> listOf(decoder.json.decodeFromJsonElement(itemSerializer, element))
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: ItemOrArray<T>) {
+        if (value.size == 1) {
+            encoder.encodeSerializableValue(itemSerializer, value[0])
+        } else {
+            encoder.encodeSerializableValue(listSerializer, value)
+        }
     }
 }

@@ -1,25 +1,39 @@
 package glassbricks.factorio
 
+import com.squareup.kotlinpoet.TypeName
+
 
 class GeneratedPrototypes(
-    val prototypes: List<GeneratedPrototype>
+    val docs: PrototypeApiDocs,
+    val prototypes: Map<String, GeneratedPrototype>,
+    val concepts: Map<String, GeneratedConcept>
 )
 
+sealed interface GeneratedValue {
+    val inner: ProtoOrConcept
+}
+
 class GeneratedPrototype(
-    val prototype: Prototype,
+    override val inner: Prototype,
     val includedProperties: Map<String, GeneratedProperty>
-)
+): GeneratedValue
+
+class GeneratedConcept(
+    override val inner: Concept,
+    val overrideType: TypeName?
+): GeneratedValue
 
 class GeneratedProperty(val property: Property)
 
 @DslMarker
-annotation class PrototypePropertiesDsl
+annotation class GeneratedPrototypesDsl
 
 
-@PrototypePropertiesDsl
-class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
+@GeneratedPrototypesDsl
+class GeneratedPrototypesBuilder(private val docs: PrototypeApiDocs) {
     private val origPrototypes = docs.prototypes.associateBy { it.name }
     private val prototypes = mutableMapOf<String, GeneratedPrototype>()
+    private val concepts = mutableMapOf<String, GeneratedConcept>()
 
     fun prototype(
         name: String,
@@ -33,20 +47,28 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
         prototype(this, block)
     }
 
+    fun concept(
+        name: String,
+        block: GeneratedConceptBuilder.() -> Unit = {}
+    ) {
+        val concept = docs.types.find { it.name == name } ?: error("Concept $name not found")
+        concepts[name] = GeneratedConceptBuilder(concept).apply(block).build()
+    }
+
     fun build(): GeneratedPrototypes {
         for (genPrototype in prototypes.values) {
-            val prototype = genPrototype.prototype
+            val prototype = genPrototype.inner
             if (prototype.parent != null) {
                 check(prototype.parent in prototypes) {
                     "Parent of ${prototype.name} (${prototype.parent}) not defined"
                 }
             }
         }
-        return GeneratedPrototypes(prototypes.values.toList())
+        return GeneratedPrototypes(docs, prototypes, concepts)
     }
 }
 
-@PrototypePropertiesDsl
+@GeneratedPrototypesDsl
 class GeneratedPrototypeBuilder(val prototype: Prototype) {
     private val properties = mutableMapOf<String, GeneratedProperty>()
 
@@ -74,7 +96,21 @@ class GeneratedPrototypeBuilder(val prototype: Prototype) {
     }
 }
 
-@PrototypePropertiesDsl
+@GeneratedPrototypesDsl
+class GeneratedConceptBuilder(private val concept: Concept) {
+    private val properties = mutableMapOf<String, GeneratedProperty>()
+
+    var overrideType: TypeName? = null
+
+    fun build(): GeneratedConcept {
+        return GeneratedConcept(
+            concept,
+            overrideType = overrideType
+        )
+    }
+}
+
+@GeneratedPrototypesDsl
 class PropertyOptionsBuilder(val property: Property) {
     // more stuff here maybe later
     fun build() = GeneratedProperty(property)
