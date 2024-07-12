@@ -6,6 +6,7 @@
 @file:UseSerializers(
     PositionShorthandSerializer::class,
     BoundingBoxShorthandSerializer::class,
+    LuaListSerializer::class,
 )
 
 package glassbricks.factorio.blueprint.prototypes
@@ -178,6 +179,104 @@ public class ArithmeticCombinatorPrototype : CombinatorPrototype()
 public class ArtilleryTurretPrototype : EntityWithOwnerPrototype()
 
 /**
+ * The abstract basis of the assembling machines and furnaces. Contains the properties that both of
+ * them have.
+ *
+ * Note that a crafting machine cannot be rotated unless it has at least one of the following: a
+ * fluid box, a heat energy source, a fluid energy source, or a non-square collision box. Crafting
+ * machines with non-square collision boxes can only be rotated before placement, not after.
+ */
+@Serializable
+public sealed class CraftingMachinePrototype : EntityWithOwnerPrototype() {
+    /**
+     * How fast this crafting machine can craft. 1 means that for example a 1 second long recipe
+     * take 1 second to craft. 0.5 means it takes 2 seconds, and 2 means it takes 0.5 seconds.
+     *
+     * Crafting speed has to be positive.
+     */
+    public var crafting_speed: Double = 0.0
+        private set
+
+    /**
+     * A list of [recipe categories](prototype:RecipeCategory) this crafting machine can use.
+     */
+    public lateinit var crafting_categories: List<RecipeCategoryID>
+        private set
+
+    /**
+     * Defines how the crafting machine is powered.
+     *
+     * When using an electric energy source and `drain` is not specified, it will be set to
+     * `energy_usage ÷ 30` automatically.
+     */
+    public lateinit var energy_source: EnergySource
+        private set
+
+    /**
+     * Can have `off_when_no_fluid_recipe` key that has a [bool](prototype:bool) value.
+     * `off_when_no_fluid_recipe` defaults to false. `off_when_no_fluid_recipe` is ignored by
+     * [FurnacePrototype](prototype:FurnacePrototype) and considered to always be false.
+     *
+     * If a crafting machine has fluid boxes *and* `off_when_no_fluid_recipe` is true, the crafting
+     * machine can only be rotated when a recipe consuming or producing fluid is set, or it has one of
+     * the other properties listed at the top of the page.
+     */
+    public var fluid_boxes: List<FluidBox>? = null
+        private set
+
+    /**
+     * Sets the [modules](prototype:ModulePrototype) and [beacon](prototype:BeaconPrototype) effects
+     * that are allowed to be used on this machine.
+     *
+     * Note: If the time to complete a recipe is shorter than one tick, only one craft can be
+     * completed per tick, but productivity bonus is applied to the non-limited ''completable'' work.
+     * For a simple example, if a recipe were to take half a tick, only one recipe would be completed,
+     * but twice the productivity bonus would occur. The surplus production from productivity is
+     * **not** limited to one craft per tick.
+     */
+    public var allowed_effects: EffectTypeLimitation? = null
+        private set
+
+    /**
+     * Productivity bonus that this machine always has.
+     */
+    public var base_productivity: Float? = null
+        private set
+
+    /**
+     * The number of module slots in this machine, and their icon positions.
+     */
+    public var module_specification: ModuleSpecification? = null
+        private set
+}
+
+/**
+ * An assembling machine - like the assembling machines 1/2/3 in the game, but you can use your own
+ * recipe categories.
+ */
+@Serializable
+@SerialName("assembling-machine")
+public open class AssemblingMachinePrototype : CraftingMachinePrototype() {
+    /**
+     * The preset recipe of this machine. This machine does not show a recipe selection if this is
+     * set. The base game uses this for the [rocket silo](https://wiki.factorio.com/Rocket_silo).
+     */
+    public var fixed_recipe: RecipeID? = null
+        private set
+
+    /**
+     * Sets the maximum number of ingredients this machine can craft with. Any recipe with more
+     * ingredients than this will be unavailable in this machine.
+     *
+     * This only counts item ingredients, not fluid ingredients! This means if ingredient count is
+     * 2, and the recipe has 2 item ingredients and 1 fluid ingredient, it can still be crafted in the
+     * machine.
+     */
+    public var ingredient_count: UByte? = null
+        private set
+}
+
+/**
  * Entity with the ability to transfer [module](prototype:ModulePrototype) effects to its
  * neighboring entities.
  */
@@ -282,11 +381,101 @@ public class ConstantCombinatorPrototype : EntityWithOwnerPrototype() {
 }
 
 /**
+ * A generic container, such as a chest. Cannot be rotated.
+ */
+@Serializable
+public enum class InventoryType {
+    with_bar,
+    with_filters_and_bar,
+}
+
+/**
+ * A generic container, such as a chest. Cannot be rotated.
+ */
+@Serializable
+@SerialName("container")
+public open class ContainerPrototype : EntityWithOwnerPrototype() {
+    /**
+     * The number of slots in this container.
+     */
+    public var inventory_size: ItemStackIndex = 0u
+        private set
+
+    /**
+     * Whether the inventory of this container can be filtered (like cargo wagons) or not.
+     */
+    public var inventory_type: InventoryType? = null
+        private set
+
+    /**
+     * The maximum circuit wire distance for this container.
+     */
+    public var circuit_wire_max_distance: Double? = null
+        private set
+}
+
+/**
  * A [decider combinator](https://wiki.factorio.com/Decider_combinator).
  */
 @Serializable
 @SerialName("decider-combinator")
 public class DeciderCombinatorPrototype : CombinatorPrototype()
+
+/**
+ * A furnace. Normal furnaces only process "smelting" category recipes, but you can make furnaces
+ * that process other [recipe categories](prototype:RecipeCategory). The difference to assembling
+ * machines is that furnaces automatically choose their recipe based on input.
+ */
+@Serializable
+@SerialName("furnace")
+public class FurnacePrototype : CraftingMachinePrototype()
+
+/**
+ * A generic container, such as a chest, that interacts with the logistics network.
+ */
+@Serializable
+public enum class LogisticMode {
+    `active-provider`,
+    `passive-provider`,
+    requester,
+    storage,
+    buffer,
+}
+
+/**
+ * A generic container, such as a chest, that interacts with the logistics network.
+ */
+@Serializable
+@SerialName("logistic-container")
+public open class LogisticContainerPrototype : ContainerPrototype() {
+    /**
+     * The way this chest interacts with the logistic network.
+     */
+    public var logistic_mode: LogisticMode? = null
+        private set
+
+    /**
+     * The number of request slots this logistics container has. Requester-type containers must have
+     * > 0 slots and can have a maximum of 1000 slots. Storage-type containers must have <= 1 slot.
+     */
+    public var max_logistic_slots: UShort? = null
+        private set
+}
+
+/**
+ * A generic container, such as a chest, that can spawn or void items and interact with the
+ * logistics network.
+ */
+@Serializable
+@SerialName("infinity-container")
+public class InfinityContainerPrototype : LogisticContainerPrototype()
+
+/**
+ * A [rocket silo](https://wiki.factorio.com/Rocket_silo).
+ */
+@Serializable
+@SerialName("rocket-silo")
+public class RocketSiloPrototype : AssemblingMachinePrototype()
 
 /**
  * The abstract base of all [EnergySources](prototype:EnergySource). Specifies the way an entity
@@ -668,6 +857,16 @@ public enum class ProductionType {
     output,
 }
 
+/**
+ * The name of a [RecipeCategory](prototype:RecipeCategory).
+ */
+public typealias RecipeCategoryID = String
+
+/**
+ * The name of a [RecipePrototype](prototype:RecipePrototype).
+ */
+public typealias RecipeID = String
+
 @Serializable
 public enum class SignalType {
     virtual,
@@ -714,4 +913,10 @@ public class DataRaw(
     public val `arithmetic-combinator`: Map<String, ArithmeticCombinatorPrototype>,
     public val `decider-combinator`: Map<String, DeciderCombinatorPrototype>,
     public val `constant-combinator`: Map<String, ConstantCombinatorPrototype>,
+    public val container: Map<String, ContainerPrototype>,
+    public val `logistic-container`: Map<String, LogisticContainerPrototype>,
+    public val `infinity-container`: Map<String, InfinityContainerPrototype>,
+    public val `assembling-machine`: Map<String, AssemblingMachinePrototype>,
+    public val `rocket-silo`: Map<String, RocketSiloPrototype>,
+    public val furnace: Map<String, FurnacePrototype>,
 )

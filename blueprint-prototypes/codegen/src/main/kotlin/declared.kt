@@ -29,7 +29,7 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             name: String,
             block: GeneratedPrototypeBuilder.() -> Unit = {}
         ) {
-            prototype(name) {
+            prototype(name + "Prototype") {
                 tryAddProperty("energy_source")
                 tryAddProperty("fluid_box")
                 tryAddProperty("output_fluid_box")
@@ -39,26 +39,55 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         }
 
         // all blueprint-able prototypes...
-        blueprintable("AccumulatorPrototype") {
+        blueprintable("Accumulator") {
             +"default_output_signal"
         }
-        blueprintable("ArtilleryTurretPrototype")
-        blueprintable("BeaconPrototype") {
+        blueprintable("ArtilleryTurret")
+        blueprintable("Beacon") {
             +"supply_area_distance"
             +"distribution_effectivity"
             +"module_specification"
             +"allowed_effects"
         }
-        blueprintable("BoilerPrototype")
-        blueprintable("BurnerGeneratorPrototype") {
+        blueprintable("Boiler")
+        blueprintable("BurnerGenerator") {
             +"burner"
         }
-        blueprintable("CombinatorPrototype")
-        blueprintable("ArithmeticCombinatorPrototype")
-        blueprintable("DeciderCombinatorPrototype")
-        blueprintable("ConstantCombinatorPrototype") {
+        blueprintable("Combinator")
+        blueprintable("ArithmeticCombinator")
+        blueprintable("DeciderCombinator")
+        blueprintable("ConstantCombinator") {
             +"item_slot_count"
         }
+        blueprintable("Container") {
+            +"inventory_size"
+            "inventory_type" {
+                innerEnumName = "InventoryType"
+            }
+        }
+        blueprintable("LogisticContainer") {
+            "logistic_mode" {
+                innerEnumName = "LogisticMode"
+                inner.optional = true
+            }
+            +"max_logistic_slots"
+
+        }
+        blueprintable("InfinityContainer")
+        blueprintable("CraftingMachine") {
+            +"crafting_speed"
+            +"crafting_categories"
+            +"fluid_boxes"
+            +"allowed_effects"
+            +"base_productivity"
+            +"module_specification"
+        }
+        blueprintable("AssemblingMachine") {
+            +"fixed_recipe"
+            +"ingredient_count"
+        }
+        blueprintable("RocketSilo")
+        blueprintable("Furnace")
     }
 
     concepts {
@@ -98,8 +127,11 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             innerEnumName = "EffectType"
         }
 
-        "FluidID" {}
+        "RecipeID" {}
+        "RecipeCategoryID" {}
         "ProductionType" {}
+
+        "FluidID" {}
         "FluidBox" {
             includeAllProperties = false
             +"pipe_connections"

@@ -85,7 +85,7 @@ class Property(
     val alt_name: String? = null,
     val override: Boolean,
     var type: TypeDefinition,
-    val optional: Boolean,
+    var optional: Boolean,
     val default: DefaultValue? = null
 )
 

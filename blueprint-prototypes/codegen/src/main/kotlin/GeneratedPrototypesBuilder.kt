@@ -149,7 +149,8 @@ class GeneratedPrototypeBuilder(val prototype: Prototype) {
         name: String,
         block: PropertyOptionsBuilder.() -> Unit
     ) {
-        if (!tryAddProperty(name, block)) error("Property $name not found")
+        if (!tryAddProperty(name, block))
+            error("Property $name not found")
     }
 
     operator fun String.invoke(block: PropertyOptionsBuilder.() -> Unit) {
@@ -217,8 +218,8 @@ class GeneratedConceptBuilder(private val concept: Concept) {
 }
 
 @GeneratedPrototypesDsl
-class PropertyOptionsBuilder(val property: Property) {
+class PropertyOptionsBuilder(val inner: Property) {
     var overrideType: TypeName? = null
     var innerEnumName: String? = null
-    fun build() = GeneratedProperty(property, overrideType = overrideType, innerEnumName = innerEnumName)
+    fun build() = GeneratedProperty(inner, overrideType = overrideType, innerEnumName = innerEnumName)
 }

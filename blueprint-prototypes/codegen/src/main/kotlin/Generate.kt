@@ -65,6 +65,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             AnnotationSpec.builder(UseSerializers::class)
                 .addMember("PositionShorthandSerializer::class")
                 .addMember("BoundingBoxShorthandSerializer::class")
+                .addMember("LuaListSerializer::class")
                 .build()
         )
         addKotlinDefaultImports()
@@ -213,7 +214,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             val hasInheritors = value.inner.name in hasInheritors
             if (hasInheritors) {
                 check(!isDataClass)
-                if(value.inner.abstract) {
+                if (value.inner.abstract) {
                     addModifiers(KModifier.SEALED)
                 } else {
                     addModifiers(KModifier.OPEN)
@@ -278,6 +279,17 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             }.build()
     }
 
+    /**
+     * Gets the name of the builtin type, if it is a builtin type.
+     * Follows concepts which are only type aliases.
+     */
+    private tailrec fun TypeDefinition.getBuiltinType(): String? {
+        val type = (innerType() as? BasicType)?.value ?: return null
+        if (type in builtins) return type
+        val concept = input.concepts[type] ?: return null
+        return concept.inner.type.getBuiltinType()
+    }
+
     private fun getDefaultValue(
         property: Property,
     ): CodeBlock? {
@@ -292,14 +304,14 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             }
             return result
         }
-        val simpleType = (property.type.innerType() as? BasicType)?.value
+        val builtinType = property.type.getBuiltinType()
         return when {
-            simpleType == null -> null
-            simpleType == "double" -> CodeBlock.of("0.0")
-            simpleType == "float" -> CodeBlock.of("0f")
-            simpleType == "bool" -> CodeBlock.of("false")
-            simpleType.contains("uint") -> CodeBlock.of("0u")
-            simpleType.contains("int") -> CodeBlock.of("0")
+            builtinType == null -> null
+            builtinType == "double" -> CodeBlock.of("0.0")
+            builtinType == "float" -> CodeBlock.of("0f")
+            builtinType == "bool" -> CodeBlock.of("false")
+            builtinType.contains("uint") -> CodeBlock.of("0u")
+            builtinType.contains("int") -> CodeBlock.of("0")
             else -> null
         }
     }
@@ -453,19 +465,16 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
 
         is TupleType -> error("TupleType not supported")
         is UnionType -> tryGetEnumOptions(type)?.let { options ->
-            val name = if (context is GeneratedConcept) {
-                if (property == null) {
-                    if (isRoot) {
-                        context.inner.name
-                    } else {
-                        context.innerEnumName ?: error("Inner enum name not specified for ${context.inner.name}")
-                    }
+            val name = if (property == null) {
+                check(context is GeneratedConcept)
+                if (isRoot) {
+                    context.inner.name
                 } else {
-                    property.innerEnumName
-                        ?: error("Inner enum name not specified for ${context.inner.name}.${property.inner.name}")
+                    context.innerEnumName ?: error("Inner enum name not specified for ${context.inner.name}")
                 }
             } else {
-                error("todo")
+                property.innerEnumName
+                    ?: error("Inner enum name not specified for ${context.inner.name}.${property.inner.name}")
             }
             val enumType = generateEnumType(name, options) {
                 if (isRoot) {

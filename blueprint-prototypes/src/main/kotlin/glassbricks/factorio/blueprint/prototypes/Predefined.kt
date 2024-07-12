@@ -14,8 +14,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 
 
-public typealias UnknownStringLiteral = String
-
 public typealias ItemOrArray<T> = @Serializable(with = ItemOrArraySerializer::class) List<T>
 
 public object PositionShorthandSerializer : KSerializer<Position> {
@@ -102,5 +100,31 @@ public class ItemOrArraySerializer<T>(private val itemSerializer: KSerializer<T>
         } else {
             encoder.encodeSerializableValue(listSerializer, value)
         }
+    }
+}
+
+public class LuaListSerializer<T>(private val itemSerializer: KSerializer<T>) : KSerializer<List<T>> {
+    private val listSerializer = ListSerializer(itemSerializer)
+    override val descriptor: SerialDescriptor get() = listSerializer.descriptor
+    override fun deserialize(decoder: Decoder): List<T> {
+        decoder as JsonDecoder
+        return when (val element = decoder.decodeJsonElement()) {
+            is JsonArray -> decoder.json.decodeFromJsonElement(listSerializer, element)
+
+            is JsonObject -> {
+                val size = element.keys
+                    .maxOfOrNull { key -> key.toIntOrNull() ?: 0 } ?: 0
+                MutableList(size) { index ->
+                    val luaIndex = (index + 1).toString()
+                    decoder.json.decodeFromJsonElement(itemSerializer, element[luaIndex] ?: JsonNull)
+                }
+            }
+
+            else -> throw SerializationException("Unexpected json for LuaList: $element")
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: List<T>) {
+        listSerializer.serialize(encoder, value)
     }
 }
