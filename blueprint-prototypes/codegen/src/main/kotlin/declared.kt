@@ -5,6 +5,7 @@ import com.squareup.kotlinpoet.asClassName
 
 
 fun GeneratedPrototypesBuilder.getGeneratedClasses() {
+    extraSealedIntf("EVEnergySource", "ElectricEnergySource", "VoidEnergySource")
     prototypes {
         "PrototypeBase" {
             +"type"
@@ -22,11 +23,19 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         "EntityWithHealthPrototype" {}
         "EntityWithOwnerPrototype" {}
 
-        // all blueprintable prototypes...
+        // all blueprint-able prototypes...
         "AccumulatorPrototype" {
             +"energy_source"
             +"circuit_wire_max_distance"
             +"default_output_signal"
+        }
+        "ArtilleryTurretPrototype" {}
+        "BeaconPrototype" {
+            +"energy_source"
+            +"supply_area_distance"
+            +"distribution_effectivity"
+            +"module_specification"
+            +"allowed_effects"
         }
     }
 
@@ -49,9 +58,19 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             }
         })
 
+        "ItemStackIndex" {}
+        "ModuleSpecification" {
+            includeAllProperties = false
+            +"module_slots"
+        }
+        "EffectTypeLimitation" {
+            innerEnumName = "EffectType"
+        }
+
         "BaseEnergySource" {
             includeAllProperties = false
         }
+        "VoidEnergySource" {}
         "ElectricEnergySource" {
             includeAllProperties = false
             +"type"

@@ -197,30 +197,3 @@ fun TypeDefinition.innerType(): TypeDefinition = when (this) {
     is TypeType -> value
     else -> this
 }
-
-inline fun <T> List<T>.pairwiseEquals(other: List<T>, predicate: (T, T) -> Boolean): Boolean {
-    if (size != other.size) return false
-    return zip(other).all { (a, b) -> predicate(a, b) }
-}
-
-fun TypeDefinition.typeEquals(other: TypeDefinition): Boolean {
-    val ot = other.innerType()
-    return when (val t = innerType()) {
-        is BasicType -> ot is BasicType && t.value == ot.value
-        is ArrayType -> ot is ArrayType && t.value.typeEquals(ot.value)
-        is DictType -> ot is DictType && t.key.typeEquals(ot.key) && t.value.typeEquals(ot.value)
-        is TupleType -> ot is TupleType && t.values.pairwiseEquals(ot.values) { a, b -> a.typeEquals(b) }
-        is UnionType -> ot is UnionType && t.options.pairwiseEquals(ot.options) { a, b -> a.typeEquals(b) }
-        is LiteralType -> ot is LiteralType && t.value == ot.value
-        is TypeType, StructType -> false
-    }
-}
-
-
-private val json = Json {
-    ignoreUnknownKeys = true
-}
-
-fun readDocs(url: URL): PrototypeApiDocs {
-    return json.decodeFromStream<PrototypeApiDocs>(url.openStream())
-}

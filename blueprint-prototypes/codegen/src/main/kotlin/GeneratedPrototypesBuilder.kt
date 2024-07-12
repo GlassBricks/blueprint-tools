@@ -5,7 +5,8 @@ import com.squareup.kotlinpoet.TypeName
 
 class GeneratedPrototypes(
     val prototypes: Map<String, GeneratedPrototype>,
-    val concepts: Map<String, GeneratedConcept>
+    val concepts: Map<String, GeneratedConcept>,
+    val extraSealedIntfs: Map<Set<String>, String>
 )
 
 sealed interface GeneratedValue {
@@ -39,11 +40,13 @@ class GeneratedProperty(
 annotation class GeneratedPrototypesDsl
 
 @GeneratedPrototypesDsl
-class GeneratedPrototypesBuilder(private val docs: PrototypeApiDocs) {
+class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
     private val origPrototypes = docs.prototypes.associateBy { it.name }
     private val origConcepts = docs.types.associateBy { it.name }
     private val prototypes = mutableMapOf<String, GeneratedPrototype>()
     private val concepts = mutableMapOf<String, GeneratedConcept>()
+
+    private val extraSealedIntfs = mutableMapOf<Set<String>, String>()
 
     @GeneratedPrototypesDsl
     inner class Prototypes {
@@ -83,6 +86,10 @@ class GeneratedPrototypesBuilder(private val docs: PrototypeApiDocs) {
 
     inline fun concepts(block: Concepts.() -> Unit) = Concepts().block()
 
+    fun extraSealedIntf(name: String, vararg values: String) {
+        extraSealedIntfs[values.toSet()] = name
+    }
+
     fun build(): GeneratedPrototypes {
         for (genPrototype in prototypes.values) {
             val prototype = genPrototype.inner
@@ -92,7 +99,12 @@ class GeneratedPrototypesBuilder(private val docs: PrototypeApiDocs) {
                 }
             }
         }
-        return GeneratedPrototypes(prototypes, concepts)
+        for (value in extraSealedIntfs.keys.flatten()) {
+            check(value in prototypes || value in concepts) {
+                "Extra sealed interface value $value not found"
+            }
+        }
+        return GeneratedPrototypes(prototypes, concepts, extraSealedIntfs)
     }
 }
 

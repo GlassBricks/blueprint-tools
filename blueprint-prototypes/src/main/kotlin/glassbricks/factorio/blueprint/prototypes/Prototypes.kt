@@ -147,6 +147,49 @@ public class AccumulatorPrototype : EntityWithOwnerPrototype() {
 }
 
 /**
+ * An [artillery turret](https://wiki.factorio.com/Artillery_turret).
+ */
+@Serializable
+@SerialName("artillery-turret")
+public class ArtilleryTurretPrototype : EntityWithOwnerPrototype()
+
+/**
+ * Entity with the ability to transfer [module](prototype:ModulePrototype) effects to its
+ * neighboring entities.
+ */
+@Serializable
+@SerialName("beacon")
+public class BeaconPrototype : EntityWithOwnerPrototype() {
+  public lateinit var energy_source: EVEnergySource
+    private set
+
+  /**
+   * The maximum distance that this beacon can supply its neighbors with its module's effects. Max
+   * distance is 64.
+   */
+  public var supply_area_distance: Double = 0.0
+    private set
+
+  /**
+   * The multiplier of the module's effects, when shared between neighbors.
+   */
+  public var distribution_effectivity: Double = 0.0
+    private set
+
+  /**
+   * The number of module slots in this beacon and their icon positions.
+   */
+  public lateinit var module_specification: ModuleSpecification
+    private set
+
+  /**
+   * The types of [modules](prototype:ModulePrototype) that a player can place inside of the beacon.
+   */
+  public var allowed_effects: EffectTypeLimitation? = null
+    private set
+}
+
+/**
  * The abstract base of all [EnergySources](prototype:EnergySource). Specifies the way an entity
  * gets its energy.
  */
@@ -170,8 +213,36 @@ public sealed class BaseEnergySource
 public typealias CollisionMask = List<String>
 
 @Serializable
+public enum class EffectType {
+  /**
+   * Modules that increase or decrease the machine's speed.
+   */
+  speed,
+  /**
+   * Modules that make the machine produce bonus items.
+   */
+  productivity,
+  /**
+   * Modules that increase or decrease the machine's energy consumption.
+   */
+  consumption,
+  /**
+   * Modules that make the machine produce more or less pollution.
+   */
+  pollution,
+}
+
+/**
+ * A list of [module](prototype:ModulePrototype) effects, or just a single effect. Modules with
+ * other effects cannot be used on the machine. This means that both effects from modules and from
+ * surrounding beacons are restricted to the listed effects. If `allowed_effects` is an empty array,
+ * the machine cannot be affected by modules or beacons.
+ */
+public typealias EffectTypeLimitation = ItemOrArray<EffectType>
+
+@Serializable
 @SerialName("electric")
-public data object ElectricEnergySource : BaseEnergySource()
+public data object ElectricEnergySource : BaseEnergySource(), EVEnergySource
 
 @Serializable
 public enum class EntityPrototypeFlag {
@@ -319,6 +390,8 @@ public typealias EntityPrototypeFlags = List<EntityPrototypeFlag>
  */
 public typealias ItemID = String
 
+public typealias ItemStackIndex = UShort
+
 /**
  * Item that when placed creates this entity/tile.
  */
@@ -333,6 +406,17 @@ public data class ItemToPlace(
    * of the item.
    */
   public val count: UInt,
+)
+
+/**
+ * The number of module slots in this entity, and their icon positions.
+ */
+@Serializable
+public data class ModuleSpecification(
+  /**
+   * The number of module slots in this entity.
+   */
+  public val module_slots: ItemStackIndex?,
 )
 
 @Serializable
@@ -352,10 +436,21 @@ public data class SignalIDConnector(
 )
 
 /**
+ * Void energy sources provide unlimited free energy.
+ */
+@Serializable
+@SerialName("void")
+public data object VoidEnergySource : BaseEnergySource(), EVEnergySource
+
+public sealed interface EVEnergySource
+
+/**
  * All prototypes, aka [data.raw](https://wiki.factorio.com/Data.raw). Only contains the subset of
  * objects this library uses.
  */
 @Serializable
 public class DataRaw(
   public val accumulator: Map<String, AccumulatorPrototype>,
+  public val `artillery-turret`: Map<String, ArtilleryTurretPrototype>,
+  public val beacon: Map<String, BeaconPrototype>,
 )

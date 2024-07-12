@@ -5,6 +5,9 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.longOrNull
 
 private const val PACKAGE_NAME = "glassbricks.factorio.blueprint.prototypes"
 private const val PAR_PACKAGE_NAME = "glassbricks.factorio.blueprint"
@@ -30,6 +33,10 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     private val file = FileSpec.builder(PACKAGE_NAME, "Prototypes")
 
     private val hasInheritors = mutableSetOf<String>()
+    private val extraSealedSupertypes =
+        input.extraSealedIntfs
+            .flatMap { it.key.map { subType -> subType to it.value } }
+            .groupBy({ it.first }, { it.second })
 
     fun generate(): FileSpec {
         findInheritors()
@@ -37,6 +44,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         setupFile()
         generatePrototypes()
         generateConcepts()
+        generateExtraSealedIntfs()
         generateDataRaw()
 
         return file.build()
@@ -69,6 +77,27 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         }
     }
 
+
+    private fun generatePrototypes(): MutableSet<String> {
+        val alreadyGenerated = mutableSetOf<String>()
+        fun visitPrototype(prototype: GeneratedPrototype) {
+            if (prototype.inner.name in alreadyGenerated) return
+            alreadyGenerated.add(prototype.inner.name)
+
+            val parent = prototype.inner.parent
+            if (parent != null) {
+                val parentPrototype = input.prototypes[parent] ?: error("Parent prototype not found: $parent")
+                visitPrototype(parentPrototype)
+            }
+            file.addType(generatePrototype(prototype))
+        }
+
+        for (prototype in input.prototypes.values.sortedBy { it.inner.order }) {
+            visitPrototype(prototype)
+        }
+        return alreadyGenerated
+    }
+
     private fun generateConcepts() {
         val alreadyGenerated = mutableSetOf<String>()
 
@@ -95,24 +124,13 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         }
     }
 
-    private fun generatePrototypes(): MutableSet<String> {
-        val alreadyGenerated = mutableSetOf<String>()
-        fun visitPrototype(prototype: GeneratedPrototype) {
-            if (prototype.inner.name in alreadyGenerated) return
-            alreadyGenerated.add(prototype.inner.name)
-
-            val parent = prototype.inner.parent
-            if (parent != null) {
-                val parentPrototype = input.prototypes[parent] ?: error("Parent prototype not found: $parent")
-                visitPrototype(parentPrototype)
-            }
-            file.addType(generatePrototype(prototype))
+    private fun generateExtraSealedIntfs() {
+        for ((_, name) in input.extraSealedIntfs) {
+            val type = TypeSpec.interfaceBuilder(name).apply {
+                addModifiers(KModifier.SEALED)
+            }.build()
+            file.addType(type)
         }
-
-        for (prototype in input.prototypes.values.sortedBy { it.inner.order }) {
-            visitPrototype(prototype)
-        }
-        return alreadyGenerated
     }
 
     private fun generateDataRaw() {
@@ -201,6 +219,12 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                 }
                 superclass(ClassName(PACKAGE_NAME, parent))
             }
+            val extraSealedIntfs = extraSealedSupertypes[value.inner.name]
+            if (extraSealedIntfs != null) {
+                for (extra in extraSealedIntfs) {
+                    addSuperinterface(ClassName(PACKAGE_NAME, extra))
+                }
+            }
 
             // properties
             if (isDataClass) {
@@ -244,6 +268,67 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             }.build()
     }
 
+    private fun getDefaultValue(
+        property: Property,
+    ): CodeBlock? {
+        if (property.default is LiteralDefault) {
+            val value = property.default.value
+            val result: CodeBlock? = if (value.isString) CodeBlock.of("%S", value.content)
+            else value.booleanOrNull?.let { CodeBlock.of("%L", it) }
+                ?: value.longOrNull?.let { CodeBlock.of("%L", it) }
+                ?: value.doubleOrNull?.let { CodeBlock.of("%L", it) }
+            if(result!=null) {
+                println("Wow, a default: $result")
+            }
+            return result
+        }
+        val simpleType = (property.type.innerType() as? BasicType)?.value
+        return when {
+            simpleType == null -> null
+            simpleType == "double" -> CodeBlock.of("0.0")
+            simpleType == "float" -> CodeBlock.of("0f")
+            simpleType == "bool" -> CodeBlock.of("false")
+            simpleType.contains("int") -> CodeBlock.of("0")
+            else -> null
+        }
+    }
+
+    private fun generateProperty(
+        context: GeneratedValue,
+        genProperty: GeneratedProperty,
+        initByMutate: Boolean,
+        block: PropertySpec.Builder.() -> Unit = {}
+    ): PropertySpec {
+        val property = genProperty.inner
+        val nullable = property.optional || property.default != null
+
+        val basicType =
+            genProperty.overrideType ?: mapTypeDefinition(property.type, context, genProperty, true).putType()
+        val type =
+            basicType.copy(nullable = nullable)
+
+        return PropertySpec.builder(property.name, type).apply {
+            if (initByMutate) {
+                mutable()
+                if (nullable) {
+                    initializer("null")
+                } else {
+                    val defaultValue = getDefaultValue(property)
+                    if (defaultValue != null) {
+                        initializer(defaultValue)
+                    } else {
+                        addModifiers(KModifier.LATEINIT)
+                    }
+                }
+                setter(FunSpec.setterBuilder().addModifiers(KModifier.PRIVATE).build())
+            }
+            if (property.description.isNotBlank()) {
+                addKdoc(property.description)
+            }
+            block()
+        }.build()
+    }
+
 
     private fun tryGetEnumOptions(type: TypeDefinition): List<LiteralType>? =
         if (type is UnionType && type.options.all { it is LiteralType && it.value.isString }) {
@@ -283,37 +368,16 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         return first
     }
 
-    private fun generateProperty(
-        context: GeneratedValue,
-        genProperty: GeneratedProperty,
-        initByMutate: Boolean,
-        block: PropertySpec.Builder.() -> Unit = {}
-    ): PropertySpec {
-        val property = genProperty.inner
-        val nullable = property.optional || property.default != null
-
-        val basicType =
-            genProperty.overrideType ?: mapTypeDefinition(property.type, context, genProperty, true).putType()
-        val type =
-            basicType.copy(nullable = nullable)
-
-        return PropertySpec.builder(property.name, type).apply {
-            if (initByMutate) {
-                mutable()
-                if (!nullable) {
-                    addModifiers(KModifier.LATEINIT)
-                } else {
-                    initializer("null")
-                }
-                setter(FunSpec.setterBuilder().addModifiers(KModifier.PRIVATE).build())
-            }
-            if (property.description.isNotBlank()) {
-                addKdoc(property.description)
-            }
-            block()
-        }.build()
-
+    private fun tryGetExtraSealedIntfName(type: UnionType): TypeName? {
+        if (!type.options.all {
+                it is BasicType
+                        && it.value in input.concepts
+            }) return null
+        val options = type.options.map { (it as BasicType).value }.toSet()
+        val name = input.extraSealedIntfs[options] ?: return null
+        return ClassName(PACKAGE_NAME, name)
     }
+
 
     private inner class GeneratedType(
         private val typeName: TypeName,
@@ -382,7 +446,8 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                         context.innerEnumName ?: error("Inner enum name not specified for ${context.inner.name}")
                     }
                 } else {
-                    property.innerEnumName ?: error("Inner enum name not specified for ${context.inner.name}.${property.inner.name}")
+                    property.innerEnumName
+                        ?: error("Inner enum name not specified for ${context.inner.name}.${property.inner.name}")
                 }
             } else {
                 error("todo")
@@ -397,7 +462,8 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             ClassName(PACKAGE_NAME, "ItemOrArray")
                 .parameterizedBy(mapTypeDefinition(item, context, property).putType())
                 .toGenType()
-        } ?: run {
+        } ?: tryGetExtraSealedIntfName(type)?.toGenType()
+        ?: run {
             println("UnionType $type not supported")
             Any::class.asClassName().toGenType()
         }
