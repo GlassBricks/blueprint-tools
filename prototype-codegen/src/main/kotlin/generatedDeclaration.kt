@@ -25,5 +25,7 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
     concept("CollisionMask") {
         overrideType = List::class.parameterizedBy(String::class)
     }
-    concept("EntityPrototypeFlags")
+    concept("EntityPrototypeFlags") {
+        innerEnumName = "EntityPrototypeFlag"
+    }
 }

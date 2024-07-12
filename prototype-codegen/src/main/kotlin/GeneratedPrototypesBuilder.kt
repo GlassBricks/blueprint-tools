@@ -19,7 +19,8 @@ class GeneratedPrototype(
 
 class GeneratedConcept(
     override val inner: Concept,
-    val overrideType: TypeName?
+    val overrideType: TypeName?,
+    val innerEnumName: String?
 ): GeneratedValue
 
 class GeneratedProperty(val property: Property)
@@ -94,14 +95,14 @@ class GeneratedPrototypeBuilder(val prototype: Prototype) {
 
 @GeneratedPrototypesDsl
 class GeneratedConceptBuilder(private val concept: Concept) {
-    private val properties = mutableMapOf<String, GeneratedProperty>()
-
     var overrideType: TypeName? = null
+    var innerEnumName: String? = null
 
     fun build(): GeneratedConcept {
         return GeneratedConcept(
             concept,
-            overrideType = overrideType
+            overrideType = overrideType,
+            innerEnumName = innerEnumName
         )
     }
 }

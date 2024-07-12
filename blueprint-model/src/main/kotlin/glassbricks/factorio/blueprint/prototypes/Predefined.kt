@@ -14,8 +14,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 
 
-public typealias Position = @Serializable(with = PositionShorthandSerializer::class) Position
-public typealias BoundingBox = @Serializable(with = BoundingBoxShorthandSerializer::class) BoundingBox
 public typealias ItemOrArray<T> = @Serializable(with = ItemOrArraySerializer::class) List<T>
 
 public object PositionShorthandSerializer : KSerializer<Position> {

@@ -3,8 +3,15 @@
   "EnumEntryName",
   "PropertyName",
 )
+@file:UseSerializers(
+  PositionShorthandSerializer::class,
+  BoundingBoxShorthandSerializer::class,
+)
 
 package glassbricks.factorio.blueprint.prototypes
+
+import glassbricks.factorio.blueprint.BoundingBox
+import kotlinx.serialization.UseSerializers
 
 /**
  * The abstract base for prototypes. PrototypeBase defines the common features of prototypes, such
@@ -113,7 +120,7 @@ public interface EntityWithOwnerPrototype : EntityWithHealthPrototype
  */
 public typealias CollisionMask = List<String>
 
-public enum class EntityPrototypeFlagsValue {
+public enum class EntityPrototypeFlag {
   /**
    * Can't be rotated before or after placing.
    */
@@ -251,7 +258,7 @@ public enum class EntityPrototypeFlagsValue {
  * - Enemy expansion considers entities that are both buildings and player-creations as "enemy"
  * entities that may block expansion.
  */
-public typealias EntityPrototypeFlags = List<EntityPrototypeFlagsValue>
+public typealias EntityPrototypeFlags = List<EntityPrototypeFlag>
 
 /**
  * The name of an [ItemPrototype](prototype:ItemPrototype).
