@@ -31,7 +31,8 @@ class GeneratedConcept(
 
 class GeneratedProperty(
     val inner: Property,
-    val overrideType: TypeName? = null
+    val overrideType: TypeName?,
+    val innerEnumName: String?
 )
 
 @DslMarker
@@ -176,5 +177,6 @@ class GeneratedConceptBuilder(private val concept: Concept) {
 @GeneratedPrototypesDsl
 class PropertyOptionsBuilder(val property: Property) {
     var overrideType: TypeName? = null
-    fun build() = GeneratedProperty(property, overrideType = overrideType)
+    var innerEnumName: String? = null
+    fun build() = GeneratedProperty(property, overrideType = overrideType, innerEnumName = innerEnumName)
 }

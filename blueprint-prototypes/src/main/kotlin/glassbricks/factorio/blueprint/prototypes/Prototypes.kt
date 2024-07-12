@@ -336,7 +336,7 @@ public data class ItemToPlace(
 )
 
 @Serializable
-public enum class SignalIDConnectorType {
+public enum class SignalType {
   virtual,
   item,
   fluid,
@@ -344,7 +344,7 @@ public enum class SignalIDConnectorType {
 
 @Serializable
 public data class SignalIDConnector(
-  public val type: SignalIDConnectorType,
+  public val type: SignalType,
   /**
    * Name of the signal that shows this color.
    */

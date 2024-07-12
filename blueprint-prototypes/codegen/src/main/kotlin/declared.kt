@@ -44,6 +44,9 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             "name" {
                 overrideType = String::class.asClassName()
             }
+            "type" {
+                innerEnumName = "SignalType"
+            }
         })
 
         "BaseEnergySource" {

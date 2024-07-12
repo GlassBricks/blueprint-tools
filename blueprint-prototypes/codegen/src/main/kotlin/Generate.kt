@@ -157,7 +157,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         isDataClass: Boolean = false
     ): TypeSpec {
         val canBeObject = value.includedProperties.isEmpty()
-                && value.inner.parent != null
+                && value.inner.parent.let { it != null && input.concepts[it]?.includedProperties?.isEmpty() == true }
                 && value.typeName != null
                 && value.inner.name !in hasInheritors
 
@@ -223,8 +223,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     }
 
     private fun Concept.canBeDataClass(): Boolean =
-        properties != null
-                && name !in hasInheritors
+        !properties.isNullOrEmpty() && name !in hasInheritors
 
     private fun generateStructConcept(
         concept: GeneratedConcept,
@@ -383,7 +382,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                         context.innerEnumName ?: error("Inner enum name not specified for ${context.inner.name}")
                     }
                 } else {
-                    context.inner.name + property.inner.name.capitalize()
+                    property.innerEnumName ?: error("Inner enum name not specified for ${context.inner.name}.${property.inner.name}")
                 }
             } else {
                 error("todo")
