@@ -213,7 +213,11 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             val hasInheritors = value.inner.name in hasInheritors
             if (hasInheritors) {
                 check(!isDataClass)
-                addModifiers(KModifier.SEALED)
+                if(value.inner.abstract) {
+                    addModifiers(KModifier.SEALED)
+                } else {
+                    addModifiers(KModifier.OPEN)
+                }
             }
             if (value.inner.abstract) check(hasInheritors)
 
@@ -294,6 +298,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             simpleType == "double" -> CodeBlock.of("0.0")
             simpleType == "float" -> CodeBlock.of("0f")
             simpleType == "bool" -> CodeBlock.of("false")
+            simpleType.contains("uint") -> CodeBlock.of("0u")
             simpleType.contains("int") -> CodeBlock.of("0")
             else -> null
         }
