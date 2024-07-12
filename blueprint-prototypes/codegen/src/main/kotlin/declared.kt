@@ -187,12 +187,36 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         blueprintable("Turret")
         blueprintable("AmmoTurret")
         blueprintable("Wall")
+
+        // items
+        "ItemPrototype" {
+            +"stack_size"
+            +"place_result"
+            +"fuel_category"
+            +"flags"
+        }
+        "AmmoItemPrototype" {}
+        "CapsulePrototype" {}
+        "GunPrototype" {}
+        "ItemWithEntityDataPrototype" {}
+        "ItemWithLabelPrototype" {}
+        "ItemWithInventoryPrototype" {}
+        "BlueprintBookPrototype" {}
+        "ItemWithTagsPrototype" {}
+        "ModulePrototype" {
+            +"category"
+            +"tier"
+            +"effect"
+            +"limitation"
+            +"limitation_blacklist"
+        }
     }
 
     concepts {
         "ItemID" {}
         "EntityID" {}
         "ItemToPlace" {}
+        "ItemCountType" {}
 
         "Vector" {
             overrideType = ClassName(PAR_PACKAGE_NAME, "Position")
@@ -201,22 +225,26 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             overrideType = ClassName(PAR_PACKAGE_NAME, "Position")
         }
 
-        "CollisionMask"(fun GeneratedConceptBuilder.() {
+        "CollisionMask" {
             overrideType = List::class.parameterizedBy(String::class)
-        })
+        }
 
-        "EntityPrototypeFlags"(fun GeneratedConceptBuilder.() {
+        "EntityPrototypeFlags" {
             innerEnumName = "EntityPrototypeFlag"
-        })
+        }
 
-        "SignalIDConnector"(fun GeneratedConceptBuilder.() {
+        "ItemPrototypeFlags" {
+            innerEnumName = "ItemPrototypeFlag"
+        }
+
+        "SignalIDConnector" {
             "name" {
                 overrideType = String::class.asClassName()
             }
             "type" {
                 innerEnumName = "SignalType"
             }
-        })
+        }
 
         "ItemStackIndex" {}
         "ModuleSpecification" {
@@ -227,10 +255,14 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             innerEnumName = "EffectType"
         }
 
+        "ModuleCategoryID" {}
         "RecipeID" {}
         "RecipeCategoryID" {}
         "ResourceCategoryID" {}
         "ProductionType" {}
+
+        "Effect" {}
+        "EffectValue" {}
 
         "FluidID" {}
         "FluidBox" {

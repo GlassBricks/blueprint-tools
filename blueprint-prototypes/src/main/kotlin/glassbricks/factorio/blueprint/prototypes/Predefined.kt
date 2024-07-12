@@ -114,7 +114,7 @@ public class LuaListSerializer<T>(private val itemSerializer: KSerializer<T>) : 
             is JsonObject -> {
                 val size = element.keys
                     .maxOfOrNull { key -> key.toIntOrNull() ?: 0 } ?: 0
-                MutableList(size) { index ->
+                List(size) { index ->
                     val luaIndex = (index + 1).toString()
                     decoder.json.decodeFromJsonElement(itemSerializer, element[luaIndex] ?: JsonNull)
                 }

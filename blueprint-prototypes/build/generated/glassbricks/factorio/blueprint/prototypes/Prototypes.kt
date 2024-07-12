@@ -150,6 +150,50 @@ public class AccumulatorPrototype : EntityWithOwnerPrototype() {
 }
 
 /**
+ * Possible configuration for all items.
+ */
+@Serializable
+@SerialName("item")
+public open class ItemPrototype : PrototypeBase() {
+    /**
+     * Count of items of the same name that can be stored in one inventory slot. Must be 1 when the
+     * `"not-stackable"` flag is set.
+     */
+    public var stack_size: ItemCountType = 0u
+        private set
+
+    /**
+     * Name of the [EntityPrototype](prototype:EntityPrototype) that can be built using this item.
+     * If this item should be the one that construction bots use to build the specified `place_result`,
+     * set the `"primary-place-result"` [item flag](prototype:ItemPrototypeFlags).
+     *
+     * The localised name of the entity will be used as the in-game item name. This behavior can be
+     * overwritten by specifying `localised_name` on this item, it will be used instead.
+     */
+    public var place_result: EntityID? = null
+        private set
+
+    /**
+     * Must exist when a nonzero fuel_value is defined.
+     */
+    public var fuel_category: FuelCategoryID? = null
+        private set
+
+    /**
+     * Specifies some properties of the item.
+     */
+    public var flags: ItemPrototypeFlags? = null
+        private set
+}
+
+/**
+ * Ammo used for a gun.
+ */
+@Serializable
+@SerialName("ammo")
+public class AmmoItemPrototype : ItemPrototype()
+
+/**
  * A turret that needs no extra ammunition. See the children for turrets that need some kind of
  * ammunition.
  */
@@ -329,6 +373,27 @@ public class BeaconPrototype : EntityWithOwnerPrototype() {
 }
 
 /**
+ * Like a normal item but with the ability to have a colored label.
+ */
+@Serializable
+@SerialName("item-with-label")
+public open class ItemWithLabelPrototype : ItemPrototype()
+
+/**
+ * The inventory allows setting player defined filters similar to cargo wagon inventories.
+ */
+@Serializable
+@SerialName("item-with-inventory")
+public open class ItemWithInventoryPrototype : ItemWithLabelPrototype()
+
+/**
+ * A [blueprint book](https://wiki.factorio.com/Blueprint_book).
+ */
+@Serializable
+@SerialName("blueprint-book")
+public class BlueprintBookPrototype : ItemWithInventoryPrototype()
+
+/**
  * A [boiler](https://wiki.factorio.com/Boiler). It heats fluid and optionally outputs it as a
  * different fluid.
  */
@@ -378,6 +443,14 @@ public class BurnerGeneratorPrototype : EntityWithOwnerPrototype() {
     public lateinit var burner: BurnerEnergySource
         private set
 }
+
+/**
+ * A capsule, for example a [combat robot capsule](https://wiki.factorio.com/Combat_robot_capsules)
+ * or the [raw fish](https://wiki.factorio.com/Raw_fish).
+ */
+@Serializable
+@SerialName("capsule")
+public class CapsulePrototype : ItemPrototype()
 
 /**
  * A [constant combinator](https://wiki.factorio.com/Constant_combinator).
@@ -507,6 +580,13 @@ public class GeneratorPrototype : EntityWithOwnerPrototype() {
 }
 
 /**
+ * A gun. A weapon to deal damage to entities.
+ */
+@Serializable
+@SerialName("gun")
+public class GunPrototype : ItemPrototype()
+
+/**
  * This entity produces or consumes heat. Its heat settings can be changed runtime.
  */
 @Serializable
@@ -611,6 +691,22 @@ public class InserterPrototype : EntityWithOwnerPrototype() {
     public var circuit_wire_max_distance: Double? = null
         private set
 }
+
+/**
+ * ItemWithEntityData saves data associated with the entity that it represents, for example the
+ * content of the equipment grid of a car.
+ */
+@Serializable
+@SerialName("item-with-entity-data")
+public class ItemWithEntityDataPrototype : ItemPrototype()
+
+/**
+ * Item type that can store any basic arbitrary Lua data, see
+ * [LuaItemStack::tags](runtime:LuaItemStack::tags).
+ */
+@Serializable
+@SerialName("item-with-tags")
+public class ItemWithTagsPrototype : ItemWithLabelPrototype()
 
 /**
  * A [lab](https://wiki.factorio.com/Lab). It consumes [science packs](prototype:ToolPrototype) to
@@ -858,6 +954,55 @@ public class MiningDrillPrototype : EntityWithOwnerPrototype() {
         private set
 
     public var module_specification: ModuleSpecification? = null
+        private set
+}
+
+/**
+ * A [module](https://wiki.factorio.com/Module). They are used to affect the capabilities of
+ * existing machines, for example by increasing the crafting speed of a [crafting
+ * machine](prototype:CraftingMachinePrototype).
+ */
+@Serializable
+@SerialName("module")
+public class ModulePrototype : ItemPrototype() {
+    /**
+     * Used when upgrading modules: Ctrl + click modules into an entity and it will replace lower
+     * tier modules of the same category with higher tier modules.
+     */
+    public lateinit var category: ModuleCategoryID
+        private set
+
+    /**
+     * Tier of the module inside its category. Used when upgrading modules: Ctrl + click modules
+     * into an entity and it will replace lower tier modules with higher tier modules if they have the
+     * same category.
+     */
+    public var tier: UInt = 0u
+        private set
+
+    /**
+     * The effect of the module on the machine it's inserted in, such as increased pollution.
+     */
+    public lateinit var effect: Effect
+        private set
+
+    /**
+     * Array of [recipe names](prototype:RecipePrototype) this module can be used on. If empty, the
+     * module can be used on all recipes.
+     */
+    public var limitation: List<RecipeID>? = null
+        private set
+
+    /**
+     * Array of [recipe names](prototype:RecipePrototype) this module can **not** be used on,
+     * implicitly allowing its use on all other recipes. This property has no effect if set to an empty
+     * table.
+     *
+     * Note that the game converts this into a normal list of limitations internally, so reading
+     * [LuaItemPrototype::limitations](runtime:LuaItemPrototype::limitations) at runtime will be the
+     * product of both ways of defining limitations.
+     */
+    public var limitation_blacklist: List<RecipeID>? = null
         private set
 }
 
@@ -1251,6 +1396,34 @@ public data class BurnerEnergySource(
  */
 public typealias CollisionMask = List<String>
 
+/**
+ * When applied to [modules](prototype:ModulePrototype), the resulting effect is a sum of all module
+ * effects, multiplied through calculations: `(1 + sum module effects)` or, for productivity `(0 +
+ * sum)`.
+ */
+@Serializable
+public data class Effect(
+    /**
+     * Multiplier to energy used during operation (not idle/drain use). The minimum possible sum
+     * is -80%.
+     */
+    public val consumption: EffectValue?,
+    /**
+     * Modifier to crafting speed, research speed, etc. The minimum possible sum is -80%.
+     */
+    public val speed: EffectValue?,
+    /**
+     * Multiplied against work completed, adds to the bonus results of operating. E.g. an extra
+     * crafted recipe or immediate research bonus. The minimum possible sum is 0%.
+     */
+    public val productivity: EffectValue?,
+    /**
+     * Multiplier to the pollution factor of an entity's pollution during use. The minimum possible
+     * sum is -80%.
+     */
+    public val pollution: EffectValue?,
+)
+
 @Serializable
 public enum class EffectType {
     /**
@@ -1278,6 +1451,15 @@ public enum class EffectType {
  * the machine cannot be affected by modules or beacons.
  */
 public typealias EffectTypeLimitation = ItemOrArray<EffectType>
+
+@Serializable
+public data class EffectValue(
+    /**
+     * Precision is ignored beyond two decimals - `0.567` results in `0.56` and means 56% etc.
+     * Values can range from `-327.68` to `327.67`. Numbers outside of this range will wrap around.
+     */
+    public val bonus: Double?,
+)
 
 @Serializable
 @SerialName("electric")
@@ -1518,10 +1700,77 @@ public data class HeatEnergySource(
 ) : BaseEnergySource(),
     EHFVEnergySource
 
+public typealias ItemCountType = UInt
+
 /**
  * The name of an [ItemPrototype](prototype:ItemPrototype).
  */
 public typealias ItemID = String
+
+@Serializable
+public enum class ItemPrototypeFlag {
+    /**
+     * Whether the logistics areas of roboports should be drawn when holding this item. Used for
+     * example by the [deconstruction planner](https://wiki.factorio.com/Deconstruction_planner).
+     */
+    `draw-logistic-overlay`,
+    /**
+     * Item will not appear in lists of all items such as those for logistics requests, filters,
+     * etc.
+     */
+    hidden,
+    /**
+     * Always show the item in selection lists (item filter, logistic request etc.) even when locked
+     * recipe for that item is present.
+     */
+    `always-show`,
+    /**
+     * Item will not appear in the bonus gui.
+     */
+    `hide-from-bonus-gui`,
+    /**
+     * Item will not appear in the tooltips shown when hovering over a burner inventory with the
+     * fuel category the item is in.
+     */
+    `hide-from-fuel-tooltip`,
+    /**
+     * The item can never be stacked. Additionally, the item does not show an item count when in the
+     * cursor. This also prevents the item from stacking in assembling machine input slots, which
+     * otherwise can exceed the item stack size if required by the recipe.
+     */
+    `not-stackable`,
+    /**
+     * Must be set on [ItemWithInventoryPrototype](prototype:ItemWithInventoryPrototype) when the
+     * item should act as an extension to the inventory that it is placed in. Does nothing for other
+     * item types.
+     */
+    `can-extend-inventory`,
+    /**
+     * Item will be preferred by construction bots when building the entity specified by the item's
+     * [place_result](prototype:ItemPrototype::place_result).
+     */
+    `primary-place-result`,
+    /**
+     * Only works for [SelectionToolPrototype](prototype:SelectionToolPrototype) and derived
+     * classes. Corresponds to the runtime [on_mod_item_opened](runtime:on_mod_item_opened) event.
+     */
+    `mod-openable`,
+    /**
+     * Item is deleted when removed from the cursor by pressing `Q` ("clear cursor"). Used for
+     * example by the copy/paste tools.
+     */
+    `only-in-cursor`,
+    /**
+     * Item is able to be spawned by a [ShortcutPrototype](prototype:ShortcutPrototype) or
+     * [CustomInputPrototype](prototype:CustomInputPrototype).
+     */
+    spawnable,
+}
+
+/**
+ * An array containing the following values.
+ */
+public typealias ItemPrototypeFlags = List<ItemPrototypeFlag>
 
 public typealias ItemStackIndex = UShort
 
@@ -1549,6 +1798,11 @@ public data class ItemToPlace(
  * precision, meaning the smallest value step is `1/2^8 = 0.00390625` tiles.
  */
 public typealias MapPosition = Position
+
+/**
+ * The name of a [ModuleCategory](prototype:ModuleCategory).
+ */
+public typealias ModuleCategoryID = String
 
 /**
  * The number of module slots in this entity, and their icon positions.
@@ -1719,4 +1973,14 @@ public class DataRaw(
     public val turret: Map<String, TurretPrototype>,
     public val `ammo-turret`: Map<String, AmmoTurretPrototype>,
     public val wall: Map<String, WallPrototype>,
+    public val item: Map<String, ItemPrototype>,
+    public val ammo: Map<String, AmmoItemPrototype>,
+    public val capsule: Map<String, CapsulePrototype>,
+    public val gun: Map<String, GunPrototype>,
+    public val `item-with-entity-data`: Map<String, ItemWithEntityDataPrototype>,
+    public val `item-with-label`: Map<String, ItemWithLabelPrototype>,
+    public val `item-with-inventory`: Map<String, ItemWithInventoryPrototype>,
+    public val `blueprint-book`: Map<String, BlueprintBookPrototype>,
+    public val `item-with-tags`: Map<String, ItemWithTagsPrototype>,
+    public val module: Map<String, ModulePrototype>,
 )
