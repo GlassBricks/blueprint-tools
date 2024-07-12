@@ -17,6 +17,8 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         +"tile_width"
         +"tile_height"
     }
+    "EntityWithHealthPrototype" {}
+    "EntityWithOwnerPrototype" {}
 
     concept("ItemID")
     concept("ItemToPlace")

@@ -89,10 +89,7 @@ class GeneratedPrototypeBuilder(val prototype: Prototype) {
     }
 
 
-    fun build(prototype: Prototype): GeneratedPrototype {
-        check(properties.isNotEmpty())
-        return GeneratedPrototype(prototype, properties)
-    }
+    fun build(prototype: Prototype): GeneratedPrototype = GeneratedPrototype(prototype, properties)
 }
 
 @GeneratedPrototypesDsl

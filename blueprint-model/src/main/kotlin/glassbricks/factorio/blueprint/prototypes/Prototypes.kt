@@ -7,6 +7,27 @@
 package glassbricks.factorio.blueprint.prototypes
 
 /**
+ * The abstract base for prototypes. PrototypeBase defines the common features of prototypes, such
+ * as localization and order.
+ */
+public interface PrototypeBase {
+  /**
+   * Specifies the kind of prototype this is.
+   *
+   * For a list of all types used in vanilla, see [data.raw](https://wiki.factorio.com/Data.raw).
+   */
+  public val type: String
+
+  /**
+   * Unique textual identification of the prototype. May not contain a dot, nor exceed a length of
+   * 200 characters.
+   *
+   * For a list of all names used in vanilla, see [data.raw](https://wiki.factorio.com/Data.raw).
+   */
+  public val name: String
+}
+
+/**
  * Abstract base of all entities in the game. Entity is nearly everything that can be on the map
  * (except tiles).
  *
@@ -65,25 +86,16 @@ public interface EntityPrototype : PrototypeBase {
 }
 
 /**
- * The abstract base for prototypes. PrototypeBase defines the common features of prototypes, such
- * as localization and order.
+ * Abstract base of all entities with health in the game.
  */
-public interface PrototypeBase {
-  /**
-   * Specifies the kind of prototype this is.
-   *
-   * For a list of all types used in vanilla, see [data.raw](https://wiki.factorio.com/Data.raw).
-   */
-  public val type: String
+public interface EntityWithHealthPrototype : EntityPrototype
 
-  /**
-   * Unique textual identification of the prototype. May not contain a dot, nor exceed a length of
-   * 200 characters.
-   *
-   * For a list of all names used in vanilla, see [data.raw](https://wiki.factorio.com/Data.raw).
-   */
-  public val name: String
-}
+/**
+ * Abstract base of all entities with a force in the game. These entities have a
+ * [LuaEntity::unit_number](runtime:LuaEntity::unit_number) during runtime. Can be high priority
+ * [military targets](https://wiki.factorio.com/Military_units_and_structures).
+ */
+public interface EntityWithOwnerPrototype : EntityWithHealthPrototype
 
 /**
  * Every entry in the array is a specification of one layer the object collides with or a special
