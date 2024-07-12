@@ -236,6 +236,7 @@ public class ElectricEnergySource : BaseEnergySource() {
  * Used to specify priority of energy usage in the [electric
  * system](https://wiki.factorio.com/Electric_system).
  */
+@Serializable
 public enum class ElectricUsagePriority {
   /**
    * Used for the most important machines, for example laser turrets.
@@ -293,6 +294,7 @@ public enum class ElectricUsagePriority {
  */
 public typealias Energy = String
 
+@Serializable
 public enum class EntityPrototypeFlag {
   /**
    * Can't be rotated before or after placing.
@@ -454,6 +456,7 @@ public data class ItemToPlace(
   public val count: UInt,
 )
 
+@Serializable
 public enum class SignalIDConnectorType {
   virtual,
   item,
@@ -467,4 +470,13 @@ public data class SignalIDConnector(
    * Name of the signal that shows this color.
    */
   public val name: String,
+)
+
+/**
+ * All prototypes, aka the `data` object. Only contains the subset of prototypes used by this
+ * library.
+ */
+@Serializable
+public class AllPrototypes(
+  public val accumulator: Map<String, AccumulatorPrototype>,
 )
