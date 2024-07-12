@@ -20,7 +20,7 @@ import kotlinx.serialization.UseSerializers
  * as localization and order.
  */
 @Serializable
-public abstract class PrototypeBase {
+public sealed class PrototypeBase {
   /**
    * Specifies the kind of prototype this is.
    *
@@ -46,7 +46,7 @@ public abstract class PrototypeBase {
  * For in game script access to entity, take a look at [LuaEntity](runtime:LuaEntity).
  */
 @Serializable
-public abstract class EntityPrototype : PrototypeBase() {
+public sealed class EntityPrototype : PrototypeBase() {
   /**
    * Specification of the entity collision boundaries. Empty collision box means no collision and is
    * used for smoke, projectiles, particles, explosions etc.
@@ -109,7 +109,7 @@ public abstract class EntityPrototype : PrototypeBase() {
  * Abstract base of all entities with health in the game.
  */
 @Serializable
-public abstract class EntityWithHealthPrototype : EntityPrototype()
+public sealed class EntityWithHealthPrototype : EntityPrototype()
 
 /**
  * Abstract base of all entities with a force in the game. These entities have a
@@ -117,7 +117,7 @@ public abstract class EntityWithHealthPrototype : EntityPrototype()
  * [military targets](https://wiki.factorio.com/Military_units_and_structures).
  */
 @Serializable
-public abstract class EntityWithOwnerPrototype : EntityWithHealthPrototype()
+public sealed class EntityWithOwnerPrototype : EntityWithHealthPrototype()
 
 /**
  * Entity with energy source with specialised animation for charging/discharging. Used for the
@@ -148,31 +148,10 @@ public class AccumulatorPrototype : EntityWithOwnerPrototype() {
 
 /**
  * The abstract base of all [EnergySources](prototype:EnergySource). Specifies the way an entity
- * gets its energy.The abstract base of all [EnergySources](prototype:EnergySource). Specifies the way
- * an entity gets its energy.
+ * gets its energy.
  */
 @Serializable
-public abstract class BaseEnergySource {
-  /**
-   * The pollution an entity emits per minute at full energy consumption. This is exactly the value
-   * that is shown in the entity tooltip.
-   */
-  public var emissions_per_minute: Double? = null
-    private set
-
-  /**
-   * Whether to render the "no power" icon if the entity is low on power. Also applies to the "no
-   * fuel" icon when using burner energy sources.
-   */
-  public var render_no_power_icon: Boolean? = null
-    private set
-
-  /**
-   * Whether to render the "no network" icon if the entity is not connected to an electric network.
-   */
-  public var render_no_network_icon: Boolean? = null
-    private set
-}
+public sealed class BaseEnergySource
 
 /**
  * Every entry in the array is a specification of one layer the object collides with or a special
@@ -191,108 +170,8 @@ public abstract class BaseEnergySource {
 public typealias CollisionMask = List<String>
 
 @Serializable
-public class ElectricEnergySource : BaseEnergySource() {
-  /**
-   * This is only loaded, and mandatory if the energy source can be loaded as multiple energy source
-   * types.
-   */
-  public var type: UnknownStringLiteral? = null
-    private set
-
-  /**
-   * How much energy this entity can hold.
-   */
-  public var buffer_capacity: Energy? = null
-    private set
-
-  public lateinit var usage_priority: ElectricUsagePriority
-    private set
-
-  /**
-   * The rate at which energy can be taken, from the network, to refill the energy buffer. `0` means
-   * no transfer.
-   */
-  public var input_flow_limit: Energy? = null
-    private set
-
-  /**
-   * The rate at which energy can be provided, to the network, from the energy buffer. `0` means no
-   * transfer.
-   */
-  public var output_flow_limit: Energy? = null
-    private set
-
-  /**
-   * How much energy (per second) will be continuously removed from the energy buffer. In-game, this
-   * is shown in the tooltip as "Min. [Minimum] Consumption". Applied as a constant
-   * consumption-per-tick, even when the entity has the property [active](runtime:LuaEntity::active)
-   * set to `false`.
-   */
-  public var drain: Energy? = null
-    private set
-}
-
-/**
- * Used to specify priority of energy usage in the [electric
- * system](https://wiki.factorio.com/Electric_system).
- */
-@Serializable
-public enum class ElectricUsagePriority {
-  /**
-   * Used for the most important machines, for example laser turrets.
-   */
-  `primary-input`,
-  `primary-output`,
-  /**
-   * Used for all other machines.
-   */
-  `secondary-input`,
-  /**
-   * Used in steam generators.
-   */
-  `secondary-output`,
-  /**
-   * As input/output used for accumulators, to collect the overproduction or provide energy when
-   * neither primary/secondary output can't.
-   */
-  tertiary,
-  /**
-   * Can only be used by [SolarPanelPrototype](prototype:SolarPanelPrototype), will be ignored
-   * otherwise.
-   */
-  solar,
-  /**
-   * Can only be used by [LampPrototype](prototype:LampPrototype), will be ignored otherwise.
-   */
-  lamp,
-}
-
-/**
- * Specifies an amount of electric energy in joules, or electric energy per time in watts.
- *
- * Internally, the input in `Watt` or `Joule/second` is always converted into `Joule/tick`, where 1
- * second is equal to 60 ticks. This means it uses the following formula: `Power in Joule/tick = Power
- * in Watt / 60`. See [Power](https://wiki.factorio.com/Units#Power).
- *
- * Supported Multipliers:
- *
- * - `k/K`: 10^3, or 1 000
- *
- * - `M`: 10^6
- *
- * - `G`: 10^9
- *
- * - `T`: 10^12
- *
- * - `P`: 10^15
- *
- * - `E`: 10^18
- *
- * - `Z`: 10^21
- *
- * - `Y`: 10^24
- */
-public typealias Energy = String
+@SerialName("electric")
+public data object ElectricEnergySource : BaseEnergySource()
 
 @Serializable
 public enum class EntityPrototypeFlag {
@@ -441,7 +320,7 @@ public typealias EntityPrototypeFlags = List<EntityPrototypeFlag>
 public typealias ItemID = String
 
 /**
- * Item that when placed creates this entity/tile.Item that when placed creates this entity/tile.
+ * Item that when placed creates this entity/tile.
  */
 @Serializable
 public data class ItemToPlace(

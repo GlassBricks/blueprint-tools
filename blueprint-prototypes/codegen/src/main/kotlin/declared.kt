@@ -40,8 +40,6 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             innerEnumName = "EntityPrototypeFlag"
         })
 
-        "ElectricUsagePriority" {}
-        "Energy" {}
         "SignalIDConnector"(fun GeneratedConceptBuilder.() {
             "name" {
                 overrideType = String::class.asClassName()
@@ -49,9 +47,11 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         })
 
         "BaseEnergySource" {
+            includeAllProperties = false
         }
         "ElectricEnergySource" {
-
+            includeAllProperties = false
+            +"type"
         }
     }
 }

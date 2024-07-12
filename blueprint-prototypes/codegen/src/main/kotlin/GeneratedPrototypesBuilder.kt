@@ -11,18 +11,22 @@ class GeneratedPrototypes(
 sealed interface GeneratedValue {
     val inner: ProtoOrConcept
     val includedProperties: Map<String, GeneratedProperty>
+    val typeName: String?
 }
 
 class GeneratedPrototype(
     override val inner: Prototype,
     override val includedProperties: Map<String, GeneratedProperty>
-) : GeneratedValue
+) : GeneratedValue {
+    override val typeName: String? = inner.typename
+}
 
 class GeneratedConcept(
     override val inner: Concept,
     val overrideType: TypeName?,
     val innerEnumName: String?,
-    override val includedProperties: Map<String, GeneratedProperty>
+    override val includedProperties: Map<String, GeneratedProperty>,
+    override val typeName: String?
 ) : GeneratedValue
 
 class GeneratedProperty(
@@ -122,6 +126,8 @@ class GeneratedConceptBuilder(private val concept: Concept) {
     var innerEnumName: String? = null
     private val properties: MutableMap<String, GeneratedProperty> = mutableMapOf()
 
+    var includeAllProperties: Boolean = true
+
     fun property(
         name: String,
         block: PropertyOptionsBuilder.() -> Unit
@@ -135,17 +141,34 @@ class GeneratedConceptBuilder(private val concept: Concept) {
         property(this, block)
     }
 
+    operator fun String.unaryPlus() {
+        property(this) {}
+    }
+
+    private fun Property.getTypeValue(): String? {
+        if (name != "type") return null
+        return (type.innerType() as? LiteralType)?.value?.takeIf { it.isString }?.content
+    }
+
     fun build(): GeneratedConcept {
-        for (property in concept.properties.orEmpty()) {
-            if (property.name !in properties) {
-                properties[property.name] = PropertyOptionsBuilder(property).build()
+        if (includeAllProperties)
+            for (property in concept.properties.orEmpty()) {
+                if (property.name !in properties) {
+                    properties[property.name] = PropertyOptionsBuilder(property).build()
+                }
             }
+        val typeProperty = properties["type"]
+        val typeName = typeProperty?.inner?.getTypeValue()
+        if (typeName != null) {
+            properties.remove("type")
         }
+
         return GeneratedConcept(
             concept,
             overrideType = overrideType,
             innerEnumName = innerEnumName,
-            properties
+            properties,
+            typeName
         )
     }
 }

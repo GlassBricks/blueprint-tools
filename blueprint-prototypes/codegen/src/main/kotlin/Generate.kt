@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 
 private const val PACKAGE_NAME = "glassbricks.factorio.blueprint.prototypes"
-private const val PAR_PACKAGE_NAME = "glassbricks.factorio.blueprint.prototypes"
+private const val PAR_PACKAGE_NAME = "glassbricks.factorio.blueprint"
 
 private val builtins = mapOf(
     "bool" to Boolean::class.asClassName(),
@@ -149,11 +149,30 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     }
 
     private fun generatePrototype(prototype: GeneratedPrototype): TypeSpec =
-        generateClass(
-            prototype,
-            prototype.inner.name,
-        ) {
-            val typeName = prototype.inner.typename
+        generateClass(prototype, prototype.inner.name)
+
+    private fun generateClass(
+        value: GeneratedValue,
+        name: String,
+        isDataClass: Boolean = false
+    ): TypeSpec {
+        val canBeObject = value.includedProperties.isEmpty()
+                && value.inner.parent != null
+                && value.typeName != null
+                && value.inner.name !in hasInheritors
+
+        val builder = if (canBeObject) {
+            TypeSpec.objectBuilder(name)
+        } else {
+            TypeSpec.classBuilder(name)
+        }
+        return builder.apply {
+            // doc
+            addDescription(value.inner.description)
+
+            // annotations
+            addAnnotation(Serializable::class)
+            val typeName = value.typeName
             if (typeName != null) {
                 addAnnotation(
                     AnnotationSpec.builder(SerialName::class)
@@ -161,21 +180,15 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                         .build()
                 )
             }
-        }
 
-    private fun generateClass(
-        value: GeneratedValue,
-        name: String,
-        block: TypeSpec.Builder.() -> Unit = {}
-    ): TypeSpec =
-        TypeSpec.classBuilder(name).apply {
-            // doc
-            addDescription(value.inner.description)
+            // modifiers
+            if (isDataClass) {
+                addModifiers(KModifier.DATA)
+            }
 
-            // annotations
-            addAnnotation(Serializable::class)
             val hasInheritors = value.inner.name in hasInheritors
             if (hasInheritors) {
+                check(!isDataClass)
                 addModifiers(KModifier.SEALED)
             }
             if (value.inner.abstract) check(hasInheritors)
@@ -190,48 +203,35 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             }
 
             // properties
-            for (property in value.includedProperties.values.sortedBy { it.inner.order }) {
-                addProperty(generateProperty(value, property, initByMutate = true))
+            if (isDataClass) {
+                val constructorBuilder = FunSpec.constructorBuilder()
+                for (property in value.includedProperties.values.sortedBy { it.inner.order }) {
+                    val propertySpec = generateProperty(value, property, initByMutate = false) {
+                        initializer(property.inner.name)
+                    }
+                    addProperty(propertySpec)
+                    constructorBuilder.addParameter(propertySpec.name, propertySpec.type)
+                }
+                if (constructorBuilder.parameters.isNotEmpty())
+                    primaryConstructor(constructorBuilder.build())
+            } else {
+                for (property in value.includedProperties.values.sortedBy { it.inner.order }) {
+                    addProperty(generateProperty(value, property, initByMutate = true))
+                }
             }
-
-            block()
         }.build()
+    }
 
     private fun Concept.canBeDataClass(): Boolean =
         properties != null
-                && parent == null
                 && name !in hasInheritors
 
     private fun generateStructConcept(
         concept: GeneratedConcept,
         name: String,
     ): TypeSpec {
-        return if (concept.inner.canBeDataClass()) {
-            generateDataClass(concept, name)
-        } else {
-            generateClass(concept, name)
-        }
+        return generateClass(concept, name, isDataClass = concept.inner.canBeDataClass())
     }
-
-    private fun generateDataClass(
-        concept: GeneratedConcept,
-        name: String,
-    ): TypeSpec = TypeSpec.classBuilder(name).apply {
-        addDescription(concept.inner.description)
-        addModifiers(KModifier.DATA)
-        addAnnotation(Serializable::class)
-
-        val properties = concept.includedProperties
-        val constructorBuilder = FunSpec.constructorBuilder()
-        for (property in properties.values.sortedBy { it.inner.order }) {
-            val propertySpec = generateProperty(concept, property, initByMutate = false) {
-                initializer(property.inner.name)
-            }
-            addProperty(propertySpec)
-            constructorBuilder.addParameter(propertySpec.name, propertySpec.type)
-        }
-        primaryConstructor(constructorBuilder.build())
-    }.build()
 
     private fun generateConcept(concept: GeneratedConcept): Any {
         val type = if (concept.overrideType != null) {
