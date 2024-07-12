@@ -12,7 +12,6 @@ repositories {
 
 dependencies {
     api(project(":blueprint"))
-    api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
     testImplementation(kotlin("test"))
 }
 
@@ -21,7 +20,6 @@ tasks.test {
 }
 kotlin {
     explicitApi()
-    jvmToolchain(21)
 }
 
 val generatedDir = layout.buildDirectory.dir("generated").get()
