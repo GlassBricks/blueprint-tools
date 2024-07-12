@@ -11,19 +11,22 @@
 package glassbricks.factorio.blueprint.prototypes
 
 import glassbricks.factorio.blueprint.BoundingBox
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 
 /**
  * The abstract base for prototypes. PrototypeBase defines the common features of prototypes, such
  * as localization and order.
  */
-public interface PrototypeBase {
+@Serializable
+public abstract class PrototypeBase {
   /**
    * Specifies the kind of prototype this is.
    *
    * For a list of all types used in vanilla, see [data.raw](https://wiki.factorio.com/Data.raw).
    */
-  public val type: String
+  public lateinit var type: String
+    private set
 
   /**
    * Unique textual identification of the prototype. May not contain a dot, nor exceed a length of
@@ -31,7 +34,8 @@ public interface PrototypeBase {
    *
    * For a list of all names used in vanilla, see [data.raw](https://wiki.factorio.com/Data.raw).
    */
-  public val name: String
+  public lateinit var name: String
+    private set
 }
 
 /**
@@ -40,7 +44,8 @@ public interface PrototypeBase {
  *
  * For in game script access to entity, take a look at [LuaEntity](runtime:LuaEntity).
  */
-public interface EntityPrototype : PrototypeBase {
+@Serializable
+public abstract class EntityPrototype : PrototypeBase() {
   /**
    * Specification of the entity collision boundaries. Empty collision box means no collision and is
    * used for smoke, projectiles, particles, explosions etc.
@@ -53,14 +58,14 @@ public interface EntityPrototype : PrototypeBase {
    * and the edge of the building, this lets the player move between the building and electric
    * poles/inserters etc.
    */
-  public val collision_box: BoundingBox?
+  public var collision_box: BoundingBox? = null
 
   /**
    * Two entities can collide only if they share a layer from the collision mask.
    */
-  public val collision_mask: CollisionMask?
+  public var collision_mask: CollisionMask? = null
 
-  public val flags: EntityPrototypeFlags?
+  public var flags: EntityPrototypeFlags? = null
 
   /**
    * Supported values are 1 (for 1x1 grid) and 2 (for 2x2 grid, like rails).
@@ -69,7 +74,7 @@ public interface EntityPrototype : PrototypeBase {
    * [RailRemnantsPrototype](prototype:RailRemnantsPrototype) and
    * [TrainStopPrototype](prototype:TrainStopPrototype).
    */
-  public val build_grid_size: UByte?
+  public var build_grid_size: UByte? = null
 
   /**
    * Item that when placed creates this entity. Determines which item is picked when "Q" (smart
@@ -78,7 +83,7 @@ public interface EntityPrototype : PrototypeBase {
    *
    * The item count specified here can't be larger than the stack size of that item.
    */
-  public val placeable_by: ItemOrArray<ItemToPlace>?
+  public var placeable_by: ItemOrArray<ItemToPlace>? = null
 
   /**
    * Used to determine how the center of the entity should be positioned when building (unless the
@@ -87,22 +92,24 @@ public interface EntityPrototype : PrototypeBase {
    * When the tile width is odd, the center will be in the center of the tile, when it is even, the
    * center is on the tile transition.
    */
-  public val tile_width: UInt?
+  public var tile_width: UInt? = null
 
-  public val tile_height: UInt?
+  public var tile_height: UInt? = null
 }
 
 /**
  * Abstract base of all entities with health in the game.
  */
-public interface EntityWithHealthPrototype : EntityPrototype
+@Serializable
+public abstract class EntityWithHealthPrototype : EntityPrototype()
 
 /**
  * Abstract base of all entities with a force in the game. These entities have a
  * [LuaEntity::unit_number](runtime:LuaEntity::unit_number) during runtime. Can be high priority
  * [military targets](https://wiki.factorio.com/Military_units_and_structures).
  */
-public interface EntityWithOwnerPrototype : EntityWithHealthPrototype
+@Serializable
+public abstract class EntityWithOwnerPrototype : EntityWithHealthPrototype()
 
 /**
  * Every entry in the array is a specification of one layer the object collides with or a special
@@ -268,15 +275,15 @@ public typealias ItemID = String
 /**
  * Item that when placed creates this entity/tile.Item that when placed creates this entity/tile.
  */
-public interface ItemToPlace {
+@Serializable
+public data class ItemToPlace(
+  /**
+   * The item used to place this entity/tile.
+   */
+  public val item: ItemID,
   /**
    * How many items are used to place one of this entity/tile. Can't be larger than the stack size
    * of the item.
    */
-  public val count: UInt
-
-  /**
-   * The item used to place this entity/tile.
-   */
-  public val item: ItemID
-}
+  public val count: UInt,
+)
