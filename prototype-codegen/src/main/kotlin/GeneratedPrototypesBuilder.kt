@@ -4,7 +4,6 @@ import com.squareup.kotlinpoet.TypeName
 
 
 class GeneratedPrototypes(
-    val docs: PrototypeApiDocs,
     val prototypes: Map<String, GeneratedPrototype>,
     val concepts: Map<String, GeneratedConcept>
 )
@@ -64,7 +63,7 @@ class GeneratedPrototypesBuilder(private val docs: PrototypeApiDocs) {
                 }
             }
         }
-        return GeneratedPrototypes(docs, prototypes, concepts)
+        return GeneratedPrototypes(prototypes, concepts)
     }
 }
 
