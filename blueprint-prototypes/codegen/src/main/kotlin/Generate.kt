@@ -174,11 +174,11 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
 
             // annotations
             addAnnotation(Serializable::class)
-            if (value.inner.abstract) {
-                addModifiers(KModifier.ABSTRACT)
-            } else if (value.inner.name in hasInheritors) {
+            val hasInheritors = value.inner.name in hasInheritors
+            if (hasInheritors) {
                 addModifiers(KModifier.SEALED)
             }
+            if (value.inner.abstract) check(hasInheritors)
 
             // supertypes
             val parent = value.inner.parent
@@ -239,15 +239,10 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         } else {
             mapTypeDefinition(concept.inner.type, concept, null, true)
         }
-        return if (type.declaration != null) {
-            type.declaration.toBuilder().apply {
+        return type.declaration
+            ?: TypeAliasSpec.builder(concept.inner.name, type.putType()).apply {
                 addDescription(concept.inner.description)
             }.build()
-        } else {
-            TypeAliasSpec.builder(concept.inner.name, type.putType()).apply {
-                addDescription(concept.inner.description)
-            }.build()
-        }
     }
 
 
@@ -259,7 +254,11 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             null
         }
 
-    private fun generateEnumType(name: String, options: List<LiteralType>): TypeSpec =
+    private fun generateEnumType(
+        name: String,
+        options: List<LiteralType>,
+        block: TypeSpec.Builder.() -> Unit = {}
+    ): TypeSpec =
         TypeSpec.enumBuilder(name).apply {
             addAnnotation(Serializable::class)
 
@@ -271,6 +270,8 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                     }.build()
                 )
             }
+
+            block()
         }.build()
 
 
@@ -387,7 +388,11 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             } else {
                 error("todo")
             }
-            val enumType = generateEnumType(name, options)
+            val enumType = generateEnumType(name, options) {
+                if (isRoot) {
+                    addDescription(context.inner.description)
+                }
+            }
             GeneratedType(ClassName(PACKAGE_NAME, name), enumType)
         } ?: tryGetItemOrArrayValue(type)?.let { item ->
             ClassName(PACKAGE_NAME, "ItemOrArray")

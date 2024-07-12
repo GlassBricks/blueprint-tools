@@ -15,5 +15,4 @@ class LoadKtTest {
         val saved = dataRawJson.encodeToString(DataRaw.serializer(), dataRaw)
         println(saved)
     }
-
 }

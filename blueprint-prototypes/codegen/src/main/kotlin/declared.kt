@@ -29,8 +29,8 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             +"default_output_signal"
         }
     }
-    concepts {
 
+    concepts {
         "ItemID" {}
         "ItemToPlace" {}
         "CollisionMask"(fun GeneratedConceptBuilder.() {
@@ -42,12 +42,16 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
 
         "ElectricUsagePriority" {}
         "Energy" {}
-        "BaseEnergySource" {}
-        "ElectricEnergySource" {}
         "SignalIDConnector"(fun GeneratedConceptBuilder.() {
             "name" {
                 overrideType = String::class.asClassName()
             }
         })
+
+        "BaseEnergySource" {
+        }
+        "ElectricEnergySource" {
+
+        }
     }
 }
