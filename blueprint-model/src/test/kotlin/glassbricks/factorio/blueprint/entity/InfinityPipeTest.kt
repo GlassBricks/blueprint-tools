@@ -8,13 +8,13 @@ class InfinityPipeTest {
     @Test
     fun `can save and load`() {
         testSaveLoad(InfinityPipe::class, "infinity-pipe")
-        testSaveLoad(InfinityPipe::class, "infinity-pipe", null, false, fun EntityJson.() {
+        testSaveLoad(InfinityPipe::class, "infinity-pipe", null, false) {
             infinity_settings = InfinitySettings(
                 name = "water",
                 mode = InfinityMode.AtMost,
                 percentage = 0.51,
                 temperature = 15,
             )
-        })
+        }
     }
 }

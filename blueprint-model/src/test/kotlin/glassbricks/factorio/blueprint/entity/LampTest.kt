@@ -8,10 +8,8 @@ class LampTest {
     @Test
     fun `can load lamp`() {
         testSaveLoad(Lamp::class, "small-lamp")
-        testSaveLoad(Lamp::class, "small-lamp", connectToNetwork = true, build = fun EntityJson.() {
-
-        })
-        testSaveLoad(Lamp::class, "small-lamp", connectToNetwork = true, build = fun EntityJson.() {
+        testSaveLoad(Lamp::class, "small-lamp", connectToNetwork = true)
+        testSaveLoad(Lamp::class, "small-lamp", connectToNetwork = true) {
             control_behavior = ControlBehaviorJson(
                 circuit_condition = CircuitCondition(
                     first_signal = signalId("signal-A"),
@@ -20,6 +18,6 @@ class LampTest {
                 ),
                 use_colors = true
             )
-        })
+        }
     }
 }

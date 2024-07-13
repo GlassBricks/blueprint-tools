@@ -2,8 +2,8 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.SignalID
 import glassbricks.factorio.blueprint.json.Color
-import glassbricks.factorio.blueprint.json.toJsonBasic
-import glassbricks.factorio.blueprint.json.toSignalIDBasic
+import glassbricks.factorio.blueprint.json.toJsonWithDefault
+import glassbricks.factorio.blueprint.json.toSignalIdWithDefault
 import glassbricks.factorio.blueprint.prototypes.TrainStopPrototype
 
 
@@ -16,7 +16,8 @@ public class TrainStop(
     public var manualTrainsLimit: Int? = json.manual_trains_limit
 
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
-    public override val controlBehavior: TrainStopControlBehavior = TrainStopControlBehavior(json.control_behavior)
+    public override val controlBehavior: TrainStopControlBehavior =
+        TrainStopControlBehavior(prototype, json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
         json.station = station
@@ -27,29 +28,36 @@ public class TrainStop(
 
 }
 
-public class TrainStopControlBehavior(json: ControlBehaviorJson?) : GenericOnOffControlBehavior(json), ControlBehavior {
+public class TrainStopControlBehavior(
+    private val prototype: TrainStopPrototype,
+    json: ControlBehaviorJson?
+) : GenericOnOffControlBehavior(json), ControlBehavior {
     public var sendToTrain: Boolean = json?.send_to_train ?: false
     public var readFromTrain: Boolean = json?.read_from_train ?: false
 
+    public val defaultTrainStoppedSignal: SignalID? get() = prototype.default_train_stopped_signal
+    public val defaultTrainsLimitSignal: SignalID? get() = prototype.default_trains_limit_signal
+    public val defaultTrainsCountSignal: SignalID? get() = prototype.default_trains_count_signal
+
     public var trainStoppedSignal: SignalID? = json?.train_stopped_signal
-        ?.takeIf { json.read_stopped_train }
-        ?.toSignalIDBasic()
+        .toSignalIdWithDefault(defaultTrainStoppedSignal)
+        ?.takeIf { json?.read_stopped_train == true }
     public var trainsLimitSignal: SignalID? = json?.trains_limit_signal
-        ?.takeIf { json.set_trains_limit }
-        ?.toSignalIDBasic()
+        .toSignalIdWithDefault(defaultTrainsLimitSignal)
+        ?.takeIf { json?.set_trains_limit == true }
     public var trainsCountSignal: SignalID? = json?.trains_count_signal
-        ?.takeIf { json.read_trains_count }
-        ?.toSignalIDBasic()
+        .toSignalIdWithDefault(defaultTrainsCountSignal)
+        ?.takeIf { json?.read_trains_count == true }
 
     override fun exportToJson(): ControlBehaviorJson = super.baseExportToJson().apply {
         circuit_enable_disable = if (circuitCondition != null) true else null
         send_to_train = sendToTrain
         read_from_train = readFromTrain
         read_stopped_train = trainStoppedSignal != null
-        train_stopped_signal = trainStoppedSignal.toJsonBasic()
+        train_stopped_signal = trainStoppedSignal?.toJsonWithDefault(defaultTrainStoppedSignal)
         set_trains_limit = trainsLimitSignal != null
-        trains_limit_signal = trainsLimitSignal.toJsonBasic()
+        trains_limit_signal = trainsLimitSignal?.toJsonWithDefault(defaultTrainsLimitSignal)
         read_trains_count = trainsCountSignal != null
-        trains_count_signal = trainsCountSignal.toJsonBasic()
+        trains_count_signal = trainsCountSignal?.toJsonWithDefault(defaultTrainsCountSignal)
     }
 }

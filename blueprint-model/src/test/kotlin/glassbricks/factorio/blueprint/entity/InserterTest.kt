@@ -27,26 +27,26 @@ class InserterTest {
             defaultInserter.controlBehavior.defaultStackSizeSignal,
             defaultInserter.controlBehavior.setStackSizeSignal
         )
-        testSaveLoad(Inserter::class, "inserter", connectToNetwork = true, build = fun EntityJson.() {
+        testSaveLoad(Inserter::class, "inserter", connectToNetwork = true) {
             control_behavior = ControlBehaviorJson(
                 circuit_mode_of_operation = InserterModeOfOperation.None.asMode(),
             )
-        })
-        testSaveLoad(Inserter::class, "fast-inserter", null, false, fun EntityJson.() {
+        }
+        testSaveLoad(Inserter::class, "fast-inserter", null, false) {
             override_stack_size = 2U
-        })
-        testSaveLoad(Inserter::class, "long-handed-inserter", connectToNetwork = true, build = fun EntityJson.() {
+        }
+        testSaveLoad(Inserter::class, "long-handed-inserter", connectToNetwork = true) {
             override_stack_size = 3U
             control_behavior = ControlBehaviorJson(
                 circuit_condition = CircuitCondition(comparator = CompareOperation.Equal),
                 circuit_mode_of_operation = InserterModeOfOperation.EnableDisable.asMode(),
                 circuit_read_hand_contents = false,
             )
-        })
-        testSaveLoad(Inserter::class, "filter-inserter", null, false, fun EntityJson.() {
+        }
+        testSaveLoad(Inserter::class, "filter-inserter", null, false) {
             filters = itemFilterList("copper-plate", "iron-plate", null, "steel-plate")
             drop_position = Position(1.0, 2.0)
             pickup_position = Position(3.0, 4.0)
-        })
+        }
     }
 }

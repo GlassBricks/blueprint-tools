@@ -10,37 +10,37 @@ class ContainerKtTest {
     @Test
     fun `can load simple container`() {
         testSaveLoad(Container::class, "iron-chest")
-        testSaveLoad(Container::class, "iron-chest", null, false, fun EntityJson.() {
+        testSaveLoad(Container::class, "iron-chest", null, false) {
             bar = 1
-        })
+        }
     }
 
     @Test
     fun `can load logistic containers`() {
         val passiveProvider = testSaveLoad(LogisticContainer::class, "logistic-chest-passive-provider")
         assertFalse(passiveProvider.allowsFilters)
-        val storage = testSaveLoad(LogisticContainer::class, "logistic-chest-storage", null, false, fun EntityJson.() {
+        val storage = testSaveLoad(LogisticContainer::class, "logistic-chest-storage", null, false) {
             request_filters = listOf(LogisticFilter(name = "iron-plate", count = 1, index = 1))
-        })
+        }
         assertFalse(storage.allowsFilters)
         assertEquals(1, storage.requestFilters.size)
-        testSaveLoad(LogisticContainer::class, "logistic-chest-requester", null, false, fun EntityJson.() {
+        testSaveLoad(LogisticContainer::class, "logistic-chest-requester", null, false) {
             request_filters = listOf(
                 LogisticFilter(name = "iron-plate", count = 1, index = 1),
                 LogisticFilter(name = "copper-plate", count = 2, index = 5)
             )
             request_from_buffers = true
-        })
-        testSaveLoad(LogisticContainer::class, "logistic-chest-requester", null, false, fun EntityJson.() {
+        }
+        testSaveLoad(LogisticContainer::class, "logistic-chest-requester", null, false) {
             control_behavior = ControlBehaviorJson(
                 circuit_mode_of_operation = LogisticContainerModeOfOperation.SetRequests.asMode()
             )
-        })
+        }
     }
 
     @Test
     fun `can load infinity containers`() {
-        testSaveLoad(InfinityContainer::class, "infinity-chest", null, false, fun EntityJson.() {
+        testSaveLoad(InfinityContainer::class, "infinity-chest", null, false) {
             infinity_settings = InfinitySettings(
                 filters = listOf(
                     InfinityFilter(
@@ -52,6 +52,6 @@ class ContainerKtTest {
                 ),
                 remove_unfiltered_items = true,
             )
-        })
+        }
     }
 }

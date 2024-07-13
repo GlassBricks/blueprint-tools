@@ -10,15 +10,15 @@ class TrainStopTest {
     @Test
     fun `can load train stop`() {
         testSaveLoad(TrainStop::class, "train-stop")
-        testSaveLoad(TrainStop::class, "train-stop", connectToNetwork = true, build = fun EntityJson.() {
+        testSaveLoad(TrainStop::class, "train-stop", connectToNetwork = true) {
             control_behavior = ControlBehavior()
-        })
-        testSaveLoad(TrainStop::class, "train-stop", null, false, fun EntityJson.() {
+        }
+        testSaveLoad(TrainStop::class, "train-stop", null, false) {
             station = "foo"
             color = Color(0.5, 0.5, 0.5)
             manual_trains_limit = 5
-        })
-        testSaveLoad(TrainStop::class, "train-stop", connectToNetwork = true, build = fun EntityJson.() {
+        }
+        testSaveLoad(TrainStop::class, "train-stop", connectToNetwork = true) {
             control_behavior = ControlBehaviorJson(
                 send_to_train = true,
                 read_from_train = true,
@@ -35,6 +35,6 @@ class TrainStopTest {
                 read_trains_count = true,
                 trains_count_signal = signalId("signal-D")
             )
-        })
+        }
     }
 }

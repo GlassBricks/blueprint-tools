@@ -10,11 +10,11 @@ class TransportBeltConnectableTest {
     @Test
     fun `can load transport belt`() {
         testSaveLoad(TransportBelt::class, "transport-belt")
-        testSaveLoad(TransportBelt::class, "transport-belt", connectToNetwork = true, build = fun EntityJson.() {
+        testSaveLoad(TransportBelt::class, "transport-belt", connectToNetwork = true) {
             control_behavior = ControlBehavior(
                 circuit_enable_disable = false
             )
-        })
+        }
         val belt = testSaveLoad(TransportBelt::class, "transport-belt",
             connectToNetwork = true,
             build = fun EntityJson.() {
@@ -36,43 +36,43 @@ class TransportBeltConnectableTest {
 
     @Test
     fun `can load underground belt`() {
-        testSaveLoad(UndergroundBelt::class, "underground-belt", null, false, fun EntityJson.() {
+        testSaveLoad(UndergroundBelt::class, "underground-belt", null, false) {
             type = IOType.Input
-        })
-        testSaveLoad(UndergroundBelt::class, "underground-belt", null, false, fun EntityJson.() {
+        }
+        testSaveLoad(UndergroundBelt::class, "underground-belt", null, false) {
             type = IOType.Output
-        })
+        }
     }
 
     @Test
     fun `can load splitter`() {
         testSaveLoad(Splitter::class, "splitter")
-        testSaveLoad(Splitter::class, "splitter", null, false, fun EntityJson.() {
+        testSaveLoad(Splitter::class, "splitter", null, false) {
             input_priority = SplitterPriority.Left
             output_priority = SplitterPriority.Right
             filter = "iron-plate"
-        })
+        }
     }
 
     @Test
     fun `can load loader`() {
-        testSaveLoad(Loader::class, "loader", null, false, fun EntityJson.() {
+        testSaveLoad(Loader::class, "loader", null, false) {
             type = IOType.Input
-        })
-        testSaveLoad(Loader::class, "loader", null, false, fun EntityJson.() {
+        }
+        testSaveLoad(Loader::class, "loader", null, false) {
             type = IOType.Output
             filters = itemFilterList("iron-plate", "copper-plate")
-        })
+        }
     }
 
     @Test
     fun `can load linked belt`() {
-        testSaveLoad(LinkedBelt::class, "linked-belt", null, false, fun EntityJson.() {
+        testSaveLoad(LinkedBelt::class, "linked-belt", null, false) {
             type = IOType.Output
-        })
-        testSaveLoad(LinkedBelt::class, "linked-belt", null, false, fun EntityJson.() {
+        }
+        testSaveLoad(LinkedBelt::class, "linked-belt", null, false) {
             type = IOType.Input
             link_id = 4
-        })
+        }
     }
 }
