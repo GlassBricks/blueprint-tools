@@ -16,7 +16,7 @@ public class PowerSwitch(
 
     override fun exportToJson(json: EntityJson) {
         json.switch_state = switchState
-        if(this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     private inner class ConnectionPoint : CableConnectionPoint {
@@ -30,7 +30,10 @@ public class PowerSwitchControlBehavior(
 ) : ControlBehavior {
     public var circuitCondition: CircuitCondition = source?.circuit_condition ?: CircuitCondition.DEFAULT
 
-    override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(
-        circuit_condition = circuitCondition
-    )
+    override fun exportToJson(): ControlBehaviorJson? =
+        if (circuitCondition == CircuitCondition.DEFAULT) {
+            null
+        } else {
+            ControlBehaviorJson(circuit_condition = circuitCondition)
+        }
 }
