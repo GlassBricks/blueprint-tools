@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.prototypes.*
+import glassbricks.factorio.blueprint.prototypes.*
 
 internal fun createEntityFromPrototype(
     prototype: EntityWithOwnerPrototype,

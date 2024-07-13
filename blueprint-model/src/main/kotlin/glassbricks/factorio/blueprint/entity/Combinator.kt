@@ -4,9 +4,9 @@ import glassbricks.factorio.blueprint.json.ArithmeticCombinatorParameters
 import glassbricks.factorio.blueprint.json.CircuitID
 import glassbricks.factorio.blueprint.json.DeciderCombinatorParameters
 import glassbricks.factorio.blueprint.json.SignalID
-import glassbricks.factorio.prototypes.ArithmeticCombinatorPrototype
-import glassbricks.factorio.prototypes.ConstantCombinatorPrototype
-import glassbricks.factorio.prototypes.DeciderCombinatorPrototype
+import glassbricks.factorio.blueprint.prototypes.ArithmeticCombinatorPrototype
+import glassbricks.factorio.blueprint.prototypes.ConstantCombinatorPrototype
+import glassbricks.factorio.blueprint.prototypes.DeciderCombinatorPrototype
 import glassbricks.factorio.blueprint.json.ConstantCombinatorParameters as ConstantCombinatorParametersJson
 
 public sealed class Combinator(

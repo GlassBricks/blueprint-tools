@@ -1,6 +1,7 @@
 package glassbricks.factorio
 
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeSpec
 
 class SealedIntf(
     val name: String,
@@ -11,18 +12,21 @@ class SealedIntf(
 class GeneratedPrototypes(
     val prototypes: Map<String, GeneratedPrototype>,
     val concepts: Map<String, GeneratedConcept>,
-    val extraSealedIntfs: List<SealedIntf>
+    val extraSealedIntfs: List<SealedIntf>,
+    val allSubclassGetters: List<String>
 )
 
 sealed interface GeneratedValue {
     val inner: ProtoOrConcept
     val includedProperties: Map<String, GeneratedProperty>
     val typeName: String?
+    val modify: (TypeSpec.Builder.() -> Unit)?
 }
 
 class GeneratedPrototype(
     override val inner: Prototype,
-    override val includedProperties: Map<String, GeneratedProperty>
+    override val includedProperties: Map<String, GeneratedProperty>,
+    override val modify: (TypeSpec.Builder.() -> Unit)?
 ) : GeneratedValue {
     override val typeName: String? = inner.typename
 }
@@ -32,7 +36,8 @@ class GeneratedConcept(
     val overrideType: TypeName?,
     val innerEnumName: String?,
     override val includedProperties: Map<String, GeneratedProperty>,
-    override val typeName: String?
+    override val typeName: String?,
+    override val modify: (TypeSpec.Builder.() -> Unit)?
 ) : GeneratedValue
 
 class GeneratedProperty(
@@ -46,12 +51,13 @@ annotation class GeneratedPrototypesDsl
 
 @GeneratedPrototypesDsl
 class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
-    private val origPrototypes = docs.prototypes.associateBy { it.name }
-    private val origConcepts = docs.types.associateBy { it.name }
-    private val prototypes = mutableMapOf<String, GeneratedPrototype>()
-    private val concepts = mutableMapOf<String, GeneratedConcept>()
+    val origPrototypes = docs.prototypes.associateBy { it.name }
+    val origConcepts = docs.types.associateBy { it.name }
+    val prototypes = mutableMapOf<String, GeneratedPrototype>()
+    val concepts = mutableMapOf<String, GeneratedConcept>()
 
     private val extraSealedIntfs = mutableListOf<SealedIntf>()
+    val allSubclassGetters = mutableListOf<String>()
 
     @GeneratedPrototypesDsl
     inner class Prototypes {
@@ -95,24 +101,6 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
         extraSealedIntfs.add(SealedIntf(name, values.toSet(), null))
     }
 
-    fun definedSealedIntf(name: String) {
-        val concept = findConcept(name)
-        val type = concept.type
-        check(type is UnionType) {
-            "Not a sealed interface type"
-        }
-        val options = type.options
-            .map {
-                ((it.innerType() as? BasicType)?.value ?: error("Union option not a basic type"))
-                    .also {
-                        check(it in origConcepts) {
-                            "Union option is not a concept"
-                        }
-                    }
-            }
-        extraSealedIntfs.add(SealedIntf(name, options.toSet(), concept))
-    }
-
     fun build(): GeneratedPrototypes {
         for (genPrototype in prototypes.values) {
             val prototype = genPrototype.inner
@@ -127,13 +115,15 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
                 "Extra sealed interface value $value not found"
             }
         }
-        return GeneratedPrototypes(prototypes, concepts, extraSealedIntfs)
+        return GeneratedPrototypes(prototypes, concepts, extraSealedIntfs, allSubclassGetters)
     }
 }
 
 @GeneratedPrototypesDsl
 class GeneratedPrototypeBuilder(val prototype: Prototype) {
     private val properties = mutableMapOf<String, GeneratedProperty>()
+
+    var modify: (TypeSpec.Builder.() -> Unit)? = null
 
     fun tryAddProperty(
         name: String,
@@ -161,13 +151,14 @@ class GeneratedPrototypeBuilder(val prototype: Prototype) {
         property(this) {}
     }
 
-    fun build(prototype: Prototype): GeneratedPrototype = GeneratedPrototype(prototype, properties)
+    fun build(prototype: Prototype): GeneratedPrototype = GeneratedPrototype(prototype, properties, modify)
 }
 
 @GeneratedPrototypesDsl
 class GeneratedConceptBuilder(private val concept: Concept) {
     var overrideType: TypeName? = null
     var innerEnumName: String? = null
+    var modify: (TypeSpec.Builder.() -> Unit)? = null
     private val properties: MutableMap<String, GeneratedProperty> = mutableMapOf()
 
     var includeAllProperties: Boolean = true
@@ -212,7 +203,8 @@ class GeneratedConceptBuilder(private val concept: Concept) {
             overrideType = overrideType,
             innerEnumName = innerEnumName,
             properties,
-            typeName
+            typeName,
+            modify
         )
     }
 }

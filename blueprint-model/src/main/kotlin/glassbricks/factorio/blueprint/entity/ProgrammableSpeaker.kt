@@ -4,7 +4,7 @@ import glassbricks.factorio.blueprint.json.AlertParameters
 import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.json.ProgrammableSpeakerCircuitParameters
 import glassbricks.factorio.blueprint.json.SpeakerParameters
-import glassbricks.factorio.prototypes.ProgrammableSpeakerPrototype
+import glassbricks.factorio.blueprint.prototypes.ProgrammableSpeakerPrototype
 
 public class ProgrammableSpeaker(
     override val prototype: ProgrammableSpeakerPrototype,

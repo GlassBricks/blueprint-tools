@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.SignalID
-import glassbricks.factorio.prototypes.RoboportPrototype
+import glassbricks.factorio.blueprint.prototypes.RoboportPrototype
 
 public class Roboport(
     override val prototype: RoboportPrototype,

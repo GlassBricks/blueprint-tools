@@ -40,6 +40,8 @@ public sealed class PrototypeBase {
      */
     public lateinit var name: String
         private set
+
+    override fun toString(): String = "${this::class.simpleName}($name)"
 }
 
 /**
@@ -231,6 +233,20 @@ public sealed class CombinatorPrototype : EntityWithOwnerPrototype() {
 public class ArithmeticCombinatorPrototype : CombinatorPrototype()
 
 /**
+ * Items with a "durability". Used for [science packs](https://wiki.factorio.com/Science_pack).
+ */
+@Serializable
+@SerialName("tool")
+public open class ToolPrototype : ItemPrototype()
+
+/**
+ * Armor to wear on your in-game [character](prototype:CharacterPrototype) for defense and buffs.
+ */
+@Serializable
+@SerialName("armor")
+public class ArmorPrototype : ToolPrototype()
+
+/**
  * An [artillery turret](https://wiki.factorio.com/Artillery_turret).
  */
 @Serializable
@@ -394,6 +410,20 @@ public open class ItemWithInventoryPrototype : ItemWithLabelPrototype()
 public class BlueprintBookPrototype : ItemWithInventoryPrototype()
 
 /**
+ * Used in the base game as a base for the blueprint item and the deconstruction item.
+ */
+@Serializable
+@SerialName("selection-tool")
+public open class SelectionToolPrototype : ItemWithLabelPrototype()
+
+/**
+ * A [blueprint](https://wiki.factorio.com/Blueprint).
+ */
+@Serializable
+@SerialName("blueprint")
+public class BlueprintItemPrototype : SelectionToolPrototype()
+
+/**
  * A [boiler](https://wiki.factorio.com/Boiler). It heats fluid and optionally outputs it as a
  * different fluid.
  */
@@ -503,11 +533,25 @@ public open class ContainerPrototype : EntityWithOwnerPrototype() {
 }
 
 /**
+ * A copy-paste or cut-paste tool.
+ */
+@Serializable
+@SerialName("copy-paste-tool")
+public class CopyPasteToolPrototype : SelectionToolPrototype()
+
+/**
  * A [decider combinator](https://wiki.factorio.com/Decider_combinator).
  */
 @Serializable
 @SerialName("decider-combinator")
 public class DeciderCombinatorPrototype : CombinatorPrototype()
+
+/**
+ * A [deconstruction planner](https://wiki.factorio.com/Deconstruction_planner).
+ */
+@Serializable
+@SerialName("deconstruction-item")
+public class DeconstructionItemPrototype : SelectionToolPrototype()
 
 /**
  * Entity with electric energy source with that can have some of its values changed runtime. Useful
@@ -958,6 +1002,13 @@ public class MiningDrillPrototype : EntityWithOwnerPrototype() {
 }
 
 /**
+ * Exists only for migration, cannot be used by mods.
+ */
+@Serializable
+@SerialName("mining-tool")
+public class MiningToolPrototype : ToolPrototype()
+
+/**
  * A [module](https://wiki.factorio.com/Module). They are used to affect the capabilities of
  * existing machines, for example by increasing the crafting speed of a [crafting
  * machine](prototype:CraftingMachinePrototype).
@@ -1143,6 +1194,13 @@ public class RailChainSignalPrototype : RailSignalBasePrototype() {
 }
 
 /**
+ * A [rail planner](https://wiki.factorio.com/Rail_planner).
+ */
+@Serializable
+@SerialName("rail-planner")
+public class RailPlannerPrototype : ItemPrototype()
+
+/**
  * The abstract base of both rail prototypes.
  */
 @Serializable
@@ -1169,6 +1227,14 @@ public class ReactorPrototype : EntityWithOwnerPrototype() {
     public lateinit var energy_source: EnergySource
         private set
 }
+
+/**
+ * A [repair pack](https://wiki.factorio.com/Repair_pack). Using the tool decreases durability to
+ * restore entity health.
+ */
+@Serializable
+@SerialName("repair-tool")
+public class RepairToolPrototype : ToolPrototype()
 
 /**
  * A [roboport](https://wiki.factorio.com/Roboport).
@@ -1266,6 +1332,14 @@ public class SolarPanelPrototype : EntityWithOwnerPrototype() {
 }
 
 /**
+ * The [spidertron remote](https://wiki.factorio.com/Spidertron_remote). This remote can only be
+ * connected to entities of type [SpiderVehiclePrototype](prototype:SpiderVehiclePrototype).
+ */
+@Serializable
+@SerialName("spidertron-remote")
+public class SpidertronRemotePrototype : ItemPrototype()
+
+/**
  * A [splitter](https://wiki.factorio.com/Splitter).
  */
 @Serializable
@@ -1343,6 +1417,13 @@ public class UndergroundBeltPrototype : TransportBeltConnectablePrototype() {
     public var max_distance: UByte = 0u
         private set
 }
+
+/**
+ * An [upgrade planner](https://wiki.factorio.com/Upgrade_planner).
+ */
+@Serializable
+@SerialName("upgrade-item")
+public class UpgradeItemPrototype : SelectionToolPrototype()
 
 /**
  * A [wall](https://wiki.factorio.com/Wall).
@@ -1915,72 +1996,171 @@ public sealed interface EVEnergySource
 public sealed interface EHFVEnergySource
 
 /**
- * All prototypes, aka [data.raw](https://wiki.factorio.com/Data.raw). Only contains the subset of
- * objects this library uses.
+ * Models [data.raw](https://wiki.factorio.com/Data.raw). This only contains a subset of objects and
+ * properties this library uses, which includes blueprintable entities and items. Other prototypes are
+ * ignored.
  */
 @Serializable
 public class DataRaw(
-    public val accumulator: Map<String, AccumulatorPrototype>,
-    public val `artillery-turret`: Map<String, ArtilleryTurretPrototype>,
-    public val beacon: Map<String, BeaconPrototype>,
-    public val boiler: Map<String, BoilerPrototype>,
-    public val `burner-generator`: Map<String, BurnerGeneratorPrototype>,
-    public val `arithmetic-combinator`: Map<String, ArithmeticCombinatorPrototype>,
-    public val `decider-combinator`: Map<String, DeciderCombinatorPrototype>,
-    public val `constant-combinator`: Map<String, ConstantCombinatorPrototype>,
-    public val container: Map<String, ContainerPrototype>,
-    public val `logistic-container`: Map<String, LogisticContainerPrototype>,
-    public val `infinity-container`: Map<String, InfinityContainerPrototype>,
-    public val `assembling-machine`: Map<String, AssemblingMachinePrototype>,
-    public val `rocket-silo`: Map<String, RocketSiloPrototype>,
-    public val furnace: Map<String, FurnacePrototype>,
-    public val `electric-energy-interface`: Map<String, ElectricEnergyInterfacePrototype>,
-    public val `electric-pole`: Map<String, ElectricPolePrototype>,
-    public val gate: Map<String, GatePrototype>,
-    public val generator: Map<String, GeneratorPrototype>,
-    public val `heat-interface`: Map<String, HeatInterfacePrototype>,
-    public val `heat-pipe`: Map<String, HeatPipePrototype>,
-    public val inserter: Map<String, InserterPrototype>,
-    public val lab: Map<String, LabPrototype>,
-    public val lamp: Map<String, LampPrototype>,
-    public val `land-mine`: Map<String, LandMinePrototype>,
-    public val `linked-container`: Map<String, LinkedContainerPrototype>,
-    public val `mining-drill`: Map<String, MiningDrillPrototype>,
-    public val `offshore-pump`: Map<String, OffshorePumpPrototype>,
-    public val pipe: Map<String, PipePrototype>,
-    public val `infinity-pipe`: Map<String, InfinityPipePrototype>,
-    public val `pipe-to-ground`: Map<String, PipeToGroundPrototype>,
-    public val `power-switch`: Map<String, PowerSwitchPrototype>,
-    public val `programmable-speaker`: Map<String, ProgrammableSpeakerPrototype>,
-    public val pump: Map<String, PumpPrototype>,
-    public val radar: Map<String, RadarPrototype>,
-    public val `straight-rail`: Map<String, StraightRailPrototype>,
-    public val `rail-chain-signal`: Map<String, RailChainSignalPrototype>,
-    public val `rail-signal`: Map<String, RailSignalPrototype>,
-    public val reactor: Map<String, ReactorPrototype>,
-    public val roboport: Map<String, RoboportPrototype>,
-    public val `simple-entity-with-owner`: Map<String, SimpleEntityWithOwnerPrototype>,
-    public val `simple-entity-with-force`: Map<String, SimpleEntityWithForcePrototype>,
-    public val `solar-panel`: Map<String, SolarPanelPrototype>,
-    public val `storage-tank`: Map<String, StorageTankPrototype>,
-    public val `train-stop`: Map<String, TrainStopPrototype>,
-    public val `linked-belt`: Map<String, LinkedBeltPrototype>,
-    public val `loader-1x1`: Map<String, Loader1x1Prototype>,
-    public val loader: Map<String, Loader1x2Prototype>,
-    public val splitter: Map<String, SplitterPrototype>,
-    public val `transport-belt`: Map<String, TransportBeltPrototype>,
-    public val `underground-belt`: Map<String, UndergroundBeltPrototype>,
-    public val turret: Map<String, TurretPrototype>,
-    public val `ammo-turret`: Map<String, AmmoTurretPrototype>,
-    public val wall: Map<String, WallPrototype>,
-    public val item: Map<String, ItemPrototype>,
-    public val ammo: Map<String, AmmoItemPrototype>,
-    public val capsule: Map<String, CapsulePrototype>,
-    public val gun: Map<String, GunPrototype>,
-    public val `item-with-entity-data`: Map<String, ItemWithEntityDataPrototype>,
-    public val `item-with-label`: Map<String, ItemWithLabelPrototype>,
-    public val `item-with-inventory`: Map<String, ItemWithInventoryPrototype>,
-    public val `blueprint-book`: Map<String, BlueprintBookPrototype>,
-    public val `item-with-tags`: Map<String, ItemWithTagsPrototype>,
-    public val module: Map<String, ModulePrototype>,
+    public val accumulator: Map<String, AccumulatorPrototype> = emptyMap(),
+    public val `artillery-turret`: Map<String, ArtilleryTurretPrototype> = emptyMap(),
+    public val beacon: Map<String, BeaconPrototype> = emptyMap(),
+    public val boiler: Map<String, BoilerPrototype> = emptyMap(),
+    public val `burner-generator`: Map<String, BurnerGeneratorPrototype> = emptyMap(),
+    public val `arithmetic-combinator`: Map<String, ArithmeticCombinatorPrototype> = emptyMap(),
+    public val `decider-combinator`: Map<String, DeciderCombinatorPrototype> = emptyMap(),
+    public val `constant-combinator`: Map<String, ConstantCombinatorPrototype> = emptyMap(),
+    public val container: Map<String, ContainerPrototype> = emptyMap(),
+    public val `logistic-container`: Map<String, LogisticContainerPrototype> = emptyMap(),
+    public val `infinity-container`: Map<String, InfinityContainerPrototype> = emptyMap(),
+    public val `assembling-machine`: Map<String, AssemblingMachinePrototype> = emptyMap(),
+    public val `rocket-silo`: Map<String, RocketSiloPrototype> = emptyMap(),
+    public val furnace: Map<String, FurnacePrototype> = emptyMap(),
+    public val `electric-energy-interface`: Map<String, ElectricEnergyInterfacePrototype> =
+            emptyMap(),
+    public val `electric-pole`: Map<String, ElectricPolePrototype> = emptyMap(),
+    public val gate: Map<String, GatePrototype> = emptyMap(),
+    public val generator: Map<String, GeneratorPrototype> = emptyMap(),
+    public val `heat-interface`: Map<String, HeatInterfacePrototype> = emptyMap(),
+    public val `heat-pipe`: Map<String, HeatPipePrototype> = emptyMap(),
+    public val inserter: Map<String, InserterPrototype> = emptyMap(),
+    public val lab: Map<String, LabPrototype> = emptyMap(),
+    public val lamp: Map<String, LampPrototype> = emptyMap(),
+    public val `land-mine`: Map<String, LandMinePrototype> = emptyMap(),
+    public val `linked-container`: Map<String, LinkedContainerPrototype> = emptyMap(),
+    public val `mining-drill`: Map<String, MiningDrillPrototype> = emptyMap(),
+    public val `offshore-pump`: Map<String, OffshorePumpPrototype> = emptyMap(),
+    public val pipe: Map<String, PipePrototype> = emptyMap(),
+    public val `infinity-pipe`: Map<String, InfinityPipePrototype> = emptyMap(),
+    public val `pipe-to-ground`: Map<String, PipeToGroundPrototype> = emptyMap(),
+    public val `power-switch`: Map<String, PowerSwitchPrototype> = emptyMap(),
+    public val `programmable-speaker`: Map<String, ProgrammableSpeakerPrototype> = emptyMap(),
+    public val pump: Map<String, PumpPrototype> = emptyMap(),
+    public val radar: Map<String, RadarPrototype> = emptyMap(),
+    public val `straight-rail`: Map<String, StraightRailPrototype> = emptyMap(),
+    public val `rail-chain-signal`: Map<String, RailChainSignalPrototype> = emptyMap(),
+    public val `rail-signal`: Map<String, RailSignalPrototype> = emptyMap(),
+    public val reactor: Map<String, ReactorPrototype> = emptyMap(),
+    public val roboport: Map<String, RoboportPrototype> = emptyMap(),
+    public val `simple-entity-with-owner`: Map<String, SimpleEntityWithOwnerPrototype> = emptyMap(),
+    public val `simple-entity-with-force`: Map<String, SimpleEntityWithForcePrototype> = emptyMap(),
+    public val `solar-panel`: Map<String, SolarPanelPrototype> = emptyMap(),
+    public val `storage-tank`: Map<String, StorageTankPrototype> = emptyMap(),
+    public val `train-stop`: Map<String, TrainStopPrototype> = emptyMap(),
+    public val `linked-belt`: Map<String, LinkedBeltPrototype> = emptyMap(),
+    public val `loader-1x1`: Map<String, Loader1x1Prototype> = emptyMap(),
+    public val loader: Map<String, Loader1x2Prototype> = emptyMap(),
+    public val splitter: Map<String, SplitterPrototype> = emptyMap(),
+    public val `transport-belt`: Map<String, TransportBeltPrototype> = emptyMap(),
+    public val `underground-belt`: Map<String, UndergroundBeltPrototype> = emptyMap(),
+    public val turret: Map<String, TurretPrototype> = emptyMap(),
+    public val `ammo-turret`: Map<String, AmmoTurretPrototype> = emptyMap(),
+    public val wall: Map<String, WallPrototype> = emptyMap(),
+    public val item: Map<String, ItemPrototype> = emptyMap(),
+    public val module: Map<String, ModulePrototype> = emptyMap(),
+    public val ammo: Map<String, AmmoItemPrototype> = emptyMap(),
+    public val armor: Map<String, ArmorPrototype> = emptyMap(),
+    public val `blueprint-book`: Map<String, BlueprintBookPrototype> = emptyMap(),
+    public val blueprint: Map<String, BlueprintItemPrototype> = emptyMap(),
+    public val capsule: Map<String, CapsulePrototype> = emptyMap(),
+    public val `copy-paste-tool`: Map<String, CopyPasteToolPrototype> = emptyMap(),
+    public val `deconstruction-item`: Map<String, DeconstructionItemPrototype> = emptyMap(),
+    public val gun: Map<String, GunPrototype> = emptyMap(),
+    public val `item-with-entity-data`: Map<String, ItemWithEntityDataPrototype> = emptyMap(),
+    public val `item-with-inventory`: Map<String, ItemWithInventoryPrototype> = emptyMap(),
+    public val `item-with-label`: Map<String, ItemWithLabelPrototype> = emptyMap(),
+    public val `item-with-tags`: Map<String, ItemWithTagsPrototype> = emptyMap(),
+    public val `mining-tool`: Map<String, MiningToolPrototype> = emptyMap(),
+    public val `rail-planner`: Map<String, RailPlannerPrototype> = emptyMap(),
+    public val `repair-tool`: Map<String, RepairToolPrototype> = emptyMap(),
+    public val `selection-tool`: Map<String, SelectionToolPrototype> = emptyMap(),
+    public val `spidertron-remote`: Map<String, SpidertronRemotePrototype> = emptyMap(),
+    public val tool: Map<String, ToolPrototype> = emptyMap(),
+    public val `upgrade-item`: Map<String, UpgradeItemPrototype> = emptyMap(),
 )
+
+/**
+ * All prototypes that are subclasses of ItemPrototype.
+ */
+public fun DataRaw.allItemPrototypes(): List<ItemPrototype> = listOf(
+    ammo,
+    armor,
+    `blueprint-book`,
+    blueprint,
+    capsule,
+    `copy-paste-tool`,
+    `deconstruction-item`,
+    gun,
+    item,
+    `item-with-entity-data`,
+    `item-with-inventory`,
+    `item-with-label`,
+    `item-with-tags`,
+    `mining-tool`,
+    module,
+    `rail-planner`,
+    `repair-tool`,
+    `selection-tool`,
+    `spidertron-remote`,
+    tool,
+    `upgrade-item`,
+).flatMap { it.values }
+
+/**
+ * All prototypes that are subclasses of EntityWithOwnerPrototype.
+ */
+public fun DataRaw.allEntityWithOwnerPrototypes(): List<EntityWithOwnerPrototype> = listOf(
+    accumulator,
+    `ammo-turret`,
+    `arithmetic-combinator`,
+    `artillery-turret`,
+    `assembling-machine`,
+    beacon,
+    boiler,
+    `burner-generator`,
+    `constant-combinator`,
+    container,
+    `decider-combinator`,
+    `electric-energy-interface`,
+    `electric-pole`,
+    furnace,
+    gate,
+    generator,
+    `heat-interface`,
+    `heat-pipe`,
+    `infinity-container`,
+    `infinity-pipe`,
+    inserter,
+    lab,
+    lamp,
+    `land-mine`,
+    `linked-belt`,
+    `linked-container`,
+    `loader-1x1`,
+    loader,
+    `logistic-container`,
+    `mining-drill`,
+    `offshore-pump`,
+    pipe,
+    `pipe-to-ground`,
+    `power-switch`,
+    `programmable-speaker`,
+    pump,
+    radar,
+    `rail-chain-signal`,
+    `rail-signal`,
+    reactor,
+    roboport,
+    `rocket-silo`,
+    `simple-entity-with-force`,
+    `simple-entity-with-owner`,
+    `solar-panel`,
+    splitter,
+    `storage-tank`,
+    `straight-rail`,
+    `train-stop`,
+    `transport-belt`,
+    turret,
+    `underground-belt`,
+    wall,
+).flatMap { it.values }

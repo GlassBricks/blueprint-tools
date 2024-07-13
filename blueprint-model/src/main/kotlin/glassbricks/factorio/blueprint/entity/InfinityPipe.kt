@@ -2,7 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.InfinityMode
 import glassbricks.factorio.blueprint.json.InfinitySettings
-import glassbricks.factorio.prototypes.InfinityPipePrototype
+import glassbricks.factorio.blueprint.prototypes.InfinityPipePrototype
 import kotlin.math.roundToInt
 
 

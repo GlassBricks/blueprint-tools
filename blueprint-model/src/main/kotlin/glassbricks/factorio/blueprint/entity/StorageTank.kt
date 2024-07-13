@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.prototypes.StorageTankPrototype
+import glassbricks.factorio.blueprint.prototypes.StorageTankPrototype
 
 public class StorageTank(
     override val prototype: StorageTankPrototype,

@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.InfinityMode
-import glassbricks.factorio.prototypes.HeatInterfacePrototype
+import glassbricks.factorio.blueprint.prototypes.HeatInterfacePrototype
 
 
 public class HeatInterface(

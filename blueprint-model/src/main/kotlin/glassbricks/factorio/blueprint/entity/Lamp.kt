@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitCondition
-import glassbricks.factorio.prototypes.LampPrototype
+import glassbricks.factorio.blueprint.prototypes.LampPrototype
 
 public class Lamp(
     override val prototype: LampPrototype,

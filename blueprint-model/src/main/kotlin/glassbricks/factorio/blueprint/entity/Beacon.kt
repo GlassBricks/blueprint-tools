@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.ItemPrototypeName
-import glassbricks.factorio.prototypes.BeaconPrototype
+import glassbricks.factorio.blueprint.prototypes.BeaconPrototype
 
 
 public class Beacon(

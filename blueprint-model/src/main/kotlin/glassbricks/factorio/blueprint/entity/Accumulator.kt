@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.SignalID
-import glassbricks.factorio.prototypes.AccumulatorPrototype
+import glassbricks.factorio.blueprint.prototypes.AccumulatorPrototype
 
 
 public class Accumulator(

@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.prototypes.SimpleEntityWithOwnerPrototype
+import glassbricks.factorio.blueprint.prototypes.SimpleEntityWithOwnerPrototype
 
 /**
  * Also includes SimpleEntityWithForcePrototype (a subclass).

@@ -1,10 +1,10 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.ItemPrototypeName
-import glassbricks.factorio.prototypes.AssemblingMachinePrototype
-import glassbricks.factorio.prototypes.CraftingMachinePrototype
-import glassbricks.factorio.prototypes.FurnacePrototype
-import glassbricks.factorio.prototypes.RocketSiloPrototype
+import glassbricks.factorio.blueprint.prototypes.AssemblingMachinePrototype
+import glassbricks.factorio.blueprint.prototypes.CraftingMachinePrototype
+import glassbricks.factorio.blueprint.prototypes.FurnacePrototype
+import glassbricks.factorio.blueprint.prototypes.RocketSiloPrototype
 
 
 public sealed class CraftingMachine(json: EntityJson) : BaseEntity(json), WithModules {

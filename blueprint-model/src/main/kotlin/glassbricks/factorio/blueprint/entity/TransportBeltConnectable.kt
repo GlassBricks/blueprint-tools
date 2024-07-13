@@ -3,7 +3,7 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.json.IOType
 import glassbricks.factorio.blueprint.json.SplitterPriority
 import glassbricks.factorio.blueprint.json.TransportBeltContentReadMode
-import glassbricks.factorio.prototypes.*
+import glassbricks.factorio.blueprint.prototypes.*
 
 
 public sealed interface TransportBeltConnectable : Entity {

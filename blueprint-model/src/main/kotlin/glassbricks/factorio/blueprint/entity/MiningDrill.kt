@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.MiningDrillResourceReadMode
-import glassbricks.factorio.prototypes.MiningDrillPrototype
+import glassbricks.factorio.blueprint.prototypes.MiningDrillPrototype
 
 
 public class MiningDrill(

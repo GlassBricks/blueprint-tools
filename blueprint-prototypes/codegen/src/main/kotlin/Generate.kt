@@ -142,7 +142,11 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
 
     private fun generateDataRaw() {
         val allPrototypes = TypeSpec.classBuilder("DataRaw").apply {
-            addKdoc("All prototypes, aka [data.raw](https://wiki.factorio.com/Data.raw). Only contains the subset of objects this library uses.")
+            addKdoc(
+                "Models [data.raw](https://wiki.factorio.com/Data.raw). " +
+                        "This only contains a subset of objects and properties this library uses, " +
+                        "which includes blueprintable entities and items. Other prototypes are ignored."
+            )
             addAnnotation(Serializable::class)
 
             val constructorBuilder = FunSpec.constructorBuilder()
@@ -157,13 +161,55 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                         .initializer(typeName)
                         .build()
                 )
-                constructorBuilder.addParameter(typeName, mapType)
+                constructorBuilder.addParameter(
+                    ParameterSpec.builder(typeName, mapType)
+                        .defaultValue("emptyMap()")
+                        .build()
+                )
             }
 
             primaryConstructor(constructorBuilder.build())
         }.build()
 
         file.addType(allPrototypes)
+
+        generateAllSubclassGetters()
+    }
+
+    private fun generateAllSubclassGetters() {
+        for (baseProtoName in input.allSubclassGetters) {
+            input.prototypes[baseProtoName] ?: error("Base prototype not found: $baseProtoName")
+            val isSubclass = mutableMapOf<String, Boolean>()
+            isSubclass[baseProtoName] = true
+            fun isSubclass(prototype: Prototype): Boolean = isSubclass.getOrPut(prototype.name) {
+                val parent = prototype.parent
+                parent != null && isSubclass(input.prototypes[parent]!!.inner)
+            }
+
+            val subClasses = input.prototypes.values.filter { proto ->
+                isSubclass(proto.inner) && proto.typeName != null
+            }
+                .sortedBy { it.inner.order }
+                .map { it.typeName!! }
+            // fun DataRaw.all(BasePrototypes)s(): List<BaseClass> = listOf(
+            //      `typename`,*
+            // ).flatMap { it.values }
+            val function = FunSpec.builder("all${baseProtoName}s").apply {
+                addKdoc("All prototypes that are subclasses of $baseProtoName.")
+                receiver(ClassName(PACKAGE_NAME, "DataRaw"))
+                returns(List::class.asClassName().parameterizedBy(ClassName(PACKAGE_NAME, baseProtoName)))
+                addCode(buildCodeBlock {
+                    add("return listOf(\n")
+                    withIndent {
+                        for (subClass in subClasses) {
+                            add("%N,\n", subClass)
+                        }
+                    }
+                    add(").flatMap { it.values }")
+                })
+            }.build()
+            file.addFunction(function)
+        }
     }
 
 
@@ -254,6 +300,8 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                     addProperty(generateProperty(value, property, initByMutate = true))
                 }
             }
+
+            value.modify?.invoke(this)
         }.build()
     }
 

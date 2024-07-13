@@ -3,8 +3,8 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.json.CableConnectionData
 import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.json.EntityNumber
-import glassbricks.factorio.prototypes.ElectricPolePrototype
-import glassbricks.factorio.prototypes.PowerSwitchPrototype
+import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
+import glassbricks.factorio.blueprint.prototypes.PowerSwitchPrototype
 
 public interface CableConnectionPoint {
     public val cableConnections: CableConnectionSet

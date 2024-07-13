@@ -3,9 +3,9 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.json.CircuitID
 import glassbricks.factorio.blueprint.json.SignalID
-import glassbricks.factorio.prototypes.RailChainSignalPrototype
-import glassbricks.factorio.prototypes.RailSignalBasePrototype
-import glassbricks.factorio.prototypes.RailSignalPrototype
+import glassbricks.factorio.blueprint.prototypes.RailChainSignalPrototype
+import glassbricks.factorio.blueprint.prototypes.RailSignalBasePrototype
+import glassbricks.factorio.blueprint.prototypes.RailSignalPrototype
 
 
 public sealed class RailSignalBase(

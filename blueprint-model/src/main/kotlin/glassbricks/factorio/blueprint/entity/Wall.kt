@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitCondition
-import glassbricks.factorio.prototypes.WallPrototype
+import glassbricks.factorio.blueprint.prototypes.WallPrototype
 
 public class Wall (
     override val prototype: WallPrototype,

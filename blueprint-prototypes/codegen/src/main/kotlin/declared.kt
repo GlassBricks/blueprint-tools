@@ -1,18 +1,36 @@
 package glassbricks.factorio
 
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
 
 
 fun GeneratedPrototypesBuilder.getGeneratedClasses() {
     extraSealedIntf("EVEnergySource", "ElectricEnergySource", "VoidEnergySource")
-    extraSealedIntf("EHFVEnergySource", "ElectricEnergySource", "HeatEnergySource", "FluidEnergySource", "VoidEnergySource")
+    extraSealedIntf(
+        "EHFVEnergySource",
+        "ElectricEnergySource",
+        "HeatEnergySource",
+        "FluidEnergySource",
+        "VoidEnergySource"
+    )
 
     prototypes {
         "PrototypeBase" {
             +"type"
             +"name"
+
+            modify = {
+                addFunction(
+                    FunSpec.builder("toString")
+                        .addModifiers(KModifier.OVERRIDE)
+                        .returns(String::class)
+                        .addStatement("return \"\${this::class.simpleName}(\$name)\"")
+                        .build()
+                )
+            }
         }
         "EntityPrototype" {
             +"collision_box"
@@ -195,20 +213,24 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             +"fuel_category"
             +"flags"
         }
-        "AmmoItemPrototype" {}
-        "CapsulePrototype" {}
-        "GunPrototype" {}
-        "ItemWithEntityDataPrototype" {}
-        "ItemWithLabelPrototype" {}
-        "ItemWithInventoryPrototype" {}
-        "BlueprintBookPrototype" {}
-        "ItemWithTagsPrototype" {}
         "ModulePrototype" {
             +"category"
             +"tier"
             +"effect"
             +"limitation"
             +"limitation_blacklist"
+        }
+        val origPrototypes = this@getGeneratedClasses.origPrototypes
+        fun isItemPrototype(name: String): Boolean {
+            if (name == "ItemPrototype") return true
+            val prototype = origPrototypes[name] ?: return false
+            val parent = prototype.parent ?: return false
+            return isItemPrototype(parent)
+        }
+        for (prototype in origPrototypes.values) {
+            if (isItemPrototype(prototype.name) && prototype.name !in this@getGeneratedClasses.prototypes) {
+                prototype(prototype.name) {}
+            }
         }
     }
 
@@ -314,4 +336,11 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             +"name"
         }
     }
+
+
+
+    allSubclassGetters += listOf(
+        "ItemPrototype",
+        "EntityWithOwnerPrototype",
+    )
 }

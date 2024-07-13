@@ -2,7 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.*
-import glassbricks.factorio.prototypes.InserterPrototype
+import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 
 public class Inserter(override val prototype: InserterPrototype, json: EntityJson) :
     BaseEntity(json), WithItemFilters, CircuitConnectable {

@@ -3,13 +3,14 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.*
+import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 
 
 internal fun BlueprintPrototypes.createEntityFromJson(
     json: EntityJson,
     blueprint: BlueprintJson? = null,
 ): Entity {
-    val prototype = this.prototypes[json.name] ?: UnknownPrototype(json.name)
+    val prototype = this.blueprintableEntities[json.name] ?: UnknownPrototype(json.name)
     return createEntityFromPrototype(prototype, json, blueprint)
 }
 

@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.prototypes.LinkedContainerPrototype
+import glassbricks.factorio.blueprint.prototypes.LinkedContainerPrototype
 
 public class LinkedContainer(
     override val prototype: LinkedContainerPrototype,
