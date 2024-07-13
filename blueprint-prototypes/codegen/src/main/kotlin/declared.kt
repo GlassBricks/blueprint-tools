@@ -9,6 +9,7 @@ import com.squareup.kotlinpoet.asClassName
 
 fun GeneratedPrototypesBuilder.getGeneratedClasses() {
     extraSealedIntf("EVEnergySource", "ElectricEnergySource", "VoidEnergySource")
+    extraSealedIntf("BVEnergySource", "BurnerEnergySource", "VoidEnergySource")
     extraSealedIntf(
         "EHFVEnergySource",
         "ElectricEnergySource",
@@ -140,6 +141,7 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         blueprintable("Pipe")
         blueprintable("InfinityPipe")
         blueprintable("PipeToGround")
+        blueprintable("PlayerPort")
         blueprintable("PowerSwitch")
         blueprintable("ProgrammableSpeaker") {
             +"maximum_polyphony"
@@ -204,6 +206,21 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         }
         blueprintable("Turret")
         blueprintable("AmmoTurret")
+        blueprintable("ElectricTurret")
+        blueprintable("FluidTurret")
+        blueprintable("Vehicle")
+        blueprintable("RollingStock") {
+            +"allow_manual_color"
+        }
+        blueprintable("ArtilleryWagon")
+        blueprintable("CargoWagon") {
+            +"inventory_size"
+        }
+        blueprintable("FluidWagon") {
+            +"tank_count"
+        }
+        blueprintable("Locomotive")
+
         blueprintable("Wall")
 
         // items

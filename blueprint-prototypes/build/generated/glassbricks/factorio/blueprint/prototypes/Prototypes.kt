@@ -254,6 +254,28 @@ public class ArmorPrototype : ToolPrototype()
 public class ArtilleryTurretPrototype : EntityWithOwnerPrototype()
 
 /**
+ * Abstract base of all vehicles.
+ */
+@Serializable
+public sealed class VehiclePrototype : EntityWithOwnerPrototype()
+
+/**
+ * The abstract base of all rolling stock.
+ */
+@Serializable
+public sealed class RollingStockPrototype : VehiclePrototype() {
+    public var allow_manual_color: Boolean? = null
+        private set
+}
+
+/**
+ * An [artillery wagon](https://wiki.factorio.com/Artillery_wagon).
+ */
+@Serializable
+@SerialName("artillery-wagon")
+public class ArtilleryWagonPrototype : RollingStockPrototype()
+
+/**
  * The abstract basis of the assembling machines and furnaces. Contains the properties that both of
  * them have.
  *
@@ -483,6 +505,20 @@ public class BurnerGeneratorPrototype : EntityWithOwnerPrototype() {
 public class CapsulePrototype : ItemPrototype()
 
 /**
+ * A [cargo wagon](https://wiki.factorio.com/Cargo_wagon).
+ */
+@Serializable
+@SerialName("cargo-wagon")
+public class CargoWagonPrototype : RollingStockPrototype() {
+    /**
+     * Size of the inventory of the wagon. The inventory can be limited using the red bar and
+     * filtered. This functionality cannot be turned off.
+     */
+    public var inventory_size: ItemStackIndex = 0u
+        private set
+}
+
+/**
  * A [constant combinator](https://wiki.factorio.com/Constant_combinator).
  */
 @Serializable
@@ -587,6 +623,39 @@ public class ElectricPolePrototype : EntityWithOwnerPrototype() {
      * Max value is 64.
      */
     public var maximum_wire_distance: Double? = null
+        private set
+}
+
+/**
+ * A turret that uses electricity as ammunition.
+ */
+@Serializable
+@SerialName("electric-turret")
+public class ElectricTurretPrototype : TurretPrototype() {
+    public lateinit var energy_source: EVEnergySource
+        private set
+}
+
+/**
+ * A turret that uses [fluid](prototype:FluidPrototype) as ammunition.
+ */
+@Serializable
+@SerialName("fluid-turret")
+public class FluidTurretPrototype : TurretPrototype() {
+    public lateinit var fluid_box: FluidBox
+        private set
+}
+
+/**
+ * A [fluid wagon](https://wiki.factorio.com/Fluid_wagon).
+ */
+@Serializable
+@SerialName("fluid-wagon")
+public class FluidWagonPrototype : RollingStockPrototype() {
+    /**
+     * Must be 1, 2 or 3.
+     */
+    public var tank_count: UByte? = null
         private set
 }
 
@@ -935,6 +1004,20 @@ public class Loader1x1Prototype : LoaderPrototype()
 public class Loader1x2Prototype : LoaderPrototype()
 
 /**
+ * A [locomotive](https://wiki.factorio.com/Locomotive).
+ */
+@Serializable
+@SerialName("locomotive")
+public class LocomotivePrototype : RollingStockPrototype() {
+    /**
+     * Must be a burner energy source when using "burner", otherwise it can also be a void energy
+     * source.
+     */
+    public lateinit var energy_source: BVEnergySource
+        private set
+}
+
+/**
  * A mining drill for automatically extracting resources from [resource
  * entities](prototype:ResourceEntityPrototype). This prototype type is used by [burner mining
  * drill](https://wiki.factorio.com/Burner_mining_drill), [electric mining
@@ -1088,6 +1171,15 @@ public class PipeToGroundPrototype : EntityWithOwnerPrototype() {
     public lateinit var fluid_box: FluidBox
         private set
 }
+
+/**
+ * When a character dies, this entity will immediately respawn the character at the entities
+ * location, so there is no respawn time. If there are multiple player ports in the world, the
+ * character will respawn at the nearest player port to their death location.
+ */
+@Serializable
+@SerialName("player-port")
+public class PlayerPortPrototype : EntityWithOwnerPrototype()
 
 /**
  * A [power switch](https://wiki.factorio.com/Power_switch).
@@ -1459,7 +1551,8 @@ public data class BurnerEnergySource(
      * The energy source can be used with fuel from these [fuel categories](prototype:FuelCategory).
      */
     public val fuel_categories: List<FuelCategoryID>?,
-) : BaseEnergySource()
+) : BaseEnergySource(),
+    BVEnergySource
 
 /**
  * Every entry in the array is a specification of one layer the object collides with or a special
@@ -1987,10 +2080,14 @@ public typealias Vector = Position
  */
 @Serializable
 @SerialName("void")
-public data object VoidEnergySource : BaseEnergySource(), EVEnergySource, EHFVEnergySource
+public data object VoidEnergySource : BaseEnergySource(), EVEnergySource, BVEnergySource,
+        EHFVEnergySource
 
 @Serializable
 public sealed interface EVEnergySource
+
+@Serializable
+public sealed interface BVEnergySource
 
 @Serializable
 public sealed interface EHFVEnergySource
@@ -2033,6 +2130,7 @@ public class DataRaw(
     public val pipe: Map<String, PipePrototype> = emptyMap(),
     public val `infinity-pipe`: Map<String, InfinityPipePrototype> = emptyMap(),
     public val `pipe-to-ground`: Map<String, PipeToGroundPrototype> = emptyMap(),
+    public val `player-port`: Map<String, PlayerPortPrototype> = emptyMap(),
     public val `power-switch`: Map<String, PowerSwitchPrototype> = emptyMap(),
     public val `programmable-speaker`: Map<String, ProgrammableSpeakerPrototype> = emptyMap(),
     public val pump: Map<String, PumpPrototype> = emptyMap(),
@@ -2055,6 +2153,12 @@ public class DataRaw(
     public val `underground-belt`: Map<String, UndergroundBeltPrototype> = emptyMap(),
     public val turret: Map<String, TurretPrototype> = emptyMap(),
     public val `ammo-turret`: Map<String, AmmoTurretPrototype> = emptyMap(),
+    public val `electric-turret`: Map<String, ElectricTurretPrototype> = emptyMap(),
+    public val `fluid-turret`: Map<String, FluidTurretPrototype> = emptyMap(),
+    public val `artillery-wagon`: Map<String, ArtilleryWagonPrototype> = emptyMap(),
+    public val `cargo-wagon`: Map<String, CargoWagonPrototype> = emptyMap(),
+    public val `fluid-wagon`: Map<String, FluidWagonPrototype> = emptyMap(),
+    public val locomotive: Map<String, LocomotivePrototype> = emptyMap(),
     public val wall: Map<String, WallPrototype> = emptyMap(),
     public val item: Map<String, ItemPrototype> = emptyMap(),
     public val module: Map<String, ModulePrototype> = emptyMap(),
@@ -2114,15 +2218,20 @@ public fun DataRaw.allEntityWithOwnerPrototypes(): List<EntityWithOwnerPrototype
     `ammo-turret`,
     `arithmetic-combinator`,
     `artillery-turret`,
+    `artillery-wagon`,
     `assembling-machine`,
     beacon,
     boiler,
     `burner-generator`,
+    `cargo-wagon`,
     `constant-combinator`,
     container,
     `decider-combinator`,
     `electric-energy-interface`,
     `electric-pole`,
+    `electric-turret`,
+    `fluid-turret`,
+    `fluid-wagon`,
     furnace,
     gate,
     generator,
@@ -2138,11 +2247,13 @@ public fun DataRaw.allEntityWithOwnerPrototypes(): List<EntityWithOwnerPrototype
     `linked-container`,
     `loader-1x1`,
     loader,
+    locomotive,
     `logistic-container`,
     `mining-drill`,
     `offshore-pump`,
     pipe,
     `pipe-to-ground`,
+    `player-port`,
     `power-switch`,
     `programmable-speaker`,
     pump,
