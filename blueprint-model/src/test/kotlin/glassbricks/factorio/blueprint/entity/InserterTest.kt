@@ -6,12 +6,23 @@ import glassbricks.factorio.blueprint.json.CompareOperation
 import glassbricks.factorio.blueprint.json.InserterModeOfOperation
 import glassbricks.factorio.blueprint.json.asMode
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 
 class InserterTest {
     @Test
     fun `can load inserter`() {
         testSaveLoad<Inserter>("inserter")
+        val defaultInserter = testSaveLoad<Inserter>("inserter", connectToNetwork = true) {
+            control_behavior = ControlBehaviorJson(
+                circuit_mode_of_operation = InserterModeOfOperation.SetFilters.asMode(),
+                circuit_set_stack_size = true
+            )
+        }
+        assertEquals(
+            defaultInserter.controlBehavior.defaultStackSizeSignal,
+            defaultInserter.controlBehavior.setStackSizeSignal
+        )
         testSaveLoad<Inserter>("inserter", connectToNetwork = true) {
             control_behavior = ControlBehaviorJson(
                 circuit_mode_of_operation = InserterModeOfOperation.None.asMode(),
