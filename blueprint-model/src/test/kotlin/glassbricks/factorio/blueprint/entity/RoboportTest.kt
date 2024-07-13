@@ -1,7 +1,5 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.SignalID
-import glassbricks.factorio.blueprint.SignalType
 import kotlin.test.Test
 
 class RoboportTest {

@@ -1,7 +1,9 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.SignalType
-import glassbricks.factorio.blueprint.json.*
+import glassbricks.factorio.blueprint.json.CircuitCondition
+import glassbricks.factorio.blueprint.json.Color
+import glassbricks.factorio.blueprint.json.CompareOperation
+import glassbricks.factorio.blueprint.json.ControlBehavior
 import kotlin.test.Test
 
 class TrainStopTest {

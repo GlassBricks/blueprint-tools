@@ -1,6 +1,5 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.InfinityFilterMode
 import glassbricks.factorio.blueprint.json.InfinityMode
 import glassbricks.factorio.blueprint.json.InfinitySettings
 import org.junit.jupiter.api.Test

@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.SignalID
+import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.json.toJsonBasic
 import glassbricks.factorio.blueprint.json.toSignalIDBasic
 import glassbricks.factorio.blueprint.prototypes.RailChainSignalPrototype
