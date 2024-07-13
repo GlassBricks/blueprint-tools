@@ -40,7 +40,7 @@ public class ProgrammableSpeaker(
 }
 
 public class ProgrammableSpeakerControlBehavior(json: ControlBehaviorJson?) : ControlBehavior {
-    public var circuitCondition: CircuitCondition = json?.circuit_condition ?: CircuitCondition()
+    public var circuitCondition: CircuitCondition = json?.circuit_condition ?: CircuitCondition.DEFAULT
     public var signalValueIsPitch: Boolean = json?.circuit_parameters?.signal_value_is_pitch ?: false
     public var instrumentId: Int = json?.circuit_parameters?.instrument_id ?: 0
     public var noteId: Int = json?.circuit_parameters?.note_id ?: 0

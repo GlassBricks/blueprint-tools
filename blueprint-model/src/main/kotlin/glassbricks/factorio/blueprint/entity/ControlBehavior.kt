@@ -13,7 +13,7 @@ public interface ControlBehavior {
 public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) {
     /** If this is not null, sets enable_disable to true. */
     public var circuitCondition: CircuitCondition? = source?.circuit_condition
-        ?.takeIf { 
+        ?.takeIf {
             source.circuit_enable_disable == true
                     || source.circuit_mode_of_operation?.rawValue == InserterModeOfOperation.EnableDisable.ordinal
         }
@@ -24,7 +24,7 @@ public abstract class GenericOnOffControlBehavior(source: ControlBehaviorJson?) 
     public val connectToLogisticNetwork: Boolean get() = logisticCondition != null
 
     protected fun baseExportToJson(): ControlBehaviorJson = ControlBehaviorJson(
-        circuit_condition = circuitCondition,
+        circuit_condition = circuitCondition.takeUnless { it == CircuitCondition.DEFAULT },
         logistic_condition = logisticCondition,
         connect_to_logistic_network = logisticCondition != null
     )

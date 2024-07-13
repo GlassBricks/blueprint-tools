@@ -829,7 +829,6 @@ public data class DeciderCombinatorParameters(
 @Serializable
 public data class CircuitCondition(
     /** Specifies how the inputs should be compared. If not specified, defaults to "<". */
-    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val comparator: CompareOperation = CompareOperation.Less,
     /** Defaults to blank. */
     public val first_signal: SignalIDJson? = null,
@@ -839,11 +838,10 @@ public data class CircuitCondition(
      * Constant to compare [first_signal] to. Has no effect when [second_signal] is set.
      * When neither [second_signal] nor [constant] are specified, the effect is as though constant were specified with the value 0.
      */
-    @EncodeDefault(EncodeDefault.Mode.NEVER)
-    public val constant: Int = 0,
+    public val constant: Int? = null,
 ) {
     public companion object {
-        public val DEFAULT: CircuitCondition = CircuitCondition()
+        public val DEFAULT: CircuitCondition = CircuitCondition(constant = 0)
     }
 }
 

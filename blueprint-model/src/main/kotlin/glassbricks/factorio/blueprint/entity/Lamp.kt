@@ -8,7 +8,7 @@ public class Lamp(
     json: EntityJson,
 ) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
-    public override val controlBehavior: LampControlBehavior = LampControlBehavior(json.control_behavior)
+    override val controlBehavior: LampControlBehavior = LampControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
@@ -19,13 +19,11 @@ public class LampControlBehavior(json: ControlBehaviorJson?) : ControlBehavior {
     public var circuitCondition: CircuitCondition = json?.circuit_condition ?: CircuitCondition.DEFAULT
     public var useColors: Boolean = json?.use_colors ?: false
 
-    override fun exportToJson(): ControlBehaviorJson? {
+    override fun exportToJson(): ControlBehaviorJson? =
         if (circuitCondition == CircuitCondition.DEFAULT && !useColors) {
-            return null
-        }
-        return ControlBehaviorJson(
-            circuit_condition = circuitCondition,
+            null
+        } else ControlBehaviorJson(
+            circuit_condition = circuitCondition.takeUnless { it == CircuitCondition.DEFAULT },
             use_colors = useColors
         )
-    }
 }

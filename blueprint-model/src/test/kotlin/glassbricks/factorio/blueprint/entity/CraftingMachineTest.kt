@@ -17,6 +17,7 @@ class CraftingMachineTest {
             items = mapOf("productivity-module" to 1)
         }
         testSaveLoad<RocketSilo>("rocket-silo") {
+            recipe = "rocket-part"
             auto_launch = true
         }
     }
