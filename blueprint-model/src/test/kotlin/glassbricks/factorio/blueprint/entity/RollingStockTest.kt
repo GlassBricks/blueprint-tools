@@ -49,8 +49,7 @@ class RollingStockTest {
         val blueprint: BlueprintJson = emptyBlueprint()
         loco.orientation = 0.25
         loco.color = Color(3.0, 2.0, 1.0)
-        loco.itemRequests.clear()
-        loco.itemRequests["iron-plate"] = 2
+        loco.itemRequests = mapOf("iron-plate" to 2)
         val schedule2 = listOf(
             ScheduleRecord("unload2", listOf(WaitCondition(WaitConditionType.Empty))),
             ScheduleRecord("load", listOf(WaitCondition(WaitConditionType.Full))),

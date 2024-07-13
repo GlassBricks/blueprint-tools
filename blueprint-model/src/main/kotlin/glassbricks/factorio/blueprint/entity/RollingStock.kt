@@ -56,7 +56,7 @@ public class Locomotive(
     WithItemRequests {
     override var orientation: Double = json.orientation ?: 0.0
     override var color: Color? = json.color
-    public override val itemRequests: MutableMap<ItemPrototypeName, Int> = json.items.orEmpty().toMutableMap()
+    public override var itemRequests: Map<ItemPrototypeName, Int> = json.items.orEmpty()
     public var schedule: List<ScheduleRecord> = getSchedule(json, blueprint)
 
     override fun exportToJson(json: EntityJson) {

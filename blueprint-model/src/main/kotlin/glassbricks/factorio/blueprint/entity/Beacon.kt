@@ -8,7 +8,7 @@ public class Beacon(
     public override val prototype: BeaconPrototype,
     json: EntityJson,
 ) : BaseEntity(json), WithItemRequests {
-    override val itemRequests: MutableMap<ItemPrototypeName, Int> = json.items?.toMutableMap() ?: mutableMapOf()
+    override var itemRequests: Map<ItemPrototypeName, Int> = json.items.orEmpty()
 
     override fun exportToJson(json: EntityJson) {
         json.items = itemRequests.takeIf { it.isNotEmpty() }

@@ -10,7 +10,7 @@ import glassbricks.factorio.blueprint.prototypes.RocketSiloPrototype
 public sealed class CraftingMachine(json: EntityJson) : BaseEntity(json), WithModules {
     abstract override val prototype: CraftingMachinePrototype
 
-    override val itemRequests: MutableMap<ItemPrototypeName, Int> = json.items.orEmpty().toMutableMap()
+    override var itemRequests: Map<ItemPrototypeName, Int> = json.items.orEmpty()
 
     override fun exportToJson(json: EntityJson) {
         json.items = itemRequests.takeIf { it.isNotEmpty() }

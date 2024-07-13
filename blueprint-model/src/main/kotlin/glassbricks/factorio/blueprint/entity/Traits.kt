@@ -14,7 +14,7 @@ public interface WithColor {
  * Currently only includes: crafting machines, locomotives, and beacons.
  */
 public interface WithItemRequests {
-    public val itemRequests: MutableMap<ItemPrototypeName, Int>
+    public var itemRequests: Map<ItemPrototypeName, Int>
 }
 
 public interface WithModules : WithItemRequests
