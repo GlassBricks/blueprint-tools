@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.SignalType
 import glassbricks.factorio.blueprint.json.*
 import kotlin.test.Test
 
@@ -14,12 +15,12 @@ class CombinatorTest {
                 filters = listOf(
                     ConstantCombinatorParameters(
                         count = 1,
-                        signal = SignalID("signal-A", SignalType.Virtual),
+                        signal = signalId("signal-A"),
                         index = 1,
                     ),
                     ConstantCombinatorParameters(
                         count = 2,
-                        signal = SignalID("signal-B", SignalType.Virtual),
+                        signal = signalId("signal-B"),
                         index = 3,
                     ),
                 )
@@ -29,10 +30,10 @@ class CombinatorTest {
         testSaveLoad<ArithmeticCombinator>("arithmetic-combinator") {
             control_behavior = ControlBehaviorJson(
                 arithmetic_conditions = ArithmeticCombinatorParameters(
-                    first_signal = SignalID("signal-A", SignalType.Virtual),
+                    first_signal = signalId("signal-A"),
                     second_constant = 3,
                     operation = ArithmeticOperation.Add,
-                    output_signal = SignalID("signal-B", SignalType.Virtual),
+                    output_signal = signalId("signal-B"),
                 )
             )
         }
@@ -40,10 +41,10 @@ class CombinatorTest {
         testSaveLoad<DeciderCombinator>("decider-combinator") {
             control_behavior = ControlBehaviorJson(
                 decider_conditions = DeciderCombinatorParameters(
-                    first_signal = SignalID("signal-A", SignalType.Virtual),
+                    first_signal = signalId("signal-A"),
                     constant = 3,
                     comparator = CompareOperation.GreaterOrEqual,
-                    output_signal = SignalID("signal-B", SignalType.Virtual),
+                    output_signal = signalId("signal-B"),
                 )
             )
         }

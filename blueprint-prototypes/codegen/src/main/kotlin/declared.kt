@@ -3,7 +3,6 @@ package glassbricks.factorio
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonPrimitive
 
 
 fun GeneratedPrototypesBuilder.getGeneratedClasses() {
@@ -283,12 +282,7 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         }
 
         "SignalIDConnector" {
-            "name" {
-                overrideType = String::class.asClassName()
-            }
-            "type" {
-                innerEnumName = "SignalType"
-            }
+            overrideType(ClassName(PAR_PACKAGE_NAME, "SignalID"))
         }
 
         "ItemStackIndex" {}

@@ -1,9 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.ArithmeticCombinatorParameters
-import glassbricks.factorio.blueprint.json.CircuitID
-import glassbricks.factorio.blueprint.json.DeciderCombinatorParameters
-import glassbricks.factorio.blueprint.json.SignalID
+import glassbricks.factorio.blueprint.SignalID
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.ArithmeticCombinatorPrototype
 import glassbricks.factorio.blueprint.prototypes.ConstantCombinatorPrototype
 import glassbricks.factorio.blueprint.prototypes.DeciderCombinatorPrototype
@@ -104,9 +102,11 @@ public class ConstantCombinatorParameter(
 )
 
 private fun List<ConstantCombinatorParametersJson>?.toParameters(size: Int): Array<ConstantCombinatorParameter?> =
-    indexedToArray(size, { it.index }) { ConstantCombinatorParameter(it.signal, it.count) }
+    indexedToArray(size, { it.index }) {
+        it.signal.toSignalIDBasic()?.let { signal -> ConstantCombinatorParameter(signal, it.count) }
+    }
 
 private fun Array<out ConstantCombinatorParameter?>.arrayToIndexedList(): List<ConstantCombinatorParametersJson> =
     arrayToIndexedList { index, item ->
-        ConstantCombinatorParametersJson(index = index, signal = item.signal, count = item.count)
+        ConstantCombinatorParametersJson(index = index, signal = item.signal.toJsonBasic(), count = item.count)
     }

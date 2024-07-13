@@ -2,12 +2,13 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.json.CompareOperation
-import glassbricks.factorio.blueprint.json.SignalID
-import glassbricks.factorio.blueprint.json.SignalType
+import glassbricks.factorio.blueprint.SignalID
+import glassbricks.factorio.blueprint.SignalType
+import glassbricks.factorio.blueprint.json.SignalIDJson
 import kotlin.test.Test
 
-fun signalId(name: String) = SignalID(
-    name = name, type = SignalType.Virtual
+fun signalId(name: String) = SignalIDJson(
+    name = name, type = SignalType.virtual
 )
 
 class RailSignalBaseTest {

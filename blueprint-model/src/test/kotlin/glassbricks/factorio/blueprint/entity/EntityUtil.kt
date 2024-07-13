@@ -4,6 +4,7 @@ import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import java.io.File
+import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -32,14 +33,22 @@ internal inline fun <reified T : Entity> testSaveLoad(
     json: EntityJson,
     connectToNetwork: Boolean,
     blueprint: BlueprintJson?,
+): T = testSaveLoad(json, connectToNetwork, blueprint, T::class)
+
+internal fun <T : Entity> testSaveLoad(
+    json: EntityJson,
+    connectToNetwork: Boolean,
+    blueprint: BlueprintJson?,
+    klass: KClass<T>,
 ): T {
     json.entity_number = EntityNumber(1)
     val entity = blueprintPrototypes.createEntityFromJson(json, blueprint)
-    assertTrue(entity is T, "Expected ${T::class.java} but got ${entity.javaClass}")
+    assertTrue(klass.isInstance(entity), "Expected $klass but got ${entity.javaClass}")
+
     assertEquals(
-        entity.javaClass,
-        T::class.java,
-        "Expected exactly, ${T::class.java} but got subclass ${entity.javaClass}"
+        entity::class,
+        klass,
+        "Expected exactly, $klass but got subclass ${entity::class}"
     )
 
     if (connectToNetwork) {
@@ -49,14 +58,15 @@ internal inline fun <reified T : Entity> testSaveLoad(
 
     val backToJson = entity.toJsonIsolated(EntityNumber(1))
     assertEquals(json, backToJson)
-    return entity
+    @Suppress("UNCHECKED_CAST")
+    return entity as T
 }
 
 internal inline fun <reified T : Entity> testSaveLoad(
     name: String,
     blueprint: BlueprintJson? = null,
     connectToNetwork: Boolean = false,
-    build: EntityJson.() -> Unit = {},
+    noinline build: EntityJson.() -> Unit = {},
 ): T {
     val json = buildEntityJson(name, build)
     return testSaveLoad(json, connectToNetwork, blueprint)

@@ -49,7 +49,7 @@ internal inline fun <T, reified R> List<T>?.indexedToArray(
     }
 }
 
-internal inline fun <T, R> Array<out R?>.arrayToIndexedList(getValue: (Int, R) -> T): List<T> =
+internal inline fun <T, R> Array<out R?>.arrayToIndexedList(getValue: (Int, R) -> T?): List<T> =
     this.mapIndexedNotNull { index, item ->
         item?.let { getValue(index + 1, it) }
     }

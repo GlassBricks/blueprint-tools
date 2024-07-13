@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.model
 
+import glassbricks.factorio.blueprint.SignalType
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.json.*
 
@@ -8,7 +9,7 @@ private constructor(
     public override var label: String? = null,
     public override var label_color: Color? = null,
     public override var description: String? = null,
-    public val iconsArr: Array<SignalID?>,
+    public val iconsArr: Array<SignalIDJson?>,
     public val tiles: TileMap,
     public var snapToGridSettings: SnapToGridSettings? = null,
     public override var item: String = "blueprint",
@@ -19,7 +20,7 @@ private constructor(
         label = blueprint.label,
         label_color = blueprint.label_color,
         description = blueprint.description,
-        iconsArr = arrayOfNulls<SignalID>(4).apply {
+        iconsArr = arrayOfNulls<SignalIDJson>(4).apply {
             for (icon in blueprint.icons) {
                 this[icon.index - 1] = icon.signal
             }
@@ -53,7 +54,7 @@ private constructor(
 
     public fun defaultIcons(): List<Icon> {
         val item = entities.map { it.name }.mode() ?: tiles.values.mode() ?: this.item
-        return listOf(Icon(1, SignalID(name = item, type = SignalType.Item)))
+        return listOf(Icon(1, SignalIDJson(name = item, type = SignalType.item)))
     }
 
     public fun toBlueprint(): Blueprint {

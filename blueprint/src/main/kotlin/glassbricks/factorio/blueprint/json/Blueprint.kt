@@ -3,9 +3,7 @@
 
 package glassbricks.factorio.blueprint.json
 
-import glassbricks.factorio.blueprint.Direction
-import glassbricks.factorio.blueprint.Position
-import glassbricks.factorio.blueprint.TilePosition
+import glassbricks.factorio.blueprint.*
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -118,36 +116,43 @@ public data class Icon(
     /** Index of the icon, 1-based. */
     public val index: Int,
     /** The icon that is displayed. */
-    public val signal: SignalID,
+    public val signal: SignalIDJson,
 )
 
 /**
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#SignalID_object)
  */
 @Serializable
-public data class SignalID(
+public data class SignalIDJson(
     /**
      * Name of the signal prototype this signal is set to.
      *
-     * In roboport read robot count, this may be null to indicate no signal (instead of the default signal).
+     * This may be null to indicate no signal (instead of the default signal),
+     * unlike with [SignalID]
      */
     public val name: String?,
     /** Type of the signal. Either "item", "fluid" or "virtual". */
     public val type: SignalType,
 )
 
+public fun SignalID?.toJsonBasic(): SignalIDJson = SignalIDJson(
+    name = this?.name,
+    type = this?.type ?: SignalType.item,
+)
 
-@Serializable
-public enum class SignalType {
-    @SerialName("item")
-    Item,
+public fun SignalIDJson.toSignalIDBasic(): SignalID? =
+    if (name == null) null else SignalID(name, type)
 
-    @SerialName("fluid")
-    Fluid,
+public fun SignalID?.toJsonWithDefault(default: SignalID?): SignalIDJson? =
+    if (this == default) null
+    else toJsonBasic()
 
-    @SerialName("virtual")
-    Virtual
+public fun SignalIDJson?.toSignalIdWithDefault(default: SignalID?): SignalID? = when {
+    this == null -> default
+    this.name == null -> null
+    else -> SignalID(name, type)
 }
+
 
 @Suppress("CanBeParameter", "MemberVisibilityCanBePrivate")
 @Serializable
@@ -443,6 +448,7 @@ public data class CableConnectionData internal constructor(
 public enum class CircuitID {
     /** The main circuit connection point, or combinator input. */
     First,
+
     /** Combinator output. */
     Second;
 
@@ -569,7 +575,7 @@ public data class AlertParameters(
     /** Whether an alert icon is shown on the map. */
     public val show_on_map: Boolean = false,
     /** The icon that is displayed with the alert. */
-    public val icon_signal_id: SignalID? = null,
+    public val icon_signal_id: SignalIDJson? = null,
     /** Message of the alert. */
     public val alert_message: String = "",
 )
@@ -617,14 +623,14 @@ public data class ControlBehavior(
     public var circuit_close_signal: Boolean? = null,
     /** Whether or not to read the state of this rail/chain signal. */
     public var circuit_read_signal: Boolean? = null,
-    /** [SignalID] to use if the rail/chain signal is currently red. */
-    public var red_output_signal: SignalID? = null,
-    /** [SignalID] to use if the rail/chain signal is currently orange. */
-    public var orange_output_signal: SignalID? = null,
-    /** [SignalID] to use if the rail/chain signal is currently green. */
-    public var green_output_signal: SignalID? = null,
-    /** [SignalID] to use if the rail/chain signal is currently blue. */
-    public var blue_output_signal: SignalID? = null,
+    /** [SignalIDJson] to use if the rail/chain signal is currently red. */
+    public var red_output_signal: SignalIDJson? = null,
+    /** [SignalIDJson] to use if the rail/chain signal is currently orange. */
+    public var orange_output_signal: SignalIDJson? = null,
+    /** [SignalIDJson] to use if the rail/chain signal is currently green. */
+    public var green_output_signal: SignalIDJson? = null,
+    /** [SignalIDJson] to use if the rail/chain signal is currently blue. */
+    public var blue_output_signal: SignalIDJson? = null,
     public var circuit_condition: CircuitCondition? = null,
     /** Enable or disable based on circuit_condition. */
     public var circuit_enable_disable: Boolean? = null,
@@ -637,38 +643,38 @@ public data class ControlBehavior(
     /** Get the currently stopped trains ID. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var read_stopped_train: Boolean = false,
-    /** [SignalID] to output the train ID on. */
-    public var train_stopped_signal: SignalID? = null,
+    /** [SignalIDJson] to output the train ID on. */
+    public var train_stopped_signal: SignalIDJson? = null,
     /** Whether this stations train limit will be set through circuit values. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var set_trains_limit: Boolean = false,
-    /** [SignalID] to use to set the trains limit. */
-    public var trains_limit_signal: SignalID? = null,
+    /** [SignalIDJson] to use to set the trains limit. */
+    public var trains_limit_signal: SignalIDJson? = null,
     /** Whether to read this stations currently on route trains count. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var read_trains_count: Boolean = false,
-    /** [SignalID] to output the on route trains count on. */
-    public var trains_count_signal: SignalID? = null,
+    /** [SignalIDJson] to output the on route trains count on. */
+    public var trains_count_signal: SignalIDJson? = null,
     /** Whether this roboport should output the contents of its network. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var read_logistics: Boolean = true,
     /** Whether this roboport should output the robot stats of its network. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var read_robot_stats: Boolean = false,
-    /** [SignalID] to output available logistic robots on. */
-    public var available_logistic_output_signal: SignalID? = null,
-    /** [SignalID] to output total count of logistic robots on. */
-    public var total_logistic_output_signal: SignalID? = null,
-    /** [SignalID] to output available construction robots on. */
-    public var available_construction_output_signal: SignalID? = null,
-    /** [SignalID] to output total count of construction robots on. */
-    public var total_construction_output_signal: SignalID? = null,
+    /** [SignalIDJson] to output available logistic robots on. */
+    public var available_logistic_output_signal: SignalIDJson? = null,
+    /** [SignalIDJson] to output total count of logistic robots on. */
+    public var total_logistic_output_signal: SignalIDJson? = null,
+    /** [SignalIDJson] to output available construction robots on. */
+    public var available_construction_output_signal: SignalIDJson? = null,
+    /** [SignalIDJson] to output total count of construction robots on. */
+    public var total_construction_output_signal: SignalIDJson? = null,
     /** Whether to limit the gate opening with circuit_condition. */
     public var circuit_open_gate: Boolean? = null,
     /** Whether to send the wall-gate proximity sensor to the circuit network. */
     public var circuit_read_sensor: Boolean? = null,
-    /** [SignalID] to output the wall-gate proximity sensor / accumulator charge on. */
-    public var output_signal: SignalID? = null,
+    /** [SignalIDJson] to output the wall-gate proximity sensor / accumulator charge on. */
+    public var output_signal: SignalIDJson? = null,
     /** Whether to read this belts content or inserters hand. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var circuit_read_hand_contents: Boolean = false,
@@ -678,8 +684,8 @@ public data class ControlBehavior(
     /** Whether to set inserters stack size from a circuit signal. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var circuit_set_stack_size: Boolean = false,
-    /** [SignalID] to use to set the inserters stack size. */
-    public var stack_control_input_signal: SignalID? = null,
+    /** [SignalIDJson] to use to set the inserters stack size. */
+    public var stack_control_input_signal: SignalIDJson? = null,
     /** whether this miner should output its remaining resource amounts to the circuit network. */
     public var circuit_read_resources: Boolean? = null,
     public var circuit_resource_read_mode: MiningDrillResourceReadMode? = null,
@@ -705,7 +711,7 @@ public data class ControlBehavior(
 @Serializable
 public data class ConstantCombinatorParameters(
     /** Signal to emit. */
-    public val signal: SignalID,
+    public val signal: SignalIDJson,
     /** Value of the signal to emit. */
     public val count: Int,
     /** Index of the constant combinator's slot to set this signal to. */
@@ -721,12 +727,12 @@ public data class ArithmeticCombinatorParameters(
      * First signal to use in an operation.
      * If not specified, the second argument will be the value of [first_constant].
      */
-    public val first_signal: SignalID? = null,
+    public val first_signal: SignalIDJson? = null,
     /**
      * Second signal to use in an operation.
      * If not specified, the second argument will be the value of [second_constant].
      */
-    public val second_signal: SignalID? = null,
+    public val second_signal: SignalIDJson? = null,
     /**
      * Constant to use as the first argument of the operation.
      * Has no effect when [first_signal] is set. Defaults to 0.
@@ -740,7 +746,7 @@ public data class ArithmeticCombinatorParameters(
     /** When not specified, defaults to "*". */
     public val operation: ArithmeticOperation = ArithmeticOperation.Multiply,
     /** Specifies the signal to output. */
-    public val output_signal: SignalID? = null,
+    public val output_signal: SignalIDJson? = null,
 )
 
 @Serializable
@@ -782,18 +788,18 @@ public enum class ArithmeticOperation {
 @Serializable
 public data class DeciderCombinatorParameters(
     /** Defaults to blank. */
-    public val first_signal: SignalID? = null,
+    public val first_signal: SignalIDJson? = null,
     /**
      * Second signal to use in an operation, if any.
      * If this is not specified, the second argument to a decider combinator's operation is assumed to be the value of [constant].
      */
-    public val second_signal: SignalID? = null,
+    public val second_signal: SignalIDJson? = null,
     /** Constant to use as the second argument of operation. Defaults to 0. */
     public val constant: Int? = null,
     /** Specifies how the inputs should be compared. If not specified, defaults to "<". */
     public val comparator: CompareOperation = CompareOperation.Less,
     /** Defaults to blank. */
-    public val output_signal: SignalID? = null,
+    public val output_signal: SignalIDJson? = null,
     /** Defaults to `true`. When `false`, will output a value of `1` for the given [output_signal]. */
     public val copy_count_from_input: Boolean = true,
 )
@@ -804,9 +810,9 @@ public data class CircuitCondition(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val comparator: CompareOperation = CompareOperation.Less,
     /** Defaults to blank. */
-    public val first_signal: SignalID? = null,
+    public val first_signal: SignalIDJson? = null,
     /** What to compare [first_signal] to. If not specified, [first_signal] will be compared to [constant]. */
-    public val second_signal: SignalID? = null,
+    public val second_signal: SignalIDJson? = null,
     /**
      * Constant to compare [first_signal] to. Has no effect when [second_signal] is set.
      * When neither [second_signal] nor [constant] are specified, the effect is as though constant were specified with the value 0.

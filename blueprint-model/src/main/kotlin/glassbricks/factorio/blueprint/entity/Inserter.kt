@@ -1,6 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.SignalID
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 
@@ -31,7 +32,7 @@ public class InserterControlBehavior(
     public var modeOfOperation: InserterModeOfOperation =
         json?.circuit_mode_of_operation?.asInserter() ?: InserterModeOfOperation.None
     public var readContentsMode: InserterHandReadMode? = json?.circuit_hand_read_mode
-    public var setStackSizeSignal: SignalID? = json?.stack_control_input_signal?.takeIf { json.circuit_set_stack_size }
+    public var setStackSizeSignal: SignalID? = json?.stack_control_input_signal?.toSignalIDBasic()?.takeIf { json.circuit_set_stack_size }
 
     override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(
         circuit_mode_of_operation = modeOfOperation.asMode(),
@@ -45,6 +46,6 @@ public class InserterControlBehavior(
         circuit_hand_read_mode = readContentsMode,
 
         circuit_set_stack_size = setStackSizeSignal != null,
-        stack_control_input_signal = setStackSizeSignal,
+        stack_control_input_signal = setStackSizeSignal.toJsonBasic(),
     )
 }

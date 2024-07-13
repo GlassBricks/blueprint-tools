@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.SignalType
 import glassbricks.factorio.blueprint.json.*
 import kotlin.test.Test
 
@@ -11,7 +12,7 @@ class LampTest {
         testSaveLoad<Lamp>("small-lamp", connectToNetwork = true) {
             control_behavior = ControlBehaviorJson(
                 circuit_condition = CircuitCondition(
-                    first_signal = SignalID(name = "signal-A", type = SignalType.Item),
+                    first_signal = signalId("signal-A"),
                     comparator = CompareOperation.GreaterOrEqual,
                     constant = 5,
                 ),

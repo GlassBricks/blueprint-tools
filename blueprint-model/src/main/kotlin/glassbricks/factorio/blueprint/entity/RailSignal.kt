@@ -1,7 +1,9 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitCondition
-import glassbricks.factorio.blueprint.json.SignalID
+import glassbricks.factorio.blueprint.SignalID
+import glassbricks.factorio.blueprint.json.toJsonBasic
+import glassbricks.factorio.blueprint.json.toSignalIDBasic
 import glassbricks.factorio.blueprint.prototypes.RailChainSignalPrototype
 import glassbricks.factorio.blueprint.prototypes.RailSignalBasePrototype
 import glassbricks.factorio.blueprint.prototypes.RailSignalPrototype
@@ -33,9 +35,9 @@ public class RailSignalControlBehavior(
     public var readSignal: Boolean = source?.circuit_read_signal ?: false
 
     // todo: make null mean disabled
-    public var redSignal: SignalID? = source?.red_output_signal
-    public var orangeSignal: SignalID? = source?.orange_output_signal
-    public var greenSignal: SignalID? = source?.green_output_signal
+    public var redSignal: SignalID? = source?.red_output_signal?.toSignalIDBasic()
+    public var orangeSignal: SignalID? = source?.orange_output_signal?.toSignalIDBasic()
+    public var greenSignal: SignalID? = source?.green_output_signal?.toSignalIDBasic()
 
     public var closeSignalCondition: CircuitCondition? = source?.circuit_condition
         ?.takeIf { source.circuit_close_signal == true }
@@ -43,9 +45,9 @@ public class RailSignalControlBehavior(
     override fun exportToJson(): ControlBehaviorJson {
         return ControlBehaviorJson(
             circuit_read_signal = readSignal,
-            red_output_signal = redSignal.takeIf { readSignal },
-            orange_output_signal = orangeSignal.takeIf { readSignal },
-            green_output_signal = greenSignal.takeIf { readSignal },
+            red_output_signal = redSignal.takeIf { readSignal }?.toJsonBasic(),
+            orange_output_signal = orangeSignal.takeIf { readSignal }?.toJsonBasic(),
+            green_output_signal = greenSignal.takeIf { readSignal }?.toJsonBasic(),
             circuit_close_signal = closeSignalCondition != null,
             circuit_condition = closeSignalCondition,
         )
@@ -67,15 +69,15 @@ public class RailChainSignal(
 public class RailChainSignalControlBehavior(
     source: ControlBehaviorJson? = null,
 ) : ControlBehavior {
-    public var redSignal: SignalID? = source?.red_output_signal
-    public var orangeSignal: SignalID? = source?.orange_output_signal
-    public var greenSignal: SignalID? = source?.green_output_signal
-    public var blueSignal: SignalID? = source?.blue_output_signal
+    public var redSignal: SignalID? = source?.red_output_signal?.toSignalIDBasic()
+    public var orangeSignal: SignalID? = source?.orange_output_signal?.toSignalIDBasic()
+    public var greenSignal: SignalID? = source?.green_output_signal?.toSignalIDBasic()
+    public var blueSignal: SignalID? = source?.blue_output_signal?.toSignalIDBasic()
 
     override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(
-        red_output_signal = redSignal,
-        orange_output_signal = orangeSignal,
-        green_output_signal = greenSignal,
-        blue_output_signal = blueSignal,
+        red_output_signal = redSignal.toJsonBasic(),
+        orange_output_signal = orangeSignal.toJsonBasic(),
+        green_output_signal = greenSignal.toJsonBasic(),
+        blue_output_signal = blueSignal.toJsonBasic(),
     )
 }

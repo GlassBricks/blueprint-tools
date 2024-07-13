@@ -1,6 +1,8 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.SignalID
+import glassbricks.factorio.blueprint.SignalID
+import glassbricks.factorio.blueprint.json.toJsonWithDefault
+import glassbricks.factorio.blueprint.json.toSignalIdWithDefault
 import glassbricks.factorio.blueprint.prototypes.AccumulatorPrototype
 
 
@@ -9,7 +11,10 @@ public class Accumulator(
     json: EntityJson,
 ) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
-    public override val controlBehavior: AccumulatorControlBehavior = AccumulatorControlBehavior(json.control_behavior)
+    public override val controlBehavior: AccumulatorControlBehavior = AccumulatorControlBehavior(
+        prototype,
+        json.control_behavior
+    )
 
     override fun exportToJson(json: EntityJson) {
         if (this.hasCircuitConnections())
@@ -18,10 +23,14 @@ public class Accumulator(
 }
 
 public class AccumulatorControlBehavior(
-    source: ControlBehaviorJson? = null,
+    prototype: AccumulatorPrototype,
+    source: ControlBehaviorJson?
 ) : ControlBehavior {
-    /** Null will set it to the default value. */
-    public var outputSignal: SignalID? = source?.output_signal
+    public val defaultOutputSignal: SignalID? = prototype.default_output_signal
+    public var outputSignal: SignalID? = source?.output_signal.toSignalIdWithDefault(defaultOutputSignal)
 
-    override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(output_signal = outputSignal)
+    override fun exportToJson(): ControlBehaviorJson? {
+        if (outputSignal == defaultOutputSignal) return null
+        return ControlBehaviorJson(output_signal = outputSignal.toJsonWithDefault(defaultOutputSignal))
+    }
 }
