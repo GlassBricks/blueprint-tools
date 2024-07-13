@@ -1,17 +1,17 @@
 package glassbricks.factorio
 
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.asClassName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
 
 
 fun GeneratedPrototypesBuilder.getGeneratedClasses() {
-    extraSealedIntf("EVEnergySource", "ElectricEnergySource", "VoidEnergySource")
-    extraSealedIntf("BVEnergySource", "BurnerEnergySource", "VoidEnergySource")
+    extraSealedIntf("EVEnergySource", listOf("EnergySource"), "ElectricEnergySource", "VoidEnergySource")
+    extraSealedIntf("BVEnergySource", listOf("EnergySource"), "BurnerEnergySource", "VoidEnergySource")
     extraSealedIntf(
         "EHFVEnergySource",
+        listOf("EnergySource"),
         "ElectricEnergySource",
         "HeatEnergySource",
         "FluidEnergySource",
@@ -194,6 +194,11 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             +"allow_side_loading"
         }
         blueprintable("Loader") {
+            properties.remove("energy_source")
+            "energy_source" {
+                inner.optional = false
+                inner.default = ManualDefault(CodeBlock.of("VoidEnergySource"))
+            }
             +"filter_count"
         }
         blueprintable("Loader1x1")
@@ -259,14 +264,14 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         "ItemCountType" {}
 
         "Vector" {
-            overrideType = ClassName(PAR_PACKAGE_NAME, "Position")
+            overrideType(ClassName(PAR_PACKAGE_NAME, "Position"))
         }
         "MapPosition" {
-            overrideType = ClassName(PAR_PACKAGE_NAME, "Position")
+            overrideType(ClassName(PAR_PACKAGE_NAME, "Position"))
         }
 
         "CollisionMask" {
-            overrideType = List::class.parameterizedBy(String::class)
+            overrideType(List::class.parameterizedBy(String::class))
         }
 
         "EntityPrototypeFlags" {
@@ -320,11 +325,17 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         "FuelCategoryID" {}
         "HeatConnection" {}
 
-        "BaseEnergySource" {
-            includeAllProperties = false
-        }
+        // some stuff with energy source is hardcoded in Generate.kt
         "EnergySource" {
-            overrideType = ClassName(PACKAGE_NAME, "BaseEnergySource")
+            overrideType = {
+                val className = ClassName(PACKAGE_NAME, "EnergySource")
+                val declaration = TypeSpec.interfaceBuilder(className).apply {
+                    addDescription(concept.description)
+                    addModifiers(KModifier.SEALED)
+                    addAnnotation(Serializable::class)
+                }.build()
+                className to declaration
+            }
         }
         "VoidEnergySource" {}
         "BurnerEnergySource" {
@@ -355,10 +366,33 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         }
     }
 
-
-
     allSubclassGetters += listOf(
         "ItemPrototype",
         "EntityWithOwnerPrototype",
     )
+
+    val hasEnergySource = getAllPrototypeSubclasses(origPrototypes, "EntityWithOwnerPrototype")
+        .filter {
+            it.name in this.prototypes &&
+                    it.properties.any { prop ->
+                        prop.name == "energy_source"
+                    }
+        }
+
+    extraSealedIntf("HasEnergySource", emptyList(), *hasEnergySource.map { it.name }.toTypedArray()) {
+        // val energy_source: EnergySource
+        addProperty(
+            PropertySpec.builder(
+                "energy_source",
+                ClassName(PACKAGE_NAME, "EnergySource")
+//                    .copy(nullable = true)
+            ).build()
+        )
+    }
+
+    for (prototype in hasEnergySource) {
+        this.prototypes[prototype.name]!!.includedProperties["energy_source"]!!.modify = {
+            addModifiers(KModifier.OVERRIDE)
+        }
+    }
 }

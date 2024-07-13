@@ -2,6 +2,7 @@
 
 package glassbricks.factorio
 
+import com.squareup.kotlinpoet.CodeBlock
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -86,7 +87,7 @@ class Property(
     val override: Boolean,
     var type: TypeDefinition,
     var optional: Boolean,
-    val default: DefaultValue? = null
+    var default: DefaultValue? = null
 )
 
 @Serializable(with = DefaultValueSerializer::class)
@@ -97,6 +98,8 @@ data class DescriptionDefault(val value: String) : DefaultValue
 
 @Serializable
 data class LiteralDefault(val value: JsonPrimitive) : DefaultValue
+
+data class ManualDefault(val value: CodeBlock) : DefaultValue
 
 object DefaultValueSerializer : KSerializer<DefaultValue> {
     override val descriptor: SerialDescriptor

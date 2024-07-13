@@ -1,12 +1,14 @@
 package glassbricks.factorio
 
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 
 class SealedIntf(
     val name: String,
+    val superTypes: List<String>,
     val subtypes: Set<String>,
-    val source: Concept?
+    val modify: (TypeSpec.Builder.() -> Unit)?
 )
 
 class GeneratedPrototypes(
@@ -18,14 +20,14 @@ class GeneratedPrototypes(
 
 sealed interface GeneratedValue {
     val inner: ProtoOrConcept
-    val includedProperties: Map<String, GeneratedProperty>
+    val includedProperties: Map<String, PropertyOptions>
     val typeName: String?
     val modify: (TypeSpec.Builder.() -> Unit)?
 }
 
 class GeneratedPrototype(
     override val inner: Prototype,
-    override val includedProperties: Map<String, GeneratedProperty>,
+    override val includedProperties: Map<String, PropertyOptions>,
     override val modify: (TypeSpec.Builder.() -> Unit)?
 ) : GeneratedValue {
     override val typeName: String? = inner.typename
@@ -33,21 +35,24 @@ class GeneratedPrototype(
 
 class GeneratedConcept(
     override val inner: Concept,
-    val overrideType: TypeName?,
+    val overrideType: (() -> Pair<TypeName, TypeSpec?>)?,
     val innerEnumName: String?,
-    override val includedProperties: Map<String, GeneratedProperty>,
+    override val includedProperties: Map<String, PropertyOptions>,
     override val typeName: String?,
     override val modify: (TypeSpec.Builder.() -> Unit)?
 ) : GeneratedValue
 
-class GeneratedProperty(
-    val inner: Property,
-    val overrideType: TypeName?,
-    val innerEnumName: String?
-)
 
 @DslMarker
 annotation class GeneratedPrototypesDsl
+
+@GeneratedPrototypesDsl
+class PropertyOptions(
+    val inner: Property,
+    var overrideType: TypeName? = null,
+    var innerEnumName: String? = null,
+    var modify: (PropertySpec.Builder.() -> Unit)? = null
+)
 
 @GeneratedPrototypesDsl
 class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
@@ -97,8 +102,13 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
 
     inline fun concepts(block: Concepts.() -> Unit) = Concepts().block()
 
-    fun extraSealedIntf(name: String, vararg values: String) {
-        extraSealedIntfs.add(SealedIntf(name, values.toSet(), null))
+
+    fun extraSealedIntf(
+        name: String,
+        supertypes: List<String>,
+        vararg subtypes: String, modify: (TypeSpec.Builder.() -> Unit)? = null
+    ) {
+        extraSealedIntfs.add(SealedIntf(name, supertypes, subtypes.toSet(), modify))
     }
 
     fun build(): GeneratedPrototypes {
@@ -121,29 +131,29 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
 
 @GeneratedPrototypesDsl
 class GeneratedPrototypeBuilder(val prototype: Prototype) {
-    private val properties = mutableMapOf<String, GeneratedProperty>()
+    val properties = mutableMapOf<String, PropertyOptions>()
 
     var modify: (TypeSpec.Builder.() -> Unit)? = null
 
     fun tryAddProperty(
         name: String,
-        block: PropertyOptionsBuilder.() -> Unit = {}
+        block: PropertyOptions.() -> Unit = {}
     ): Boolean {
         if (name in properties) error("Property $name already defined")
         val property = prototype.properties.find { it.name == name } ?: return false
-        properties[name] = PropertyOptionsBuilder(property).apply(block).build()
+        properties[name] = PropertyOptions(property, null, null, null).apply(block)
         return true
     }
 
     fun property(
         name: String,
-        block: PropertyOptionsBuilder.() -> Unit
+        block: PropertyOptions.() -> Unit
     ) {
         if (!tryAddProperty(name, block))
             error("Property $name not found")
     }
 
-    operator fun String.invoke(block: PropertyOptionsBuilder.() -> Unit) {
+    operator fun String.invoke(block: PropertyOptions.() -> Unit) {
         property(this, block)
     }
 
@@ -155,24 +165,28 @@ class GeneratedPrototypeBuilder(val prototype: Prototype) {
 }
 
 @GeneratedPrototypesDsl
-class GeneratedConceptBuilder(private val concept: Concept) {
-    var overrideType: TypeName? = null
+class GeneratedConceptBuilder(val concept: Concept) {
+    var overrideType: (() -> Pair<TypeName, TypeSpec?>)? = null
+    fun overrideType(type: TypeName) {
+        overrideType = { type to null }
+    }
+
     var innerEnumName: String? = null
     var modify: (TypeSpec.Builder.() -> Unit)? = null
-    private val properties: MutableMap<String, GeneratedProperty> = mutableMapOf()
+    private val properties: MutableMap<String, PropertyOptions> = mutableMapOf()
 
     var includeAllProperties: Boolean = true
 
     fun property(
         name: String,
-        block: PropertyOptionsBuilder.() -> Unit
+        block: PropertyOptions.() -> Unit
     ) {
         if (name in properties) error("Property $name already defined")
         val property = concept.properties?.find { it.name == name } ?: error("Property $name not found")
-        properties[name] = PropertyOptionsBuilder(property).apply(block).build()
+        properties[name] = PropertyOptions(property).apply(block)
     }
 
-    operator fun String.invoke(block: PropertyOptionsBuilder.() -> Unit) {
+    operator fun String.invoke(block: PropertyOptions.() -> Unit) {
         property(this, block)
     }
 
@@ -189,7 +203,7 @@ class GeneratedConceptBuilder(private val concept: Concept) {
         if (includeAllProperties)
             for (property in concept.properties.orEmpty()) {
                 if (property.name !in properties) {
-                    properties[property.name] = PropertyOptionsBuilder(property).build()
+                    properties[property.name] = PropertyOptions(property)
                 }
             }
         val typeProperty = properties["type"]
@@ -209,9 +223,16 @@ class GeneratedConceptBuilder(private val concept: Concept) {
     }
 }
 
-@GeneratedPrototypesDsl
-class PropertyOptionsBuilder(val inner: Property) {
-    var overrideType: TypeName? = null
-    var innerEnumName: String? = null
-    fun build() = GeneratedProperty(inner, overrideType = overrideType, innerEnumName = innerEnumName)
+
+fun getAllPrototypeSubclasses(
+    prototypes: Map<String, Prototype>,
+    baseName: String
+): List<Prototype> {
+    val isSubclass = mutableMapOf<String, Boolean>()
+    isSubclass[baseName] = true
+    fun isSubclass(prototype: Prototype): Boolean = isSubclass.getOrPut(prototype.name) {
+        val parent = prototype.parent
+        parent != null && isSubclass(prototypes[parent]!!)
+    }
+    return prototypes.values.filter { isSubclass(it) }
 }

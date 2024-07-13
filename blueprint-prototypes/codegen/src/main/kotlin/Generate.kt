@@ -117,7 +117,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             alreadyGenerated.add(concept.inner.name)
 
             val parent = concept.inner.parent
-            if (parent != null) {
+            if (parent != null && parent != "BaseEnergySource") {
                 val parentConcept = input.concepts[parent] ?: error("Parent concept not found: $parent")
                 visitConcept(parentConcept)
             }
@@ -140,9 +140,10 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             val type = TypeSpec.interfaceBuilder(intf.name).apply {
                 addAnnotation(Serializable::class)
                 addModifiers(KModifier.SEALED)
-                if (intf.source != null) {
-                    addDescription(intf.source.description)
+                for (supertype in intf.superTypes) {
+                    addSuperinterface(ClassName(PACKAGE_NAME, supertype))
                 }
+                intf.modify?.invoke(this)
             }.build()
             file.addType(type)
         }
@@ -187,18 +188,10 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     private fun generateAllSubclassGetters() {
         for (baseProtoName in input.allSubclassGetters) {
             input.prototypes[baseProtoName] ?: error("Base prototype not found: $baseProtoName")
-            val isSubclass = mutableMapOf<String, Boolean>()
-            isSubclass[baseProtoName] = true
-            fun isSubclass(prototype: Prototype): Boolean = isSubclass.getOrPut(prototype.name) {
-                val parent = prototype.parent
-                parent != null && isSubclass(input.prototypes[parent]!!.inner)
-            }
-
-            val subClasses = input.prototypes.values.filter { proto ->
-                isSubclass(proto.inner) && proto.typeName != null
-            }
-                .sortedBy { it.inner.order }
-                .map { it.typeName!! }
+            val subclasses = getAllPrototypeSubclasses(input.prototypes.mapValues { it.value.inner }, baseProtoName)
+                .filter { it.typename != null }
+                .sortedBy { it.order }
+                .map { it.typename!! }
             // fun DataRaw.all(BasePrototypes)s(): List<BaseClass> = listOf(
             //      `typename`,*
             // ).flatMap { it.values }
@@ -209,8 +202,8 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                 addCode(buildCodeBlock {
                     add("return listOf(\n")
                     withIndent {
-                        for (subClass in subClasses) {
-                            add("%N,\n", subClass)
+                        for (subclass in subclasses) {
+                            add("%N,\n", subclass)
                         }
                     }
                     add(").flatMap { it.values }")
@@ -221,12 +214,6 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     }
 
 
-    private fun Documentable.Builder<*>.addDescription(description: String?) {
-        if (!description.isNullOrBlank()) {
-            addKdoc("%L", description)
-        }
-    }
-
     private fun generatePrototype(prototype: GeneratedPrototype): TypeSpec =
         generateClass(prototype, prototype.inner.name)
 
@@ -235,10 +222,13 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         name: String,
         isDataClass: Boolean = false
     ): TypeSpec {
-        val canBeObject = value.includedProperties.isEmpty()
-                && value.inner.parent.let { it != null && input.concepts[it]?.includedProperties?.isEmpty() == true }
-                && value.typeName != null
-                && value.inner.name !in hasInheritors
+        val canBeObject =
+            value.includedProperties.isEmpty()
+                    && value.typeName != null
+                    && value.inner.name !in hasInheritors
+                    && value.inner.parent.let {
+                it == "BaseEnergySource"
+            }
 
         val builder = if (canBeObject) {
             TypeSpec.objectBuilder(name)
@@ -279,10 +269,14 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             // supertypes
             val parent = value.inner.parent
             if (parent != null) {
-                check(parent in input.prototypes || parent in input.concepts) {
-                    "Parent prototype not found: $parent"
+                if (parent == "BaseEnergySource") {
+                    addSuperinterface(ClassName(PACKAGE_NAME, "EnergySource"))
+                } else {
+                    check(parent in input.prototypes || parent in input.concepts) {
+                        "Parent prototype not found: $parent"
+                    }
+                    superclass(ClassName(PACKAGE_NAME, parent))
                 }
-                superclass(ClassName(PACKAGE_NAME, parent))
             }
             val extraSealedIntfs = extraSealedSupertypes[value.inner.name]
             if (extraSealedIntfs != null) {
@@ -325,7 +319,8 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
 
     private fun generateConcept(concept: GeneratedConcept): Any {
         val type = if (concept.overrideType != null) {
-            GeneratedType(concept.overrideType, null)
+            val (type, declaration) = concept.overrideType.invoke()
+            GeneratedType(type, declaration)
         } else {
             mapTypeDefinition(concept.inner.type, concept, null, true)
         }
@@ -348,43 +343,44 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
 
     private fun getDefaultValue(
         property: Property,
-    ): CodeBlock? {
-        if (property.default is LiteralDefault) {
-            val value = property.default.value
+    ): CodeBlock? = when (val default = property.default) {
+        is LiteralDefault -> {
+            val value = default.value
             val result: CodeBlock? = if (value.isString) CodeBlock.of("%S", value.content)
             else value.booleanOrNull?.let { CodeBlock.of("%L", it) }
                 ?: value.longOrNull?.let { CodeBlock.of("%L", it) }
                 ?: value.doubleOrNull?.let { CodeBlock.of("%L", it) }
-            if (result != null) {
-                println("Wow, a default: $result")
-            }
-            return result
+            result
         }
-        val builtinType = property.type.getBuiltinType()
-        return when {
-            builtinType == null -> null
-            builtinType == "double" -> CodeBlock.of("0.0")
-            builtinType == "float" -> CodeBlock.of("0f")
-            builtinType == "bool" -> CodeBlock.of("false")
-            builtinType.contains("uint") -> CodeBlock.of("0u")
-            builtinType.contains("int") -> CodeBlock.of("0")
-            else -> null
+
+        is ManualDefault -> default.value
+
+        else -> {
+            val builtinType = property.type.getBuiltinType()
+            when {
+                builtinType == null -> null
+                builtinType == "double" -> CodeBlock.of("0.0")
+                builtinType == "float" -> CodeBlock.of("0f")
+                builtinType == "bool" -> CodeBlock.of("false")
+                builtinType.contains("uint") -> CodeBlock.of("0u")
+                builtinType.contains("int") -> CodeBlock.of("0")
+                else -> null
+            }
         }
     }
 
     private fun generateProperty(
         context: GeneratedValue,
-        genProperty: GeneratedProperty,
+        genProperty: PropertyOptions,
         initByMutate: Boolean,
         block: PropertySpec.Builder.() -> Unit = {}
     ): PropertySpec {
         val property = genProperty.inner
-        val nullable = property.optional || property.default != null
 
         val basicType =
             genProperty.overrideType ?: mapTypeDefinition(property.type, context, genProperty, true).putType()
         val type =
-            basicType.copy(nullable = nullable)
+            basicType.copy(nullable = property.optional)
 
         return PropertySpec.builder(property.name, type).apply {
             if (property.alt_name != null) {
@@ -398,7 +394,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
 
             if (initByMutate) {
                 mutable()
-                if (nullable) {
+                if (property.optional) {
                     initializer("null")
                 } else {
                     val defaultValue = getDefaultValue(property)
@@ -411,7 +407,9 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                 setter(FunSpec.setterBuilder().addModifiers(KModifier.PROTECTED).build())
             }
             addDescription(property.description)
+
             block()
+            genProperty.modify?.invoke(this)
         }.build()
     }
 
@@ -495,7 +493,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     private fun mapTypeDefinition(
         type: TypeDefinition,
         context: GeneratedValue,
-        property: GeneratedProperty?,
+        property: PropertyOptions?,
         isRoot: Boolean = false
     ): GeneratedType = when (type) {
         is BasicType -> {
@@ -566,5 +564,11 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             error("UnionType $type not supported")
 //            Any::class.asClassName().toGenType()
         }
+    }
+}
+
+fun Documentable.Builder<*>.addDescription(description: String?) {
+    if (!description.isNullOrBlank()) {
+        addKdoc("%L", description)
     }
 }
