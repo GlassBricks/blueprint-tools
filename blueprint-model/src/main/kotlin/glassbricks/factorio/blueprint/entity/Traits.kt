@@ -24,15 +24,6 @@ public fun WithItemFilters.filtersAsIndexList(): List<ItemFilter>? =
 
 
 /**
- * An entity with a main inventory; i.e. containers and cargo wagons.
- */
-public interface WithInventory : WithItemFilters {
-    public var bar: Int?
-    public val inventorySize: ItemStackIndex
-    public val allowsFilters: Boolean
-}
-
-/**
  * Represents item filters.
  *
  * Used in cargo wagons, filter inserters, loaders, and modded filtered containers.
@@ -41,6 +32,16 @@ public interface WithItemFilters {
     public val filters: Array<String?>
     public val numFilters: Int get() = filters.size
 }
+
+/**
+ * An entity with a main inventory; i.e. containers and cargo wagons.
+ */
+public interface WithInventory : WithItemFilters {
+    public var bar: Int?
+    public val inventorySize: ItemStackIndex
+    public val allowsFilters: Boolean
+}
+
 
 internal fun List<ItemFilter>?.toFilterArray(size: Int): Array<String?> =
     indexListToArray(size, ItemFilter::index, ItemFilter::name)
