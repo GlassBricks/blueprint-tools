@@ -17,8 +17,7 @@ public class UnknownEntity(
     CircuitConnectionPoint,
     CombinatorConnections,
     WithColor,
-    WithInventory,
-    WithItemFilters {
+    WithInventory {
     public val json: EntityJson = json.deepCopy()
 
     override var position: Position by json::position
