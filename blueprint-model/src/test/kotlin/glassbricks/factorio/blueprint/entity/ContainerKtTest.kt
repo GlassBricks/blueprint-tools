@@ -4,7 +4,7 @@ import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.json.InfinityFilter
 import kotlin.test.Test
 
-class ContainerTest {
+class ContainerKtTest {
     @Test
     fun `can load simple container`() {
         testSaveLoad<Container>("iron-chest")

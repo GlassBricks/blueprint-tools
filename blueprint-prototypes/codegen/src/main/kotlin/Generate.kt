@@ -9,7 +9,6 @@ import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.longOrNull
 
 const val PACKAGE_NAME = "glassbricks.factorio.blueprint.prototypes"
 const val PAR_PACKAGE_NAME = "glassbricks.factorio.blueprint"
@@ -44,6 +43,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
 
     fun generate(): FileSpec {
         findInheritors()
+        findEnumConcepts()
 
         setupFile()
         generatePrototypes()
@@ -84,6 +84,18 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             val parent = prototype.inner.parent
             if (parent != null) {
                 hasInheritors.add(parent)
+            }
+        }
+    }
+
+    private val enumTypes = mutableSetOf<String>()
+    private fun findEnumConcepts() {
+        for ((_, concept) in input.concepts) {
+            if (concept.inner.type is UnionType) {
+                val options = tryGetEnumOptions(concept.inner.type)
+                if (options != null) {
+                    enumTypes += concept.inner.name
+                }
             }
         }
     }
@@ -289,17 +301,21 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             if (isDataClass) {
                 val constructorBuilder = FunSpec.constructorBuilder()
                 for (property in value.includedProperties.values.sortedBy { it.inner.order }) {
-                    val propertySpec = generateProperty(value, property, initByMutate = false) {
+                    val (propertySpec, defaultValue) = generateProperty(value, property, initByMutate = false) {
                         initializer(property.inner.name)
                     }
                     addProperty(propertySpec)
-                    constructorBuilder.addParameter(propertySpec.name, propertySpec.type)
+                    constructorBuilder.addParameter(
+                        ParameterSpec.builder(propertySpec.name, propertySpec.type)
+                            .defaultValue(defaultValue)
+                            .build()
+                    )
                 }
                 if (constructorBuilder.parameters.isNotEmpty())
                     primaryConstructor(constructorBuilder.build())
             } else {
                 for (property in value.includedProperties.values.sortedBy { it.inner.order }) {
-                    addProperty(generateProperty(value, property, initByMutate = true))
+                    addProperty(generateProperty(value, property, initByMutate = true).first)
                 }
             }
 
@@ -341,31 +357,53 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         return concept.inner.type.getBuiltinType()
     }
 
-    private fun getDefaultValue(
-        property: Property,
-    ): CodeBlock? = when (val default = property.default) {
-        is LiteralDefault -> {
-            val value = default.value
-            val result: CodeBlock? = if (value.isString) CodeBlock.of("%S", value.content)
-            else value.booleanOrNull?.let { CodeBlock.of("%L", it) }
-                ?: value.longOrNull?.let { CodeBlock.of("%L", it) }
-                ?: value.doubleOrNull?.let { CodeBlock.of("%L", it) }
-            result
-        }
-
-        is ManualDefault -> default.value
-
-        else -> {
-            val builtinType = property.type.getBuiltinType()
-            when {
-                builtinType == null -> null
-                builtinType == "double" -> CodeBlock.of("0.0")
-                builtinType == "float" -> CodeBlock.of("0f")
-                builtinType == "bool" -> CodeBlock.of("false")
-                builtinType.contains("uint") -> CodeBlock.of("0u")
-                builtinType.contains("int") -> CodeBlock.of("0")
-                else -> null
+    private fun getDefaultValue(property: Property, type: TypeName): CodeBlock? {
+        return when (val default = property.default) {
+            is ManualDefault -> default.value
+            is LiteralDefault -> {
+                val value = default.value
+                if (value.isString) {
+                    if (type is ClassName && type.simpleName in enumTypes) {
+                        // enumType.value
+                        CodeBlock.of("%T.%N", type, value.content)
+                    } else {
+                        CodeBlock.of("%S", value.content)
+                    }
+                } else {
+                    val builtinType = property.type.getBuiltinType()
+                    value.booleanOrNull?.let {
+                        require(builtinType == "bool")
+                        CodeBlock.of("%L", it)
+                    } ?: value.doubleOrNull?.let {
+                        when {
+                            builtinType == null -> error("Got numeric default for non-numeric type")
+                            builtinType == "double" -> CodeBlock.of("%L", it)
+                            builtinType == "float" -> CodeBlock.of("%Lf", it.toFloat().toString())
+                            builtinType.contains("uint") -> CodeBlock.of("%Lu", it.toULong())
+                            builtinType.contains("int") -> CodeBlock.of("%L", it.toLong())
+                            else -> error("Unhandled builtin type: $builtinType")
+                        }
+                    }
+                    ?: error("Unhandled literal type: $value")
+                }
             }
+
+            else -> null
+        }
+    }
+
+    private fun getPlaceholderValue(property: Property): CodeBlock? {
+        val builtinType = property.type.getBuiltinType()
+        return when {
+            builtinType == null -> null
+            builtinType == "double" -> CodeBlock.of("0.0")
+            builtinType == "float" -> CodeBlock.of("0f")
+            builtinType == "bool" -> CodeBlock.of("false")
+            builtinType.contains("uint") -> CodeBlock.of("0u")
+            builtinType.contains("int") -> CodeBlock.of("0")
+            else -> null
+        }?.let {
+            CodeBlock.of("required(%L)", it)
         }
     }
 
@@ -374,15 +412,17 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
         genProperty: PropertyOptions,
         initByMutate: Boolean,
         block: PropertySpec.Builder.() -> Unit = {}
-    ): PropertySpec {
+    ): Pair<PropertySpec, CodeBlock?> {
         val property = genProperty.inner
 
         val basicType =
             genProperty.overrideType ?: mapTypeDefinition(property.type, context, genProperty, true).putType()
+        val defaultValue = getDefaultValue(property, basicType)
         val type =
-            basicType.copy(nullable = property.optional)
+            basicType.copy(nullable = property.optional && defaultValue == null)
 
-        return PropertySpec.builder(property.name, type).apply {
+        val propertySpec = PropertySpec.builder(property.name, type).apply {
+            addDescription(property.description)
             if (property.alt_name != null) {
                 addAnnotation(
                     AnnotationSpec.builder(JsonNames::class)
@@ -391,26 +431,27 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                 )
             }
 
-
             if (initByMutate) {
                 mutable()
-                if (property.optional) {
+                if (defaultValue != null) {
+                    initializer(defaultValue)
+                } else if (property.optional) {
                     initializer("null")
                 } else {
-                    val defaultValue = getDefaultValue(property)
-                    if (defaultValue != null) {
-                        initializer(defaultValue)
+                    val placeholderValue = getPlaceholderValue(property)
+                    if (placeholderValue != null) {
+                        initializer(placeholderValue)
                     } else {
                         addModifiers(KModifier.LATEINIT)
                     }
                 }
                 setter(FunSpec.setterBuilder().addModifiers(KModifier.PROTECTED).build())
             }
-            addDescription(property.description)
 
             block()
             genProperty.modify?.invoke(this)
         }.build()
+        return propertySpec to defaultValue
     }
 
 
@@ -452,6 +493,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
 
             block()
         }.build()
+            .also { enumTypes += name }
     }
 
 
@@ -550,7 +592,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                     ?: error("Inner enum name not specified for ${context.inner.name}.${property.inner.name}")
             }
             val enumType = generateEnumType(name, options) {
-                if (isRoot) {
+                if (isRoot && property == null) {
                     addDescription(context.inner.description)
                 }
             }

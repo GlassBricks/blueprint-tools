@@ -14,8 +14,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 
 
-public typealias ItemOrArray<T> = @Serializable(with = ItemOrArraySerializer::class) List<T>
-
 public object PositionShorthandSerializer : KSerializer<Position> {
     override val descriptor: SerialDescriptor = ListSerializer(Double.serializer()).descriptor
 
@@ -81,6 +79,7 @@ public object BoundingBoxShorthandSerializer : KSerializer<BoundingBox> {
     }
 }
 
+public typealias ItemOrArray<T> = @Serializable(with = ItemOrArraySerializer::class) List<T>
 
 public class ItemOrArraySerializer<T>(private val itemSerializer: KSerializer<T>) : KSerializer<ItemOrArray<T>> {
     private val listSerializer = ListSerializer(itemSerializer)
@@ -128,3 +127,11 @@ public class LuaListSerializer<T>(private val itemSerializer: KSerializer<T>) : 
         listSerializer.serialize(encoder, value)
     }
 }
+
+/**
+ * Indicates that a (primitive) property is not optional.
+ *
+ * This is only to get around the restriction that primitive types can't be lateinit.
+ */
+@Suppress("NOTHING_TO_INLINE")
+public inline fun <T> required(placeholderValue: T): T = placeholderValue

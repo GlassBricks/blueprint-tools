@@ -28,6 +28,7 @@ public open class Container(
     }
 }
 
+@Suppress("LocalVariableName")
 public open class LogisticContainer(
     prototype_: LogisticContainerPrototype,
     json: EntityJson,
@@ -52,8 +53,9 @@ public open class LogisticContainer(
 public class LogisticContainerControlBehavior(
     json: ControlBehaviorJson?,
 ) : ControlBehavior {
-    public var modeOfOperation: LogisticContainerModeOfOperation = json?.circuit_mode_of_operation
-        ?.asLogisticContainer() ?: LogisticContainerModeOfOperation.SendContents
+    public var modeOfOperation: LogisticContainerModeOfOperation =
+        json?.circuit_mode_of_operation?.asLogisticContainer()
+            ?: LogisticContainerModeOfOperation.SendContents
 
     override fun exportToJson(): ControlBehaviorJson? {
         if (modeOfOperation == LogisticContainerModeOfOperation.SendContents) return null
@@ -68,8 +70,10 @@ public data class LogisticRequest(
     val count: Int,
 )
 
-public class InfinityContainer(prototype_: InfinityContainerPrototype, json: EntityJson) :
-    LogisticContainer(prototype_, json) {
+@Suppress("LocalVariableName")
+public class InfinityContainer(
+    prototype_: InfinityContainerPrototype, json: EntityJson
+) : LogisticContainer(prototype_, json) {
     override val prototype: InfinityContainerPrototype get() = super.prototype as InfinityContainerPrototype
     public val infinityFilters: Array<InfinityFilter?> =
         json.infinity_settings?.filters.toInfFilterArray(prototype.inventory_size.toInt())

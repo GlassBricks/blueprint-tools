@@ -195,7 +195,6 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         blueprintable("Loader") {
             properties.remove("energy_source")
             "energy_source" {
-                inner.optional = false
                 inner.default = ManualDefault(CodeBlock.of("VoidEnergySource"))
             }
             +"filter_count"
