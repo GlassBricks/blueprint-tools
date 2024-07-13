@@ -12,6 +12,7 @@ public class ElectricEnergyInterface(
     public var powerUsage: Long = json.power_usage ?: 0L
 
     override fun exportToJson(json: EntityJson) {
+        // don't handle defaults here yet
         json.buffer_size = bufferSize
         json.power_production = powerProduction
         json.power_usage = powerUsage
