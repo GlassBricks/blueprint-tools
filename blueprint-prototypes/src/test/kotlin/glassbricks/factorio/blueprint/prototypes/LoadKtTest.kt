@@ -6,13 +6,13 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.test.Test
 
 
-val dataRawFile = object {}.javaClass.classLoader.getResourceAsStream("data-raw-dump.json")!!
+val dataRawFile = object {}.javaClass.classLoader.getResource("data-raw-dump.json")!!
 
 @OptIn(ExperimentalSerializationApi::class)
 class LoadKtTest {
     @Test
     fun `can load and save data raw`() {
-        val dataRaw = DataRawJson.decodeFromStream(DataRaw.serializer(), dataRawFile)
+        val dataRaw = DataRawJson.decodeFromStream(DataRaw.serializer(), dataRawFile.openStream())
         println(dataRaw)
         DataRawJson.encodeToJsonElement(DataRaw.serializer(), dataRaw)
         val pipe = dataRaw.`pipe-to-ground`.values.first()

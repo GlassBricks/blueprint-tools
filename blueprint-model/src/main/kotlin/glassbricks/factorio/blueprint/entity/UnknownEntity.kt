@@ -4,11 +4,14 @@ import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.EntityWithOwnerPrototype
+import glassbricks.factorio.blueprint.prototypes.SimpleEntityWithForcePrototype
+import glassbricks.factorio.blueprint.prototypes.SimpleEntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Unknown
 
 public class UnknownEntity(
-    override val prototype: EntityWithOwnerPrototype,
+    override val prototype: UnknownPrototype,
     json: EntityJson,
 ) : Entity,
     CableConnectionPoint,
@@ -54,10 +57,9 @@ private fun EntityJson.getJson(): EntityJson {
 }
 
 
-public class UnknownPrototype(override val name: String) : EntityWithOwnerPrototype() {
+public class UnknownPrototype(name: String) : SimpleEntityWithOwnerPrototype() {
     init {
-        this.fakeInit(
-            JsonObject(mapOf("type" to JsonPrimitive("unknown")))
-        )
+        this.name = name
+        this.type = "unknown"
     }
 }

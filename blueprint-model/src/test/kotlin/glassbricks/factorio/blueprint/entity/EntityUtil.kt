@@ -1,14 +1,16 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.json.EntityNumber
+import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import java.io.File
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 
 val blueprintPrototypes by lazy {
-    val file = File("../prototypes/src/test/resources/data-raw-dump.json")
-    BlueprintPrototypes.fromDataRawFile(file)
+    val file = File("../blueprint-prototypes/src/test/resources/data-raw-dump.json")
+    BlueprintPrototypes.loadFromDataRaw(file)
 }
 
 inline fun buildEntityJson(
@@ -58,52 +60,4 @@ internal inline fun <reified T : Entity> testSaveLoad(
 ): T {
     val json = buildEntityJson(name, build)
     return testSaveLoad(json, connectToNetwork, blueprint)
-}
-
-class BlueprintPrototypesKtTest {
-    @Test
-    fun `can load from data raw`() {
-
-        assertEquals(blueprintPrototypes.prototypes.keys, blueprintPrototypes.placeableBy.keys)
-
-        for (name in arrayOf(
-            "wooden-chest",
-            "linked-chest",
-            "curved-rail",
-            "big-electric-pole",
-            "rocket-silo",
-            "fast-loader",
-            "cargo-wagon",
-            "artillery-wagon",
-            "locomotive",
-        )) {
-            val entity = blueprintPrototypes.prototypes[name]
-            assertNotNull(entity, "Entity $name not found in prototypeMap")
-            assertEquals(entity.name, name)
-        }
-        for (name in arrayOf(
-            "spidertron",
-            "car"
-        )) {
-            assertFalse(name in blueprintPrototypes.prototypes)
-        }
-    }
-
-    @Test
-    fun `all prototypes are matched`() {
-        val unknownKeys = blueprintPrototypes.prototypes.entries
-            .filter {
-                blueprintPrototypes.createEntity(
-                    name = it.key,
-                    position = Position.ZERO
-                ) is UnknownEntity
-            }
-
-        if (unknownKeys.isNotEmpty()) {
-            val classList = unknownKeys.joinToString("\n") {
-                "  ${it.key}: ${it.value.type}, ${it.value.flags}"
-            }
-            fail("The following prototypes are not matched:\n$classList")
-        }
-    }
 }

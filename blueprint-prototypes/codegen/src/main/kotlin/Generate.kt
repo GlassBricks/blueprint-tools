@@ -2,9 +2,11 @@ package glassbricks.factorio
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
+import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
@@ -30,6 +32,7 @@ val predefined = builtins + mapOf(
     "Direction" to ClassName(PAR_PACKAGE_NAME, "Direction"),
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     private val file = FileSpec.builder(PACKAGE_NAME, "Prototypes")
 
@@ -66,6 +69,11 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                 .addMember("PositionShorthandSerializer::class")
                 .addMember("BoundingBoxShorthandSerializer::class")
                 .addMember("LuaListSerializer::class")
+                .build()
+        )
+        addAnnotation(
+            AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
                 .build()
         )
         addKotlinDefaultImports()
@@ -379,6 +387,15 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
             basicType.copy(nullable = nullable)
 
         return PropertySpec.builder(property.name, type).apply {
+            if (property.alt_name != null) {
+                addAnnotation(
+                    AnnotationSpec.builder(JsonNames::class)
+                        .addMember("%S", property.alt_name)
+                        .build()
+                )
+            }
+
+
             if (initByMutate) {
                 mutable()
                 if (nullable) {
@@ -391,7 +408,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                         addModifiers(KModifier.LATEINIT)
                     }
                 }
-                setter(FunSpec.setterBuilder().addModifiers(KModifier.PRIVATE).build())
+                setter(FunSpec.setterBuilder().addModifiers(KModifier.PROTECTED).build())
             }
             addDescription(property.description)
             block()

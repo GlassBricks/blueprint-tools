@@ -154,6 +154,7 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         }
         blueprintable("Rail")
         blueprintable("StraightRail")
+        blueprintable("CurvedRail")
         blueprintable("RailSignalBase") {
             +"default_red_output_signal"
             +"default_orange_output_signal"

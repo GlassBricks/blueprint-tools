@@ -24,7 +24,7 @@ class ImportExportKtTest {
         val entity = blueprintPrototypes.createEntityFromJson(entityJson)
         assertEquals(entity.name, "iron-chest")
         assertEquals(entity.type, "container")
-        assertEquals(entity.prototype, blueprintPrototypes.prototypes["iron-chest"])
+        assertEquals(entity.prototype, blueprintPrototypes.blueprintableEntities["iron-chest"])
 
         val backToJson = entity.toJsonIsolated(EntityNumber(2))
         assertEquals(backToJson.entity_number, EntityNumber(2))
@@ -44,7 +44,6 @@ class ImportExportKtTest {
         assertTrue(entity is UnknownEntity)
         assertEquals(entity.name, "foo")
         assertEquals(entity.type, "unknown")
-        assertTrue(entity.prototype is UnknownPrototype)
 
         val backToJson = entity.toJsonIsolated(EntityNumber(2))
         assertEquals(backToJson.entity_number, EntityNumber(2))

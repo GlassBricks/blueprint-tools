@@ -8,15 +8,18 @@
     BoundingBoxShorthandSerializer::class,
     LuaListSerializer::class,
 )
+@file:OptIn(ExperimentalSerializationApi::class)
 
 package glassbricks.factorio.blueprint.prototypes
 
 import glassbricks.factorio.blueprint.BoundingBox
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
+import kotlinx.serialization.json.JsonNames
 
 /**
  * The abstract base for prototypes. PrototypeBase defines the common features of prototypes, such
@@ -30,7 +33,7 @@ public sealed class PrototypeBase {
      * For a list of all types used in vanilla, see [data.raw](https://wiki.factorio.com/Data.raw).
      */
     public lateinit var type: String
-        private set
+        protected set
 
     /**
      * Unique textual identification of the prototype. May not contain a dot, nor exceed a length of
@@ -39,7 +42,7 @@ public sealed class PrototypeBase {
      * For a list of all names used in vanilla, see [data.raw](https://wiki.factorio.com/Data.raw).
      */
     public lateinit var name: String
-        private set
+        protected set
 
     override fun toString(): String = "${this::class.simpleName}($name)"
 }
@@ -65,16 +68,16 @@ public sealed class EntityPrototype : PrototypeBase() {
      * poles/inserters etc.
      */
     public var collision_box: BoundingBox? = null
-        private set
+        protected set
 
     /**
      * Two entities can collide only if they share a layer from the collision mask.
      */
     public var collision_mask: CollisionMask? = null
-        private set
+        protected set
 
     public var flags: EntityPrototypeFlags? = null
-        private set
+        protected set
 
     /**
      * Supported values are 1 (for 1x1 grid) and 2 (for 2x2 grid, like rails).
@@ -84,7 +87,7 @@ public sealed class EntityPrototype : PrototypeBase() {
      * [TrainStopPrototype](prototype:TrainStopPrototype).
      */
     public var build_grid_size: UByte? = null
-        private set
+        protected set
 
     /**
      * Item that when placed creates this entity. Determines which item is picked when "Q" (smart
@@ -94,7 +97,7 @@ public sealed class EntityPrototype : PrototypeBase() {
      * The item count specified here can't be larger than the stack size of that item.
      */
     public var placeable_by: ItemOrArray<ItemToPlace>? = null
-        private set
+        protected set
 
     /**
      * Used to determine how the center of the entity should be positioned when building (unless the
@@ -104,10 +107,10 @@ public sealed class EntityPrototype : PrototypeBase() {
      * the center is on the tile transition.
      */
     public var tile_width: UInt? = null
-        private set
+        protected set
 
     public var tile_height: UInt? = null
-        private set
+        protected set
 }
 
 /**
@@ -135,20 +138,20 @@ public class AccumulatorPrototype : EntityWithOwnerPrototype() {
      * The capacity of the energy source buffer specifies the capacity of the accumulator.
      */
     public lateinit var energy_source: ElectricEnergySource
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 
     /**
      * The name of the signal that is the default for when an accumulator is connected to the
      * circuit network.
      */
     public var default_output_signal: SignalIDConnector? = null
-        private set
+        protected set
 }
 
 /**
@@ -162,7 +165,7 @@ public open class ItemPrototype : PrototypeBase() {
      * `"not-stackable"` flag is set.
      */
     public var stack_size: ItemCountType = 0u
-        private set
+        protected set
 
     /**
      * Name of the [EntityPrototype](prototype:EntityPrototype) that can be built using this item.
@@ -173,19 +176,19 @@ public open class ItemPrototype : PrototypeBase() {
      * overwritten by specifying `localised_name` on this item, it will be used instead.
      */
     public var place_result: EntityID? = null
-        private set
+        protected set
 
     /**
      * Must exist when a nonzero fuel_value is defined.
      */
     public var fuel_category: FuelCategoryID? = null
-        private set
+        protected set
 
     /**
      * Specifies some properties of the item.
      */
     public var flags: ItemPrototypeFlags? = null
-        private set
+        protected set
 }
 
 /**
@@ -216,13 +219,13 @@ public class AmmoTurretPrototype : TurretPrototype()
 @Serializable
 public sealed class CombinatorPrototype : EntityWithOwnerPrototype() {
     public lateinit var energy_source: EVEnergySource
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -265,7 +268,7 @@ public sealed class VehiclePrototype : EntityWithOwnerPrototype()
 @Serializable
 public sealed class RollingStockPrototype : VehiclePrototype() {
     public var allow_manual_color: Boolean? = null
-        private set
+        protected set
 }
 
 /**
@@ -292,13 +295,13 @@ public sealed class CraftingMachinePrototype : EntityWithOwnerPrototype() {
      * Crafting speed has to be positive.
      */
     public var crafting_speed: Double = 0.0
-        private set
+        protected set
 
     /**
      * A list of [recipe categories](prototype:RecipeCategory) this crafting machine can use.
      */
     public lateinit var crafting_categories: List<RecipeCategoryID>
-        private set
+        protected set
 
     /**
      * Defines how the crafting machine is powered.
@@ -307,7 +310,7 @@ public sealed class CraftingMachinePrototype : EntityWithOwnerPrototype() {
      * `energy_usage ÷ 30` automatically.
      */
     public lateinit var energy_source: EnergySource
-        private set
+        protected set
 
     /**
      * Can have `off_when_no_fluid_recipe` key that has a [bool](prototype:bool) value.
@@ -319,7 +322,7 @@ public sealed class CraftingMachinePrototype : EntityWithOwnerPrototype() {
      * the other properties listed at the top of the page.
      */
     public var fluid_boxes: List<FluidBox>? = null
-        private set
+        protected set
 
     /**
      * Sets the [modules](prototype:ModulePrototype) and [beacon](prototype:BeaconPrototype) effects
@@ -332,19 +335,19 @@ public sealed class CraftingMachinePrototype : EntityWithOwnerPrototype() {
      * **not** limited to one craft per tick.
      */
     public var allowed_effects: EffectTypeLimitation? = null
-        private set
+        protected set
 
     /**
      * Productivity bonus that this machine always has.
      */
     public var base_productivity: Float? = null
-        private set
+        protected set
 
     /**
      * The number of module slots in this machine, and their icon positions.
      */
     public var module_specification: ModuleSpecification? = null
-        private set
+        protected set
 }
 
 /**
@@ -359,7 +362,7 @@ public open class AssemblingMachinePrototype : CraftingMachinePrototype() {
      * set. The base game uses this for the [rocket silo](https://wiki.factorio.com/Rocket_silo).
      */
     public var fixed_recipe: RecipeID? = null
-        private set
+        protected set
 
     /**
      * Sets the maximum number of ingredients this machine can craft with. Any recipe with more
@@ -370,7 +373,7 @@ public open class AssemblingMachinePrototype : CraftingMachinePrototype() {
      * machine.
      */
     public var ingredient_count: UByte? = null
-        private set
+        protected set
 }
 
 /**
@@ -381,33 +384,33 @@ public open class AssemblingMachinePrototype : CraftingMachinePrototype() {
 @SerialName("beacon")
 public class BeaconPrototype : EntityWithOwnerPrototype() {
     public lateinit var energy_source: EVEnergySource
-        private set
+        protected set
 
     /**
      * The maximum distance that this beacon can supply its neighbors with its module's effects. Max
      * distance is 64.
      */
     public var supply_area_distance: Double = 0.0
-        private set
+        protected set
 
     /**
      * The multiplier of the module's effects, when shared between neighbors.
      */
     public var distribution_effectivity: Double = 0.0
-        private set
+        protected set
 
     /**
      * The number of module slots in this beacon and their icon positions.
      */
     public lateinit var module_specification: ModuleSpecification
-        private set
+        protected set
 
     /**
      * The types of [modules](prototype:ModulePrototype) that a player can place inside of the
      * beacon.
      */
     public var allowed_effects: EffectTypeLimitation? = null
-        private set
+        protected set
 }
 
 /**
@@ -453,7 +456,7 @@ public class BlueprintItemPrototype : SelectionToolPrototype()
 @SerialName("boiler")
 public class BoilerPrototype : EntityWithOwnerPrototype() {
     public lateinit var energy_source: EnergySource
-        private set
+        protected set
 
     /**
      * The input fluid box.
@@ -461,7 +464,7 @@ public class BoilerPrototype : EntityWithOwnerPrototype() {
      * If `mode` is `"heat-water-inside"`, the fluid is heated up directly in this fluidbox.
      */
     public lateinit var fluid_box: FluidBox
-        private set
+        protected set
 
     /**
      * The output fluid box.
@@ -473,7 +476,7 @@ public class BoilerPrototype : EntityWithOwnerPrototype() {
      * If `mode` is `"heat-water-inside"`, this fluidbox is unused.
      */
     public lateinit var output_fluid_box: FluidBox
-        private set
+        protected set
 }
 
 /**
@@ -487,13 +490,13 @@ public class BurnerGeneratorPrototype : EntityWithOwnerPrototype() {
      * ignored, they must be specified on `burner`.
      */
     public lateinit var energy_source: ElectricEnergySource
-        private set
+        protected set
 
     /**
      * The input energy source of the generator.
      */
     public lateinit var burner: BurnerEnergySource
-        private set
+        protected set
 }
 
 /**
@@ -515,7 +518,7 @@ public class CargoWagonPrototype : RollingStockPrototype() {
      * filtered. This functionality cannot be turned off.
      */
     public var inventory_size: ItemStackIndex = 0u
-        private set
+        protected set
 }
 
 /**
@@ -525,13 +528,13 @@ public class CargoWagonPrototype : RollingStockPrototype() {
 @SerialName("constant-combinator")
 public class ConstantCombinatorPrototype : EntityWithOwnerPrototype() {
     public var item_slot_count: UInt = 0u
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -553,19 +556,19 @@ public open class ContainerPrototype : EntityWithOwnerPrototype() {
      * The number of slots in this container.
      */
     public var inventory_size: ItemStackIndex = 0u
-        private set
+        protected set
 
     /**
      * Whether the inventory of this container can be filtered (like cargo wagons) or not.
      */
     public var inventory_type: InventoryType? = null
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this container.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -574,6 +577,19 @@ public open class ContainerPrototype : EntityWithOwnerPrototype() {
 @Serializable
 @SerialName("copy-paste-tool")
 public class CopyPasteToolPrototype : SelectionToolPrototype()
+
+/**
+ * The abstract base of both rail prototypes.
+ */
+@Serializable
+public sealed class RailPrototype : EntityWithOwnerPrototype()
+
+/**
+ * A curved rail.
+ */
+@Serializable
+@SerialName("curved-rail")
+public class CurvedRailPrototype : RailPrototype()
 
 /**
  * A [decider combinator](https://wiki.factorio.com/Decider_combinator).
@@ -597,7 +613,7 @@ public class DeconstructionItemPrototype : SelectionToolPrototype()
 @SerialName("electric-energy-interface")
 public class ElectricEnergyInterfacePrototype : EntityWithOwnerPrototype() {
     public lateinit var energy_source: ElectricEnergySource
-        private set
+        protected set
 }
 
 /**
@@ -613,7 +629,7 @@ public class ElectricPolePrototype : EntityWithOwnerPrototype() {
      * Max value is 64.
      */
     public var supply_area_distance: Double = 0.0
-        private set
+        protected set
 
     /**
      * The maximum distance between this pole and any other connected pole - if two poles are
@@ -623,7 +639,7 @@ public class ElectricPolePrototype : EntityWithOwnerPrototype() {
      * Max value is 64.
      */
     public var maximum_wire_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -633,7 +649,7 @@ public class ElectricPolePrototype : EntityWithOwnerPrototype() {
 @SerialName("electric-turret")
 public class ElectricTurretPrototype : TurretPrototype() {
     public lateinit var energy_source: EVEnergySource
-        private set
+        protected set
 }
 
 /**
@@ -643,7 +659,7 @@ public class ElectricTurretPrototype : TurretPrototype() {
 @SerialName("fluid-turret")
 public class FluidTurretPrototype : TurretPrototype() {
     public lateinit var fluid_box: FluidBox
-        private set
+        protected set
 }
 
 /**
@@ -656,7 +672,7 @@ public class FluidWagonPrototype : RollingStockPrototype() {
      * Must be 1, 2 or 3.
      */
     public var tank_count: UByte? = null
-        private set
+        protected set
 }
 
 /**
@@ -683,13 +699,13 @@ public class GatePrototype : EntityWithOwnerPrototype()
 @SerialName("generator")
 public class GeneratorPrototype : EntityWithOwnerPrototype() {
     public lateinit var energy_source: ElectricEnergySource
-        private set
+        protected set
 
     /**
      * This must have a filter if `max_power_output` is not defined.
      */
     public lateinit var fluid_box: FluidBox
-        private set
+        protected set
 }
 
 /**
@@ -735,14 +751,14 @@ public open class LogisticContainerPrototype : ContainerPrototype() {
      * The way this chest interacts with the logistic network.
      */
     public var logistic_mode: LogisticMode? = null
-        private set
+        protected set
 
     /**
      * The number of request slots this logistics container has. Requester-type containers must have
      * > 0 slots and can have a maximum of 1000 slots. Storage-type containers must have <= 1 slot.
      */
     public var max_logistic_slots: UShort? = null
-        private set
+        protected set
 }
 
 /**
@@ -763,7 +779,7 @@ public open class PipePrototype : EntityWithOwnerPrototype() {
      * The area of the entity where fluid/gas inputs, and outputs.
      */
     public lateinit var fluid_box: FluidBox
-        private set
+        protected set
 }
 
 /**
@@ -780,29 +796,29 @@ public class InfinityPipePrototype : PipePrototype()
 @SerialName("inserter")
 public class InserterPrototype : EntityWithOwnerPrototype() {
     public lateinit var insert_position: Vector
-        private set
+        protected set
 
     public lateinit var pickup_position: Vector
-        private set
+        protected set
 
     /**
      * Defines how this inserter gets energy. The emissions set on the energy source are ignored so
      * inserters cannot produce pollution.
      */
     public lateinit var energy_source: EnergySource
-        private set
+        protected set
 
     /**
      * How many filters this inserter has. Maximum count of filtered items in inserter is 5.
      */
     public var filter_count: UByte? = null
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -832,7 +848,7 @@ public class LabPrototype : EntityWithOwnerPrototype() {
      * Defines how this lab gets energy.
      */
     public lateinit var energy_source: EnergySource
-        private set
+        protected set
 
     /**
      * A list of the names of science packs that can be used in this lab.
@@ -840,26 +856,26 @@ public class LabPrototype : EntityWithOwnerPrototype() {
      * If a technology requires other types of science packs, it cannot be researched in this lab.
      */
     public lateinit var inputs: List<ItemID>
-        private set
+        protected set
 
     /**
      * Sets the [modules](prototype:ModulePrototype) and [beacon](prototype:BeaconPrototype) effects
      * that are allowed to be used on this lab.
      */
     public var allowed_effects: EffectTypeLimitation? = null
-        private set
+        protected set
 
     /**
      * Productivity bonus that this machine always has.
      */
     public var base_productivity: Float? = null
-        private set
+        protected set
 
     /**
      * The number of module slots.
      */
     public var module_specification: ModuleSpecification? = null
-        private set
+        protected set
 }
 
 /**
@@ -872,13 +888,13 @@ public class LampPrototype : EntityWithOwnerPrototype() {
      * The emissions set on the energy source are ignored so lamps cannot produce pollution.
      */
     public lateinit var energy_source: EVEnergySource
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -907,7 +923,7 @@ public sealed class TransportBeltConnectablePrototype : EntityWithOwnerPrototype
      * entity tooltip may show a different rate.
      */
     public var speed: Double = 0.0
-        private set
+        protected set
 }
 
 /**
@@ -921,13 +937,13 @@ public sealed class TransportBeltConnectablePrototype : EntityWithOwnerPrototype
 @SerialName("linked-belt")
 public class LinkedBeltPrototype : TransportBeltConnectablePrototype() {
     public var allow_clone_connection: Boolean? = null
-        private set
+        protected set
 
     public var allow_blueprint_connection: Boolean? = null
-        private set
+        protected set
 
     public var allow_side_loading: Boolean? = null
-        private set
+        protected set
 }
 
 /**
@@ -943,19 +959,19 @@ public class LinkedContainerPrototype : EntityWithOwnerPrototype() {
      * Must be > 0.
      */
     public var inventory_size: ItemStackIndex = 0u
-        private set
+        protected set
 
     /**
      * Whether the inventory of this container can be filtered (like cargo wagons) or not.
      */
     public var inventory_type: InventoryType? = null
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this linked container.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -967,10 +983,10 @@ public sealed class LoaderPrototype : TransportBeltConnectablePrototype() {
      * How many item filters this loader has. Maximum count of filtered items in loader is 5.
      */
     public var filter_count: UByte = 0u
-        private set
+        protected set
 
     public var energy_source: EHFVEnergySource? = null
-        private set
+        protected set
 }
 
 /**
@@ -1013,8 +1029,9 @@ public class LocomotivePrototype : RollingStockPrototype() {
      * Must be a burner energy source when using "burner", otherwise it can also be a void energy
      * source.
      */
+    @JsonNames("burner")
     public lateinit var energy_source: BVEnergySource
-        private set
+        protected set
 }
 
 /**
@@ -1034,13 +1051,13 @@ public class MiningDrillPrototype : EntityWithOwnerPrototype() {
      * the placed item location.
      */
     public lateinit var vector_to_place_result: Vector
-        private set
+        protected set
 
     /**
      * The energy source of this mining drill.
      */
     public lateinit var energy_source: EnergySource
-        private set
+        protected set
 
     /**
      * The names of the [ResourceCategory](prototype:ResourceCategory) that can be mined by this
@@ -1054,23 +1071,23 @@ public class MiningDrillPrototype : EntityWithOwnerPrototype() {
      * result and halts.
      */
     public lateinit var resource_categories: List<ResourceCategoryID>
-        private set
+        protected set
 
     public var output_fluid_box: FluidBox? = null
-        private set
+        protected set
 
     /**
      * Sets the [modules](prototype:ModulePrototype) and [beacon](prototype:BeaconPrototype) effects
      * that are allowed to be used on this mining drill.
      */
     public var allowed_effects: EffectTypeLimitation? = null
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 
     /**
      * Productivity bonus that this machine always has. Values below `0` are allowed, however the
@@ -1078,10 +1095,10 @@ public class MiningDrillPrototype : EntityWithOwnerPrototype() {
      * [Effect](prototype:Effect).
      */
     public var base_productivity: Float? = null
-        private set
+        protected set
 
     public var module_specification: ModuleSpecification? = null
-        private set
+        protected set
 }
 
 /**
@@ -1104,7 +1121,7 @@ public class ModulePrototype : ItemPrototype() {
      * tier modules of the same category with higher tier modules.
      */
     public lateinit var category: ModuleCategoryID
-        private set
+        protected set
 
     /**
      * Tier of the module inside its category. Used when upgrading modules: Ctrl + click modules
@@ -1112,20 +1129,20 @@ public class ModulePrototype : ItemPrototype() {
      * same category.
      */
     public var tier: UInt = 0u
-        private set
+        protected set
 
     /**
      * The effect of the module on the machine it's inserted in, such as increased pollution.
      */
     public lateinit var effect: Effect
-        private set
+        protected set
 
     /**
      * Array of [recipe names](prototype:RecipePrototype) this module can be used on. If empty, the
      * module can be used on all recipes.
      */
     public var limitation: List<RecipeID>? = null
-        private set
+        protected set
 
     /**
      * Array of [recipe names](prototype:RecipePrototype) this module can **not** be used on,
@@ -1137,7 +1154,7 @@ public class ModulePrototype : ItemPrototype() {
      * product of both ways of defining limitations.
      */
     public var limitation_blacklist: List<RecipeID>? = null
-        private set
+        protected set
 }
 
 /**
@@ -1147,19 +1164,19 @@ public class ModulePrototype : ItemPrototype() {
 @SerialName("offshore-pump")
 public class OffshorePumpPrototype : EntityWithOwnerPrototype() {
     public lateinit var fluid_box: FluidBox
-        private set
+        protected set
 
     /**
      * The name of the fluid that is produced by the pump.
      */
     public lateinit var fluid: FluidID
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -1169,7 +1186,7 @@ public class OffshorePumpPrototype : EntityWithOwnerPrototype() {
 @SerialName("pipe-to-ground")
 public class PipeToGroundPrototype : EntityWithOwnerPrototype() {
     public lateinit var fluid_box: FluidBox
-        private set
+        protected set
 }
 
 /**
@@ -1195,16 +1212,16 @@ public class PowerSwitchPrototype : EntityWithOwnerPrototype()
 @SerialName("programmable-speaker")
 public class ProgrammableSpeakerPrototype : EntityWithOwnerPrototype() {
     public lateinit var energy_source: EVEnergySource
-        private set
+        protected set
 
     public var maximum_polyphony: UInt = 0u
-        private set
+        protected set
 
     public lateinit var instruments: List<ProgrammableSpeakerInstrument>
-        private set
+        protected set
 
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -1217,16 +1234,16 @@ public class PumpPrototype : EntityWithOwnerPrototype() {
      * The area of the entity where fluid inputs and outputs.
      */
     public lateinit var fluid_box: FluidBox
-        private set
+        protected set
 
     /**
      * The type of energy the pump uses.
      */
     public lateinit var energy_source: EnergySource
-        private set
+        protected set
 
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -1239,19 +1256,19 @@ public class RadarPrototype : EntityWithOwnerPrototype() {
      * The energy source for this radar.
      */
     public lateinit var energy_source: EnergySource
-        private set
+        protected set
 
     /**
      * The radius of the area this radar can chart, in chunks.
      */
     public var max_distance_of_sector_revealed: UInt = 0u
-        private set
+        protected set
 
     /**
      * The radius of the area constantly revealed by this radar, in chunks.
      */
     public var max_distance_of_nearby_sector_revealed: UInt = 0u
-        private set
+        protected set
 }
 
 /**
@@ -1260,19 +1277,19 @@ public class RadarPrototype : EntityWithOwnerPrototype() {
 @Serializable
 public sealed class RailSignalBasePrototype : EntityWithOwnerPrototype() {
     public var default_red_output_signal: SignalIDConnector? = null
-        private set
+        protected set
 
     public var default_orange_output_signal: SignalIDConnector? = null
-        private set
+        protected set
 
     public var default_green_output_signal: SignalIDConnector? = null
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -1282,7 +1299,7 @@ public sealed class RailSignalBasePrototype : EntityWithOwnerPrototype() {
 @SerialName("rail-chain-signal")
 public class RailChainSignalPrototype : RailSignalBasePrototype() {
     public var default_blue_output_signal: SignalIDConnector? = null
-        private set
+        protected set
 }
 
 /**
@@ -1291,12 +1308,6 @@ public class RailChainSignalPrototype : RailSignalBasePrototype() {
 @Serializable
 @SerialName("rail-planner")
 public class RailPlannerPrototype : ItemPrototype()
-
-/**
- * The abstract base of both rail prototypes.
- */
-@Serializable
-public sealed class RailPrototype : EntityWithOwnerPrototype()
 
 /**
  * A [rail signal](https://wiki.factorio.com/Rail_signal).
@@ -1317,7 +1328,7 @@ public class ReactorPrototype : EntityWithOwnerPrototype() {
      * The input energy source, in vanilla it is a burner energy source.
      */
     public lateinit var energy_source: EnergySource
-        private set
+        protected set
 }
 
 /**
@@ -1338,43 +1349,43 @@ public class RoboportPrototype : EntityWithOwnerPrototype() {
      * The roboport's energy source.
      */
     public lateinit var energy_source: EVEnergySource
-        private set
+        protected set
 
     /**
      * Can't be negative.
      */
     public var logistics_radius: Float = 0f
-        private set
+        protected set
 
     /**
      * Can't be negative.
      */
     public var construction_radius: Float = 0f
-        private set
+        protected set
 
     public var default_available_logistic_output_signal: SignalIDConnector? = null
-        private set
+        protected set
 
     public var default_total_logistic_output_signal: SignalIDConnector? = null
-        private set
+        protected set
 
     public var default_available_construction_output_signal: SignalIDConnector? = null
-        private set
+        protected set
 
     public var default_total_construction_output_signal: SignalIDConnector? = null
-        private set
+        protected set
 
     /**
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 
     /**
      * Must be >= `logistics_radius`.
      */
     public var logistics_connection_distance: Float? = null
-        private set
+        protected set
 }
 
 /**
@@ -1420,7 +1431,7 @@ public class SolarPanelPrototype : EntityWithOwnerPrototype() {
      * be the output_priority.
      */
     public lateinit var energy_source: ElectricEnergySource
-        private set
+        protected set
 }
 
 /**
@@ -1445,13 +1456,13 @@ public class SplitterPrototype : TransportBeltConnectablePrototype()
 @SerialName("storage-tank")
 public class StorageTankPrototype : EntityWithOwnerPrototype() {
     public lateinit var fluid_box: FluidBox
-        private set
+        protected set
 
     public var two_direction_only: Boolean? = null
-        private set
+        protected set
 
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -1468,16 +1479,16 @@ public class StraightRailPrototype : RailPrototype()
 @SerialName("train-stop")
 public class TrainStopPrototype : EntityWithOwnerPrototype() {
     public var default_train_stopped_signal: SignalIDConnector? = null
-        private set
+        protected set
 
     public var default_trains_count_signal: SignalIDConnector? = null
-        private set
+        protected set
 
     public var default_trains_limit_signal: SignalIDConnector? = null
-        private set
+        protected set
 
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -1490,14 +1501,14 @@ public class TransportBeltPrototype : TransportBeltConnectablePrototype() {
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 
     /**
      * The name of the [UndergroundBeltPrototype](prototype:UndergroundBeltPrototype) which is used
      * in quick-replace fashion when the smart belt dragging behavior is triggered.
      */
     public var related_underground_belt: EntityID? = null
-        private set
+        protected set
 }
 
 /**
@@ -1507,7 +1518,7 @@ public class TransportBeltPrototype : TransportBeltConnectablePrototype() {
 @SerialName("underground-belt")
 public class UndergroundBeltPrototype : TransportBeltConnectablePrototype() {
     public var max_distance: UByte = 0u
-        private set
+        protected set
 }
 
 /**
@@ -1527,7 +1538,7 @@ public class WallPrototype : EntityWithOwnerPrototype() {
      * The maximum circuit wire distance for this entity.
      */
     public var circuit_wire_max_distance: Double? = null
-        private set
+        protected set
 }
 
 /**
@@ -2136,6 +2147,7 @@ public class DataRaw(
     public val pump: Map<String, PumpPrototype> = emptyMap(),
     public val radar: Map<String, RadarPrototype> = emptyMap(),
     public val `straight-rail`: Map<String, StraightRailPrototype> = emptyMap(),
+    public val `curved-rail`: Map<String, CurvedRailPrototype> = emptyMap(),
     public val `rail-chain-signal`: Map<String, RailChainSignalPrototype> = emptyMap(),
     public val `rail-signal`: Map<String, RailSignalPrototype> = emptyMap(),
     public val reactor: Map<String, ReactorPrototype> = emptyMap(),
@@ -2226,6 +2238,7 @@ public fun DataRaw.allEntityWithOwnerPrototypes(): List<EntityWithOwnerPrototype
     `cargo-wagon`,
     `constant-combinator`,
     container,
+    `curved-rail`,
     `decider-combinator`,
     `electric-energy-interface`,
     `electric-pole`,
