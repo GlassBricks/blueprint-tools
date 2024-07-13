@@ -4,7 +4,7 @@ import glassbricks.factorio.blueprint.json.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class RollingStockTest {
+class RollingStockKtTest {
     @Test
     fun `can load and save a cargo wagon`() {
         val wagon = testSaveLoad(CargoWagon::class, "cargo-wagon", null, false, fun EntityJson.() {
