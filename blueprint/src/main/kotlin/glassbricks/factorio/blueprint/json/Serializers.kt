@@ -51,9 +51,9 @@ internal object DoubleAsIntSerializer : KSerializer<Double> {
 
     override fun deserialize(decoder: Decoder): Double = decoder.decodeDouble()
     override fun serialize(encoder: Encoder, value: Double) {
-        val asString = value.toLong()
-        if (asString.toDouble() == value) {
-            encoder.encodeLong(asString)
+        val asLong = value.toLong()
+        if (asLong.toDouble() == value) {
+            encoder.encodeLong(asLong)
         } else {
             encoder.encodeDouble(value)
         }
