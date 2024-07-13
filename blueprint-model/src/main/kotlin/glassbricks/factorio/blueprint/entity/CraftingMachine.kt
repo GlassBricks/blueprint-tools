@@ -34,11 +34,13 @@ public class RocketSilo(
     override val prototype: RocketSiloPrototype,
     json: EntityJson,
 ) : AssemblingMachine(prototype, json) {
-    public var autoLaunch: Boolean = json.auto_launch ?: false
+    public var autoLaunch: Boolean = json.auto_launch
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
-        json.auto_launch = autoLaunch.takeIf { it }
+        if (prototype.fixed_recipe.isNotEmpty())
+            json.recipe = prototype.fixed_recipe
+        json.auto_launch = autoLaunch
     }
 }
 
