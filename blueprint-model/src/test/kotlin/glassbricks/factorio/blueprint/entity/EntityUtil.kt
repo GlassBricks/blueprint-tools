@@ -29,17 +29,11 @@ internal inline fun <reified T> loadEntity(
     build: EntityJson.() -> Unit = {},
 ): T = blueprintPrototypes.entityFromJson(buildEntityJson(name, build), blueprint) as T
 
-internal inline fun <reified T : Entity> testSaveLoad(
-    json: EntityJson,
-    connectToNetwork: Boolean,
-    blueprint: BlueprintJson?,
-): T = testSaveLoad(json, connectToNetwork, blueprint, T::class)
-
 internal fun <T : Entity> testSaveLoad(
+    klass: KClass<T>,
     json: EntityJson,
     connectToNetwork: Boolean,
     blueprint: BlueprintJson?,
-    klass: KClass<T>,
 ): T {
     json.entity_number = EntityNumber(1)
     val entity = blueprintPrototypes.entityFromJson(json, blueprint)
@@ -62,12 +56,13 @@ internal fun <T : Entity> testSaveLoad(
     return entity as T
 }
 
-internal inline fun <reified T : Entity> testSaveLoad(
+internal fun <T : Entity> testSaveLoad(
+    klass: KClass<T>,
     name: String,
     blueprint: BlueprintJson? = null,
     connectToNetwork: Boolean = false,
-    noinline build: EntityJson.() -> Unit = {},
+    build: EntityJson.() -> Unit = {},
 ): T {
     val json = buildEntityJson(name, build)
-    return testSaveLoad(json, connectToNetwork, blueprint)
+    return testSaveLoad(klass, json, connectToNetwork, blueprint)
 }

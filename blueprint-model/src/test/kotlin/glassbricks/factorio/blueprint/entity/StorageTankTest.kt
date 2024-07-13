@@ -6,6 +6,6 @@ import kotlin.test.Test
 class StorageTankTest {
     @Test
     fun `can create storage tank`() {
-        testSaveLoad<StorageTank>("storage-tank")
+        testSaveLoad(StorageTank::class, "storage-tank")
     }
 }

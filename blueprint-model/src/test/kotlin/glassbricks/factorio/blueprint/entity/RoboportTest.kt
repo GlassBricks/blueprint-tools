@@ -5,9 +5,9 @@ import kotlin.test.Test
 class RoboportTest {
     @Test
     fun `can load roboport`() {
-        testSaveLoad<Roboport>("roboport")
-        testSaveLoad<Roboport>("roboport", connectToNetwork = true)
-        testSaveLoad<Roboport>("roboport", connectToNetwork = true) {
+        testSaveLoad(Roboport::class, "roboport")
+        testSaveLoad(Roboport::class, "roboport", connectToNetwork = true)
+        testSaveLoad(Roboport::class, "roboport", connectToNetwork = true, build = fun EntityJson.() {
             control_behavior = ControlBehaviorJson(
                 read_logistics = true,
                 read_robot_stats = true,
@@ -16,6 +16,6 @@ class RoboportTest {
                 available_construction_output_signal = signalId("signal-C"),
                 total_construction_output_signal = signalId("signal-D")
             )
-        }
+        })
     }
 }

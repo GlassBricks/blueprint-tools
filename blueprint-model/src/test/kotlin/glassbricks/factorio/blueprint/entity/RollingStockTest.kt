@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 class RollingStockTest {
     @Test
     fun `can load and save a cargo wagon`() {
-        val wagon = testSaveLoad<CargoWagon>("cargo-wagon") {
+        val wagon = testSaveLoad(CargoWagon::class, "cargo-wagon", null, false, fun EntityJson.() {
             orientation = 0.5
             inventory = Inventory(
                 bar = 1,
@@ -16,7 +16,7 @@ class RollingStockTest {
                     ItemFilter("copper-plate", 5),
                 )
             )
-        }
+        })
         assertEquals(wagon.orientation, 0.5)
         assertEquals(wagon.bar, 1)
         assertEquals(
@@ -81,12 +81,12 @@ class RollingStockTest {
             icons = listOf(),
             schedules = listOf(Schedule(locomotives = listOf(EntityNumber(1)), schedule = schedule))
         )
-        val loco = testSaveLoad<Locomotive>("locomotive", blueprint) {
+        val loco = testSaveLoad(Locomotive::class, "locomotive", blueprint, false, fun EntityJson.() {
             entity_number = EntityNumber(1)
             orientation = 0.5
             color = Color(1.0, 2.0, 3.0)
             items = mapOf("coal" to 1)
-        }
+        })
         return Pair(schedule, loco)
     }
 

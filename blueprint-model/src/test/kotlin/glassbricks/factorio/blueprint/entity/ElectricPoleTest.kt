@@ -6,6 +6,6 @@ import kotlin.test.Test
 class ElectricPoleTest {
     @Test
     fun `can create ElectricPole`() {
-        testSaveLoad<ElectricPole>("small-electric-pole")
+        testSaveLoad(ElectricPole::class, "small-electric-pole")
     }
 }

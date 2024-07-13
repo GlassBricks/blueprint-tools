@@ -7,8 +7,8 @@ import kotlin.test.Test
 class WallTest {
     @Test
     fun `can load wall`() {
-        testSaveLoad<Wall>("stone-wall")
-        testSaveLoad<Wall>("stone-wall", connectToNetwork = true) {
+        testSaveLoad(Wall::class, "stone-wall")
+        testSaveLoad(Wall::class, "stone-wall", connectToNetwork = true, build = fun EntityJson.() {
             control_behavior = ControlBehaviorJson(
                 circuit_condition = CircuitCondition(
                     first_signal = signalId("signal-A"),
@@ -18,6 +18,6 @@ class WallTest {
                 circuit_open_gate = true,
                 circuit_read_sensor = true
             )
-        }
+        })
     }
 }

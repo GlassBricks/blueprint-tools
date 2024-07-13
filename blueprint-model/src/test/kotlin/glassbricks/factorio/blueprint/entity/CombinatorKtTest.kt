@@ -11,7 +11,7 @@ class CombinatorKtTest {
         val combinator1 = loadEntity<ArithmeticCombinator>("arithmetic-combinator")
         assertEquals(ArithmeticCombinatorParameters.DEFAULT, combinator1.controlBehavior.parameters)
 
-        testSaveLoad<ArithmeticCombinator>("arithmetic-combinator") {
+        testSaveLoad(ArithmeticCombinator::class, "arithmetic-combinator", null, false, fun EntityJson.() {
             control_behavior = ControlBehaviorJson(
                 arithmetic_conditions = ArithmeticCombinatorParameters(
                     first_signal = signalId("signal-A"),
@@ -20,7 +20,7 @@ class CombinatorKtTest {
                     output_signal = signalId("signal-B"),
                 )
             )
-        }
+        })
     }
 
     @Test
@@ -28,7 +28,7 @@ class CombinatorKtTest {
         val combinator1 = loadEntity<DeciderCombinator>("decider-combinator")
         assertEquals(DeciderCombinatorParameters.DEFAULT, combinator1.controlBehavior.parameters)
 
-        testSaveLoad<DeciderCombinator>("decider-combinator") {
+        testSaveLoad(DeciderCombinator::class, "decider-combinator", null, false, fun EntityJson.() {
             control_behavior = ControlBehaviorJson(
                 decider_conditions = DeciderCombinatorParameters(
                     first_signal = signalId("signal-A"),
@@ -37,13 +37,13 @@ class CombinatorKtTest {
                     output_signal = signalId("signal-B"),
                 )
             )
-        }
+        })
     }
 
     @Test
     fun `can save load constant combinators`() {
-        testSaveLoad<ConstantCombinator>("constant-combinator")
-        testSaveLoad<ConstantCombinator>("constant-combinator") {
+        testSaveLoad(ConstantCombinator::class, "constant-combinator")
+        testSaveLoad(ConstantCombinator::class, "constant-combinator", null, false, fun EntityJson.() {
             control_behavior = ControlBehaviorJson(
                 is_on = false,
                 filters = listOf(
@@ -59,6 +59,6 @@ class CombinatorKtTest {
                     ),
                 )
             )
-        }
+        })
     }
 }

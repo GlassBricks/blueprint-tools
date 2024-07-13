@@ -8,10 +8,10 @@ import kotlin.test.assertTrue
 class PowerSwitchTest {
     @Test
     fun `can create a power switch`() {
-        testSaveLoad<PowerSwitch>("power-switch") {
+        testSaveLoad(PowerSwitch::class, "power-switch", null, false, fun EntityJson.() {
             switch_state = true
-        }
-        testSaveLoad<PowerSwitch>("power-switch", connectToNetwork = true) {
+        })
+        testSaveLoad(PowerSwitch::class, "power-switch", connectToNetwork = true, build = fun EntityJson.() {
             switch_state = false
             control_behavior = ControlBehaviorJson(
                 circuit_condition = CircuitCondition(
@@ -20,7 +20,7 @@ class PowerSwitchTest {
                     constant = 5
                 ),
             )
-        }
+        })
 
     }
 

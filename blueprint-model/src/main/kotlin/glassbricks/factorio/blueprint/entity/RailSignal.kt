@@ -2,8 +2,8 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.SignalID
 import glassbricks.factorio.blueprint.json.CircuitCondition
-import glassbricks.factorio.blueprint.json.toJsonBasic
-import glassbricks.factorio.blueprint.json.toSignalIDBasic
+import glassbricks.factorio.blueprint.json.toJsonWithDefault
+import glassbricks.factorio.blueprint.json.toSignalIdWithDefault
 import glassbricks.factorio.blueprint.prototypes.RailChainSignalPrototype
 import glassbricks.factorio.blueprint.prototypes.RailSignalBasePrototype
 import glassbricks.factorio.blueprint.prototypes.RailSignalPrototype
@@ -22,7 +22,7 @@ public class RailSignal(
     json: EntityJson,
 ) : RailSignalBase(json) {
     override val controlBehavior: RailSignalControlBehavior =
-        RailSignalControlBehavior(json.control_behavior)
+        RailSignalControlBehavior(prototype, json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
@@ -30,14 +30,18 @@ public class RailSignal(
 }
 
 public class RailSignalControlBehavior(
+    prototype: RailSignalPrototype,
     source: ControlBehaviorJson? = null,
 ) : ControlBehavior {
     public var readSignal: Boolean = source?.circuit_read_signal ?: false
 
-    // todo: make null mean disabled
-    public var redSignal: SignalID? = source?.red_output_signal?.toSignalIDBasic()
-    public var orangeSignal: SignalID? = source?.orange_output_signal?.toSignalIDBasic()
-    public var greenSignal: SignalID? = source?.green_output_signal?.toSignalIDBasic()
+    public val defaultRedSignal: SignalID? = prototype.default_red_output_signal
+    public val defaultOrangeSignal: SignalID? = prototype.default_orange_output_signal
+    public val defaultGreenSignal: SignalID? = prototype.default_green_output_signal
+
+    public var redSignal: SignalID? = source?.red_output_signal.toSignalIdWithDefault(defaultRedSignal)
+    public var orangeSignal: SignalID? = source?.orange_output_signal.toSignalIdWithDefault(defaultOrangeSignal)
+    public var greenSignal: SignalID? = source?.green_output_signal.toSignalIdWithDefault(defaultGreenSignal)
 
     public var closeSignalCondition: CircuitCondition? = source?.circuit_condition
         ?.takeIf { source.circuit_close_signal == true }
@@ -45,9 +49,9 @@ public class RailSignalControlBehavior(
     override fun exportToJson(): ControlBehaviorJson {
         return ControlBehaviorJson(
             circuit_read_signal = readSignal,
-            red_output_signal = redSignal.takeIf { readSignal }?.toJsonBasic(),
-            orange_output_signal = orangeSignal.takeIf { readSignal }?.toJsonBasic(),
-            green_output_signal = greenSignal.takeIf { readSignal }?.toJsonBasic(),
+            red_output_signal = redSignal.toJsonWithDefault(defaultRedSignal).takeIf { readSignal },
+            orange_output_signal = orangeSignal.toJsonWithDefault(defaultOrangeSignal).takeIf { readSignal },
+            green_output_signal = greenSignal.toJsonWithDefault(defaultGreenSignal).takeIf { readSignal },
             circuit_close_signal = closeSignalCondition != null,
             circuit_condition = closeSignalCondition,
         )
@@ -59,7 +63,7 @@ public class RailChainSignal(
     json: EntityJson,
 ) : RailSignalBase(json) {
     override val controlBehavior: RailChainSignalControlBehavior =
-        RailChainSignalControlBehavior(json.control_behavior)
+        RailChainSignalControlBehavior(prototype, json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
@@ -67,17 +71,29 @@ public class RailChainSignal(
 }
 
 public class RailChainSignalControlBehavior(
+    prototype: RailChainSignalPrototype,
     source: ControlBehaviorJson? = null,
 ) : ControlBehavior {
-    public var redSignal: SignalID? = source?.red_output_signal?.toSignalIDBasic()
-    public var orangeSignal: SignalID? = source?.orange_output_signal?.toSignalIDBasic()
-    public var greenSignal: SignalID? = source?.green_output_signal?.toSignalIDBasic()
-    public var blueSignal: SignalID? = source?.blue_output_signal?.toSignalIDBasic()
+    public val defaultRedSignal: SignalID? = prototype.default_red_output_signal
+    public val defaultOrangeSignal: SignalID? = prototype.default_orange_output_signal
+    public val defaultGreenSignal: SignalID? = prototype.default_green_output_signal
+    public val defaultBlueSignal: SignalID? = prototype.default_blue_output_signal
 
-    override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(
-        red_output_signal = redSignal.toJsonBasic(),
-        orange_output_signal = orangeSignal.toJsonBasic(),
-        green_output_signal = greenSignal.toJsonBasic(),
-        blue_output_signal = blueSignal.toJsonBasic(),
+    public var redSignal: SignalID? = source?.red_output_signal.toSignalIdWithDefault(defaultRedSignal)
+    public var orangeSignal: SignalID? = source?.orange_output_signal.toSignalIdWithDefault(defaultOrangeSignal)
+    public var greenSignal: SignalID? = source?.green_output_signal.toSignalIdWithDefault(defaultGreenSignal)
+    public var blueSignal: SignalID? = source?.blue_output_signal.toSignalIdWithDefault(defaultBlueSignal)
+
+    override fun exportToJson(): ControlBehaviorJson? = if (redSignal == defaultRedSignal &&
+        orangeSignal == defaultOrangeSignal &&
+        greenSignal == defaultGreenSignal &&
+        blueSignal == defaultBlueSignal
+    ) {
+        null
+    } else ControlBehaviorJson(
+        red_output_signal = redSignal.toJsonWithDefault(defaultRedSignal),
+        orange_output_signal = orangeSignal.toJsonWithDefault(defaultOrangeSignal),
+        green_output_signal = greenSignal.toJsonWithDefault(defaultGreenSignal),
+        blue_output_signal = blueSignal.toJsonWithDefault(defaultBlueSignal),
     )
 }
