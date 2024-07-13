@@ -56,12 +56,6 @@ public fun UnknownEntity(
     return UnknownEntity(UnknownPrototype(name), EntityJson(EntityNumber(1), name, position, direction))
 }
 
-private fun EntityJson.getJson(): EntityJson {
-    val json = this
-    return json.deepCopy()
-}
-
-
 public class UnknownPrototype(name: String) : SimpleEntityWithOwnerPrototype() {
     init {
         this.name = name
