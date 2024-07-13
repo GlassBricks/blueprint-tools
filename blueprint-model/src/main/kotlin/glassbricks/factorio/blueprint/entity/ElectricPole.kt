@@ -6,7 +6,7 @@ public class ElectricPole(
     override val prototype: ElectricPolePrototype,
     json: EntityJson,
 ) : BaseEntity(json), CableConnectionPoint, CircuitConnectionPoint {
-    override val cableConnections: CableConnectionSet = CableConnectionSet(this)
+    override val cableConnections: CableConnections = CableConnections(this)
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
 
     override val entity: Entity get() = this

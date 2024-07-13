@@ -30,7 +30,7 @@ public class UnknownEntity(
     override val allowsFilters: Boolean get() = true
     override val inventorySize: ItemStackIndex get() = UShort.MAX_VALUE
 
-    override val cableConnections: CableConnectionSet = CableConnectionSet(this)
+    override val cableConnections: CableConnections = CableConnections(this)
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
     override val input: CircuitConnectionPoint get() = this
     override val output: CircuitConnectionPoint = object : CircuitConnectionPoint {

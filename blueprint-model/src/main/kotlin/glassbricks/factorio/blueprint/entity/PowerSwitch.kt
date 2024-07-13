@@ -21,7 +21,7 @@ public class PowerSwitch(
 
     private inner class ConnectionPoint : CableConnectionPoint {
         override val entity: PowerSwitch get() = this@PowerSwitch
-        override val cableConnections: CableConnectionSet = CableConnectionSet(this)
+        override val cableConnections: CableConnections = CableConnections(this)
     }
 }
 

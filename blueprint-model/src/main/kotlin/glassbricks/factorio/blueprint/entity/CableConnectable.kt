@@ -4,7 +4,7 @@ import glassbricks.factorio.blueprint.json.CableConnectionData
 import glassbricks.factorio.blueprint.json.EntityNumber
 
 public interface CableConnectionPoint {
-    public val cableConnections: CableConnectionSet
+    public val cableConnections: CableConnections
     public val entity: Entity
 }
 
@@ -13,21 +13,21 @@ public interface PowerSwitchConnectionPoints {
     public val right: CableConnectionPoint
 }
 
-public val PowerSwitchConnectionPoints.leftConnections: CableConnectionSet get() = left.cableConnections
-public val PowerSwitchConnectionPoints.rightConnections: CableConnectionSet get() = right.cableConnections
+public val PowerSwitchConnectionPoints.leftConnections: CableConnections get() = left.cableConnections
+public val PowerSwitchConnectionPoints.rightConnections: CableConnections get() = right.cableConnections
 
 
 /**
  * A point for cable connections.
  */
-public sealed interface CableConnectionSet : MutableSet<CableConnectionPoint> {
+public sealed interface CableConnections : MutableSet<CableConnectionPoint> {
     public val parent: CableConnectionPoint
 }
 
-public fun CableConnectionSet(parent: CableConnectionPoint): CableConnectionSet = CableConnectionSetImpl(parent)
+public fun CableConnections(parent: CableConnectionPoint): CableConnections = CableConnectionSetImpl(parent)
 
 private class CableConnectionSetImpl(override val parent: CableConnectionPoint) : UpdatingSet<CableConnectionPoint>(),
-    CableConnectionSet {
+    CableConnections {
     override fun onAdd(element: CableConnectionPoint): Boolean {
         if (element.entity == parent.entity) return false
         return (element.cableConnections as CableConnectionSetImpl).inner.add(parent)
