@@ -5,6 +5,7 @@ import glassbricks.factorio.blueprint.json.Inventory
 import glassbricks.factorio.blueprint.json.ItemPrototypeName
 import glassbricks.factorio.blueprint.json.ScheduleRecord
 import glassbricks.factorio.blueprint.prototypes.CargoWagonPrototype
+import glassbricks.factorio.blueprint.prototypes.ItemStackIndex
 import glassbricks.factorio.blueprint.prototypes.LocomotivePrototype
 import glassbricks.factorio.blueprint.prototypes.RollingStockPrototype
 
@@ -32,9 +33,11 @@ public class CargoWagon(
     RollingStock,
     WithInventory {
     override var orientation: Double = json.orientation ?: 0.0
+
     override var bar: Int? = json.inventory?.bar
-    override val filters: Array<String?> =
-        json.inventory?.filters.toFilterArray(prototype.inventory_size.toInt())
+    override val inventorySize: ItemStackIndex get() = prototype.inventory_size
+    override val allowsFilters: Boolean get() = true
+    override val filters: Array<String?> = json.inventory?.filters.toFilterArray(prototype.inventory_size.toInt())
 
     override fun exportToJson(json: EntityJson) {
         json.orientation = orientation

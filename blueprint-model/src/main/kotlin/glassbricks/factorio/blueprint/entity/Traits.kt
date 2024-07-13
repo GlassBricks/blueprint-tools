@@ -3,6 +3,7 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.json.Color
 import glassbricks.factorio.blueprint.json.ItemFilter
 import glassbricks.factorio.blueprint.json.ItemPrototypeName
+import glassbricks.factorio.blueprint.prototypes.ItemStackIndex
 
 public interface WithColor {
     public var color: Color?
@@ -27,6 +28,8 @@ public fun WithItemFilters.filtersAsIndexList(): List<ItemFilter>? =
  */
 public interface WithInventory : WithItemFilters {
     public var bar: Int?
+    public val inventorySize: ItemStackIndex
+    public val allowsFilters: Boolean
 }
 
 /**

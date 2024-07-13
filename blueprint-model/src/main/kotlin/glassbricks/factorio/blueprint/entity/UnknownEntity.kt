@@ -5,6 +5,7 @@ import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.CircuitID
 import glassbricks.factorio.blueprint.json.Color
 import glassbricks.factorio.blueprint.json.EntityNumber
+import glassbricks.factorio.blueprint.prototypes.ItemStackIndex
 import glassbricks.factorio.blueprint.prototypes.SimpleEntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
 
@@ -26,6 +27,8 @@ public class UnknownEntity(
     override var color: Color? by json::color
     override var bar: Int? by json::bar
     override val filters: Array<String?> = json.filters.toFilterArray(128)
+    override val allowsFilters: Boolean get() = true
+    override val inventorySize: ItemStackIndex get() = UShort.MAX_VALUE
 
     override val cableConnections: CableConnectionSet = CableConnectionSet(this)
     override val circuitConnections: CircuitConnections = CircuitConnections(this)

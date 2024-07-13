@@ -4,9 +4,7 @@ import glassbricks.factorio.blueprint.json.InfinityFilterMode
 import glassbricks.factorio.blueprint.json.InfinitySettings
 import glassbricks.factorio.blueprint.json.LogisticContainerModeOfOperation
 import glassbricks.factorio.blueprint.json.asMode
-import glassbricks.factorio.blueprint.prototypes.ContainerPrototype
-import glassbricks.factorio.blueprint.prototypes.InfinityContainerPrototype
-import glassbricks.factorio.blueprint.prototypes.LogisticContainerPrototype
+import glassbricks.factorio.blueprint.prototypes.*
 import glassbricks.factorio.blueprint.json.InfinityFilter as InfinityFilterJson
 import glassbricks.factorio.blueprint.json.LogisticFilter as LogisticFilterJson
 
@@ -16,10 +14,13 @@ public open class Container(
     json: EntityJson,
 ) : BaseEntity(json), WithInventory, WithItemFilters {
     override val prototype: ContainerPrototype = prototype_
-    public override val filters: Array<String?> = json.filters.toFilterArray(prototype_.inventory_size.toInt())
-    public override var bar: Int? = json.bar
 
-    // containers have control behavior, but it has no settings (always read chest contents)
+    public override var bar: Int? = json.bar
+    override val inventorySize: ItemStackIndex get() = prototype.inventory_size
+    override val allowsFilters: Boolean get() = prototype.inventory_type == InventoryType.with_filters_and_bar
+    public override val filters: Array<String?> = json.filters.toFilterArray(prototype_.inventory_size.toInt())
+
+    // ordinary containers have control behavior, but it has no settings (always read chest contents)
 
     override fun exportToJson(json: EntityJson) {
         json.bar = bar
@@ -33,7 +34,7 @@ public open class LogisticContainer(
 ) : Container(prototype_, json) {
     override val prototype: LogisticContainerPrototype get() = super.prototype as LogisticContainerPrototype
     public val requestFilters: Array<LogisticRequest?> = json.request_filters.toFilterArray(
-        prototype_.max_logistic_slots?.toInt() ?: prototype_.inventory_size.toInt()
+        prototype_.max_logistic_slots?.toInt() ?: 0
     )
     public val requestFromBuffers: Boolean = json.request_from_buffers
 
@@ -93,11 +94,13 @@ public data class InfinityFilter(
 
 private fun List<LogisticFilterJson>?.toFilterArray(size: Int): Array<LogisticRequest?> =
     indexListToArray(size, LogisticFilterJson::index) { LogisticRequest(it.name, it.count) }
+
 private fun Array<LogisticRequest?>.toFilterList(): List<LogisticFilterJson> =
     arrayToIndexList { index, request -> LogisticFilterJson(name = request.item, count = request.count, index = index) }
 
 private fun List<InfinityFilterJson>?.toInfFilterArray(size: Int): Array<InfinityFilter?> =
     indexListToArray(size, InfinityFilterJson::index) { InfinityFilter(it.name, it.count, it.mode) }
+
 private fun Array<InfinityFilter?>.toInfFilterList(): List<InfinityFilterJson> =
     arrayToIndexList { index, filter ->
         InfinityFilterJson(
