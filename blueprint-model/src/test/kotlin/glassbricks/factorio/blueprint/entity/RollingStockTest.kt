@@ -20,7 +20,7 @@ class RollingStockTest {
         assertEquals(wagon.orientation, 0.5)
         assertEquals(wagon.bar, 1)
         assertEquals(
-            wagon.getFiltersAsList(), listOf(
+            wagon.filtersAsIndexList(), listOf(
                 ItemFilter("iron-plate", 1),
                 ItemFilter("copper-plate", 5),
             )

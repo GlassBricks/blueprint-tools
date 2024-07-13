@@ -30,16 +30,15 @@ public class CargoWagon(
     json: EntityJson,
 ) : BaseEntity(json),
     RollingStock,
-    WithBar,
-    WithItemFilters {
+    WithInventory {
     override var orientation: Double = json.orientation ?: 0.0
     override var bar: Int? = json.inventory?.bar
     override val filters: Array<String?> =
-        json.inventory?.filters.toFilters(prototype.inventory_size.toInt())
+        json.inventory?.filters.toFilterArray(prototype.inventory_size.toInt())
 
     override fun exportToJson(json: EntityJson) {
         json.orientation = orientation
-        val filters = this.getFiltersAsList()
+        val filters = this.filtersAsIndexList()
         if (filters != null || bar != null) {
             json.inventory = Inventory(filters = filters.orEmpty(), bar = bar)
         }

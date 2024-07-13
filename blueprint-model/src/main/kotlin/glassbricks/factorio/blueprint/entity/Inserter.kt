@@ -7,7 +7,7 @@ import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 
 public class Inserter(override val prototype: InserterPrototype, json: EntityJson) :
     BaseEntity(json), WithItemFilters, CircuitConnectionPoint, WithControlBehavior {
-    override val filters: Array<String?> = json.filters.toFilters(prototype.filter_count?.toInt() ?: 0)
+    override val filters: Array<String?> = json.filters.toFilterArray(prototype.filter_count?.toInt() ?: 0)
     public var filterMode: FilterMode = json.filter_mode
     public var overrideStackSize: Byte? = json.override_stack_size?.toByte()
     public var dropPosition: Position? = json.drop_position
@@ -17,7 +17,7 @@ public class Inserter(override val prototype: InserterPrototype, json: EntityJso
     public override val controlBehavior: InserterControlBehavior = InserterControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
-        json.filters = getFiltersAsList()
+        json.filters = filtersAsIndexList()
         json.filter_mode = filterMode
         json.override_stack_size = overrideStackSize?.toUByte()
         json.drop_position = dropPosition

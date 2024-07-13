@@ -72,11 +72,11 @@ public class Loader(
     json: EntityJson,
 ) : BaseEntity(json),
     TransportBeltConnectable, WithItemFilters {
-    public override val filters: Array<String?> = json.filters.toFilters(prototype.filter_count.toInt())
+    public override val filters: Array<String?> = json.filters.toFilterArray(prototype.filter_count.toInt())
     public var ioType: IOType = json.type ?: IOType.Input
 
     override fun exportToJson(json: EntityJson) {
-        json.filters = getFiltersAsList()
+        json.filters = filtersAsIndexList()
         json.type = ioType
     }
 }

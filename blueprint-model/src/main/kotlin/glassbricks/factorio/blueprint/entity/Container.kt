@@ -10,19 +10,20 @@ import glassbricks.factorio.blueprint.prototypes.LogisticContainerPrototype
 import glassbricks.factorio.blueprint.json.InfinityFilter as InfinityFilterJson
 import glassbricks.factorio.blueprint.json.LogisticFilter as LogisticFilterJson
 
+@Suppress("LocalVariableName")
 public open class Container(
     prototype_: ContainerPrototype,
     json: EntityJson,
-) : BaseEntity(json), WithBar, WithItemFilters {
+) : BaseEntity(json), WithInventory, WithItemFilters {
     override val prototype: ContainerPrototype = prototype_
-    public override val filters: Array<String?> = json.filters.toFilters(prototype_.inventory_size.toInt())
+    public override val filters: Array<String?> = json.filters.toFilterArray(prototype_.inventory_size.toInt())
     public override var bar: Int? = json.bar
 
     // containers have control behavior, but it has no settings (always read chest contents)
 
     override fun exportToJson(json: EntityJson) {
         json.bar = bar
-        json.filters = getFiltersAsList()
+        json.filters = filtersAsIndexList()
     }
 }
 
@@ -91,11 +92,18 @@ public data class InfinityFilter(
 )
 
 private fun List<LogisticFilterJson>?.toFilterArray(size: Int): Array<LogisticRequest?> =
-    indexedToArray(size, LogisticFilterJson::index) { LogisticRequest(it.name, it.count) }
+    indexListToArray(size, LogisticFilterJson::index) { LogisticRequest(it.name, it.count) }
 private fun Array<LogisticRequest?>.toFilterList(): List<LogisticFilterJson> =
-    arrayToIndexedList { index, request -> LogisticFilterJson(name = request.item, count = request.count, index = index) }
+    arrayToIndexList { index, request -> LogisticFilterJson(name = request.item, count = request.count, index = index) }
 
 private fun List<InfinityFilterJson>?.toInfFilterArray(size: Int): Array<InfinityFilter?> =
-    indexedToArray(size, InfinityFilterJson::index) { InfinityFilter(it.name, it.count, it.mode) }
+    indexListToArray(size, InfinityFilterJson::index) { InfinityFilter(it.name, it.count, it.mode) }
 private fun Array<InfinityFilter?>.toInfFilterList(): List<InfinityFilterJson> =
-    arrayToIndexedList { index, filter -> InfinityFilterJson(name = filter.name, count = filter.count, mode = filter.mode, index = index) }
+    arrayToIndexList { index, filter ->
+        InfinityFilterJson(
+            name = filter.name,
+            count = filter.count,
+            mode = filter.mode,
+            index = index
+        )
+    }

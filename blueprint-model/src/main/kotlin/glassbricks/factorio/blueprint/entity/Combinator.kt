@@ -104,11 +104,11 @@ public class ConstantCombinatorParameter(
 )
 
 private fun List<ConstantCombinatorParametersJson>?.toArray(size: Int): Array<ConstantCombinatorParameter?> =
-    indexedToArray(size, { it.index }) {
+    indexListToArray(size, { it.index }) {
         it.signal.toSignalIDBasic()?.let { signal -> ConstantCombinatorParameter(signal, it.count) }
     }
 
 private fun Array<out ConstantCombinatorParameter?>.toIndexList(): List<ConstantCombinatorParametersJson> =
-    arrayToIndexedList { index, item ->
+    arrayToIndexList { index, item ->
         ConstantCombinatorParametersJson(index = index, signal = item.signal.toJsonBasic(), count = item.count)
     }

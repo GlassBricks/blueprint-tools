@@ -17,9 +17,15 @@ public interface WithItemRequests {
     public var itemRequests: Map<ItemPrototypeName, Int>
 }
 
-public interface WithModules : WithItemRequests
+public fun WithItemFilters.filtersAsIndexList(): List<ItemFilter>? =
+    filters.arrayToIndexList { index, name -> ItemFilter(name = name, index = index) }
+        .takeIf { it.isNotEmpty() }
 
-public interface WithBar {
+
+/**
+ * An entity with a main inventory; i.e. containers and cargo wagons.
+ */
+public interface WithInventory : WithItemFilters {
     public var bar: Int?
 }
 
@@ -33,10 +39,10 @@ public interface WithItemFilters {
     public val numFilters: Int get() = filters.size
 }
 
-internal fun List<ItemFilter>?.toFilters(size: Int): Array<String?> =
-    this.indexedToArray(size, ItemFilter::index, ItemFilter::name)
+internal fun List<ItemFilter>?.toFilterArray(size: Int): Array<String?> =
+    indexListToArray(size, ItemFilter::index, ItemFilter::name)
 
-internal inline fun <T, reified R> List<T>?.indexedToArray(
+internal inline fun <T, reified R> List<T>?.indexListToArray(
     size: Int,
     getIndex: (T) -> Int,
     getValue: (T) -> R,
@@ -49,15 +55,11 @@ internal inline fun <T, reified R> List<T>?.indexedToArray(
     }
 }
 
-internal inline fun <T, R> Array<out R?>.arrayToIndexedList(getValue: (Int, R) -> T?): List<T> =
+internal inline fun <T, R> Array<out R?>.arrayToIndexList(getValue: (Int, R) -> T?): List<T> =
     this.mapIndexedNotNull { index, item ->
         item?.let { getValue(index + 1, it) }
     }
 
-public fun WithItemFilters.getFiltersAsList(): List<ItemFilter>? =
-    filters.arrayToIndexedList { index, name -> ItemFilter(name = name, index = index) }
-        .takeIf { it.isNotEmpty() }
-
 internal fun itemFilterList(vararg origFilters: String?): List<ItemFilter>? =
-    origFilters.arrayToIndexedList { index, name -> ItemFilter(name = name, index = index) }
+    origFilters.arrayToIndexList { index, name -> ItemFilter(name = name, index = index) }
         .takeIf { it.isNotEmpty() }

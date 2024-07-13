@@ -2,7 +2,9 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
-import glassbricks.factorio.blueprint.json.*
+import glassbricks.factorio.blueprint.json.CircuitID
+import glassbricks.factorio.blueprint.json.Color
+import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.prototypes.SimpleEntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
 
@@ -14,7 +16,7 @@ public class UnknownEntity(
     CircuitConnectionPoint,
     CombinatorConnections,
     WithColor,
-    WithBar,
+    WithInventory,
     WithItemFilters {
     public val json: EntityJson = json.deepCopy()
 
@@ -23,7 +25,7 @@ public class UnknownEntity(
     override var direction: Direction by json::direction
     override var color: Color? by json::color
     override var bar: Int? by json::bar
-    override val filters: Array<String?> = json.filters.toFilters(128)
+    override val filters: Array<String?> = json.filters.toFilterArray(128)
 
     override val cableConnections: CableConnectionSet = CableConnectionSet(this)
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
@@ -40,7 +42,7 @@ public class UnknownEntity(
         entity_number = entityNumber,
         connections = null,
         neighbours = null,
-        filters = this.getFiltersAsList(),
+        filters = this.filtersAsIndexList(),
     )
 }
 

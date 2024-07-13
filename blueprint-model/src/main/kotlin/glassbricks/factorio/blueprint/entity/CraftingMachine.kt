@@ -7,7 +7,7 @@ import glassbricks.factorio.blueprint.prototypes.FurnacePrototype
 import glassbricks.factorio.blueprint.prototypes.RocketSiloPrototype
 
 
-public sealed class CraftingMachine(json: EntityJson) : BaseEntity(json), WithModules {
+public sealed class CraftingMachine(json: EntityJson) : BaseEntity(json), WithItemRequests {
     abstract override val prototype: CraftingMachinePrototype
 
     override var itemRequests: Map<ItemPrototypeName, Int> = json.items.orEmpty()
