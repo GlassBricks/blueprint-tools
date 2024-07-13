@@ -7,14 +7,15 @@ import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 
 public class Inserter(override val prototype: InserterPrototype, json: EntityJson) :
     BaseEntity(json), WithItemFilters, CircuitConnectionPoint, WithControlBehavior {
-    override val filters: Array<String?> = json.filters.toFilterArray(prototype.filter_count?.toInt() ?: 0)
+    override val filters: Array<String?> = json.filters.toFilterArray(prototype.filter_count.toInt())
     public var filterMode: FilterMode = json.filter_mode
     public var overrideStackSize: Byte? = json.override_stack_size?.toByte()
     public var dropPosition: Position? = json.drop_position
     public var pickupPosition: Position? = json.pickup_position
 
     public override val circuitConnections: CircuitConnections = CircuitConnections(this)
-    public override val controlBehavior: InserterControlBehavior = InserterControlBehavior(json.control_behavior)
+    public override val controlBehavior: InserterControlBehavior =
+        InserterControlBehavior(prototype, json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
         json.filters = filtersAsIndexList()
@@ -22,17 +23,22 @@ public class Inserter(override val prototype: InserterPrototype, json: EntityJso
         json.override_stack_size = overrideStackSize?.toUByte()
         json.drop_position = dropPosition
         json.pickup_position = pickupPosition
-        if(this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
 }
 
 public class InserterControlBehavior(
+    prototype: InserterPrototype,
     json: ControlBehaviorJson?,
 ) : GenericOnOffControlBehavior(json), ControlBehavior {
     public var modeOfOperation: InserterModeOfOperation =
         json?.circuit_mode_of_operation?.asInserter() ?: InserterModeOfOperation.None
     public var readContentsMode: InserterHandReadMode? = json?.circuit_hand_read_mode
-    public var setStackSizeSignal: SignalID? = json?.stack_control_input_signal?.toSignalIDBasic()?.takeIf { json.circuit_set_stack_size }
+
+    public val defaultStackControlInputSignal: SignalID? = prototype.default_stack_control_input_signal
+    public var setStackSizeSignal: SignalID? =
+        json?.stack_control_input_signal.toSignalIdWithDefault(defaultStackControlInputSignal)
+            .takeIf { json?.circuit_set_stack_size == true }
 
     override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(
         circuit_mode_of_operation = modeOfOperation.asMode(),
@@ -46,6 +52,10 @@ public class InserterControlBehavior(
         circuit_hand_read_mode = readContentsMode,
 
         circuit_set_stack_size = setStackSizeSignal != null,
-        stack_control_input_signal = setStackSizeSignal.toJsonBasic(),
+        // Note the important ?. below. this output null (in the json) if the signal (in this class) is null, instead of
+        // the signal for "no signal" instead of default.
+        // This does mean it's impossible to have circuit_set_stack_size to be true, but the signal to be null,
+        // however that's likely never actually useful.
+        stack_control_input_signal = setStackSizeSignal?.toJsonWithDefault(defaultStackControlInputSignal),
     )
 }

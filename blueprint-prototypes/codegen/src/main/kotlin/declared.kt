@@ -118,6 +118,7 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             +"insert_position"
             +"pickup_position"
             +"filter_count"
+            +"default_stack_control_input_signal"
         }
         blueprintable("Lab") {
             +"inputs"

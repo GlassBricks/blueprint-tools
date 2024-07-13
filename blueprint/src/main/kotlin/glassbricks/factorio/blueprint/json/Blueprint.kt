@@ -135,6 +135,9 @@ public data class SignalIDJson(
     public val type: SignalType,
 )
 
+/**
+ * If this value is null, uses a "no signal" signal (where the name is set to null).
+ */
 public fun SignalID?.toJsonBasic(): SignalIDJson = SignalIDJson(
     name = this?.name,
     type = this?.type ?: SignalType.item,
@@ -143,10 +146,17 @@ public fun SignalID?.toJsonBasic(): SignalIDJson = SignalIDJson(
 public fun SignalIDJson.toSignalIDBasic(): SignalID? =
     if (name == null) null else SignalID(name, type)
 
+/**
+ * If this value is equal to the default value, it will be omitted.
+ * If this value is null, uses a "no signal" signal (where the name is set to null).
+ */
 public fun SignalID?.toJsonWithDefault(default: SignalID?): SignalIDJson? =
     if (this == default) null
     else toJsonBasic()
 
+/**
+ * If this value is null, uses the default value.
+ */
 public fun SignalIDJson?.toSignalIdWithDefault(default: SignalID?): SignalID? = when {
     this == null -> default
     this.name == null -> null
