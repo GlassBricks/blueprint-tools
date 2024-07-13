@@ -6,7 +6,7 @@ import glassbricks.factorio.blueprint.json.ControlBehavior
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class TransportBeltConnectableTest {
+class TransportBeltConnectableKtTest {
     @Test
     fun `can load transport belt`() {
         testSaveLoad(TransportBelt::class, "transport-belt")
