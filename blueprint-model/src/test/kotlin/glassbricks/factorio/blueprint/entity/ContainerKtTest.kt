@@ -3,6 +3,8 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.json.InfinityFilter
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class ContainerKtTest {
     @Test
@@ -15,10 +17,13 @@ class ContainerKtTest {
 
     @Test
     fun `can load logistic containers`() {
-        testSaveLoad<LogisticContainer>("logistic-chest-passive-provider")
-        testSaveLoad<LogisticContainer>("logistic-chest-storage") {
+        val passiveProvider = testSaveLoad<LogisticContainer>("logistic-chest-passive-provider")
+        assertFalse(passiveProvider.allowsFilters)
+        val storage = testSaveLoad<LogisticContainer>("logistic-chest-storage") {
             request_filters = listOf(LogisticFilter(name = "iron-plate", count = 1, index = 1))
         }
+        assertFalse(storage.allowsFilters)
+        assertEquals(1, storage.requestFilters.size)
         testSaveLoad<LogisticContainer>("logistic-chest-requester") {
             request_filters = listOf(
                 LogisticFilter(name = "iron-plate", count = 1, index = 1),

@@ -28,14 +28,13 @@ public open class Container(
     }
 }
 
-@Suppress("LocalVariableName")
 public open class LogisticContainer(
-    prototype_: LogisticContainerPrototype,
+    prototype: LogisticContainerPrototype,
     json: EntityJson,
-) : Container(prototype_, json) {
+) : Container(prototype, json) {
     override val prototype: LogisticContainerPrototype get() = super.prototype as LogisticContainerPrototype
     public val requestFilters: Array<LogisticRequest?> = json.request_filters.toFilterArray(
-        prototype_.max_logistic_slots?.toInt() ?: 0
+        prototype.max_logistic_slots?.toInt() ?: prototype.inventory_size.toInt()
     )
     public val requestFromBuffers: Boolean = json.request_from_buffers
 
@@ -81,11 +80,10 @@ public class InfinityContainer(
 
     override fun exportToJson(json: EntityJson) {
         super.exportToJson(json)
-        val filters = infinityFilters.toInfFilterList()
 
         json.infinity_settings = InfinitySettings(
             remove_unfiltered_items = removeUnfilteredItems,
-            filters = filters
+            filters = infinityFilters.toInfFilterList()
         )
     }
 }
