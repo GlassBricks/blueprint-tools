@@ -747,7 +747,14 @@ public data class ArithmeticCombinatorParameters(
     public val operation: ArithmeticOperation = ArithmeticOperation.Multiply,
     /** Specifies the signal to output. */
     public val output_signal: SignalIDJson? = null,
-)
+) {
+    public companion object {
+        public val DEFAULT: ArithmeticCombinatorParameters = ArithmeticCombinatorParameters(
+            first_constant = 0,
+            second_constant = 0,
+        )
+    }
+}
 
 @Serializable
 public enum class ArithmeticOperation {
@@ -802,7 +809,11 @@ public data class DeciderCombinatorParameters(
     public val output_signal: SignalIDJson? = null,
     /** Defaults to `true`. When `false`, will output a value of `1` for the given [output_signal]. */
     public val copy_count_from_input: Boolean = true,
-)
+) {
+    public companion object {
+        public val DEFAULT: DeciderCombinatorParameters = DeciderCombinatorParameters(constant = 0)
+    }
+}
 
 @Serializable
 public data class CircuitCondition(

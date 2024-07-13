@@ -3,6 +3,7 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.SignalID
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.ArithmeticCombinatorPrototype
+import glassbricks.factorio.blueprint.prototypes.CombinatorPrototype
 import glassbricks.factorio.blueprint.prototypes.ConstantCombinatorPrototype
 import glassbricks.factorio.blueprint.prototypes.DeciderCombinatorPrototype
 import glassbricks.factorio.blueprint.json.ConstantCombinatorParameters as ConstantCombinatorParametersJson
@@ -13,9 +14,9 @@ public sealed class Combinator(
     override val input: CircuitConnectionPoint = ConnectionPoint(CircuitID.First)
     override val output: CircuitConnectionPoint = ConnectionPoint(CircuitID.Second)
 
-    private inner class ConnectionPoint(
-        override val circuitID: CircuitID,
-    ) : CircuitConnectionPoint {
+    abstract override val prototype: CombinatorPrototype
+
+    private inner class ConnectionPoint(override val circuitID: CircuitID) : CircuitConnectionPoint {
         override val entity: Entity get() = this@Combinator
         override val circuitConnections: CircuitConnections = CircuitConnections(this)
     }
@@ -35,12 +36,12 @@ public class ArithmeticCombinator(
 
 public class ArithmeticCombinatorControlBehavior(
     source: ControlBehaviorJson? = null,
-) : GenericOnOffControlBehavior(source), ControlBehavior {
-    public var parameters: ArithmeticCombinatorParameters? = source?.arithmetic_conditions
+) : ControlBehavior {
+    public var parameters: ArithmeticCombinatorParameters = source?.arithmetic_conditions
+        ?: ArithmeticCombinatorParameters.DEFAULT
 
-    override fun exportToJson(): ControlBehaviorJson = baseExportToJson().apply {
-        arithmetic_conditions = parameters
-    }
+    override fun exportToJson(): ControlBehaviorJson =
+        ControlBehaviorJson(arithmetic_conditions = parameters)
 }
 
 public class DeciderCombinator(
@@ -58,7 +59,8 @@ public class DeciderCombinator(
 public class DeciderCombinatorControlBehavior(
     source: ControlBehaviorJson? = null,
 ) : ControlBehavior {
-    public var parameters: DeciderCombinatorParameters? = source?.decider_conditions
+    public var parameters: DeciderCombinatorParameters = source?.decider_conditions
+        ?: DeciderCombinatorParameters.DEFAULT
 
     override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(decider_conditions = parameters)
 }
@@ -82,7 +84,7 @@ public class ConstantCombinatorControlBehavior(
 ) : ControlBehavior {
     public var isOn: Boolean = source?.is_on ?: true
     public var parameters: Array<ConstantCombinatorParameter?> =
-        source?.filters.toParameters(prototype.item_slot_count.toInt())
+        source?.filters.toArray(prototype.item_slot_count.toInt())
 
     override fun exportToJson(): ControlBehaviorJson? {
         if (isOn && parameters.none { it != null }) {
@@ -90,7 +92,7 @@ public class ConstantCombinatorControlBehavior(
         }
         return ControlBehaviorJson(
             is_on = isOn,
-            filters = parameters.arrayToIndexedList(),
+            filters = parameters.toIndexList(),
         )
 
     }
@@ -101,12 +103,12 @@ public class ConstantCombinatorParameter(
     public val count: Int,
 )
 
-private fun List<ConstantCombinatorParametersJson>?.toParameters(size: Int): Array<ConstantCombinatorParameter?> =
+private fun List<ConstantCombinatorParametersJson>?.toArray(size: Int): Array<ConstantCombinatorParameter?> =
     indexedToArray(size, { it.index }) {
         it.signal.toSignalIDBasic()?.let { signal -> ConstantCombinatorParameter(signal, it.count) }
     }
 
-private fun Array<out ConstantCombinatorParameter?>.arrayToIndexedList(): List<ConstantCombinatorParametersJson> =
+private fun Array<out ConstantCombinatorParameter?>.toIndexList(): List<ConstantCombinatorParametersJson> =
     arrayToIndexedList { index, item ->
         ConstantCombinatorParametersJson(index = index, signal = item.signal.toJsonBasic(), count = item.count)
     }

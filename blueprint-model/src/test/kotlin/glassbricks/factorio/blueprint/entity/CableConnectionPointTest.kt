@@ -1,8 +1,8 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.json.CompareOperation
-import glassbricks.factorio.blueprint.Position
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -43,7 +43,7 @@ class CableConnectionPointTest {
 
     @Test
     fun `connecting a power switch to itself has no effect`() {
-        val powerSwitch = loadEntity("power-switch") as PowerSwitch
+        val powerSwitch = loadEntity<Any>("power-switch") as PowerSwitch
         powerSwitch.left.cableConnections.add(powerSwitch.right)
         assertFalse(powerSwitch.left.cableConnections.contains(powerSwitch.right))
     }
@@ -77,8 +77,8 @@ class PowerSwitchTest {
 
     @Test
     fun `can connect to pole`() {
-        val pole = loadEntity("small-electric-pole") as ElectricPole
-        val powerSwitch = loadEntity("power-switch") as PowerSwitch
+        val pole = loadEntity<Any>("small-electric-pole") as ElectricPole
+        val powerSwitch = loadEntity<Any>("power-switch") as PowerSwitch
 
         pole.cableConnections.add(powerSwitch.left)
         assertTrue(powerSwitch.left in pole.cableConnections)

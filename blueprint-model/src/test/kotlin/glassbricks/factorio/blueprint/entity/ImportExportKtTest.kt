@@ -55,7 +55,7 @@ class ImportExportKtTest {
     @Test
     fun `can set entities`() {
         val blueprint = emptyBlueprint()
-        val entities = listOf(
+        val entities = listOf<UnknownEntity>(
             loadEntity("foo1") {
                 position = Position(1.0, 2.0)
             },
@@ -64,9 +64,6 @@ class ImportExportKtTest {
                 direction = Direction.West
             },
         )
-        entities.forEach {
-            assertTrue(it is UnknownEntity)
-        }
         blueprint.setEntitiesFrom(entities)
         assertEquals(
             blueprint.entities, listOf(
@@ -114,9 +111,9 @@ class ImportExportKtTest {
 
     @Test
     fun `can save electric pole connections`() {
-        val pole1 = loadEntity("small-electric-pole") as ElectricPole
-        val pole2 = loadEntity("small-electric-pole") as ElectricPole
-        val pole3 = loadEntity("small-electric-pole") as ElectricPole
+        val pole1 = loadEntity<Any>("small-electric-pole") as ElectricPole
+        val pole2 = loadEntity<Any>("small-electric-pole") as ElectricPole
+        val pole3 = loadEntity<Any>("small-electric-pole") as ElectricPole
         pole1.cableConnections.add(pole2)
         pole1.cableConnections.add(pole3)
 
@@ -180,9 +177,9 @@ class ImportExportKtTest {
 
     @Test
     fun `can save power switch connections`() {
-        val switch1 = loadEntity("power-switch") as PowerSwitch
-        val pole2 = loadEntity("small-electric-pole") as ElectricPole
-        val pole3 = loadEntity("small-electric-pole") as ElectricPole
+        val switch1 = loadEntity<Any>("power-switch") as PowerSwitch
+        val pole2 = loadEntity<Any>("small-electric-pole") as ElectricPole
+        val pole3 = loadEntity<Any>("small-electric-pole") as ElectricPole
         switch1.left.cableConnections.add(pole2)
         switch1.right.cableConnections.add(pole3)
         switch1.circuitConnections.red.add(pole2)

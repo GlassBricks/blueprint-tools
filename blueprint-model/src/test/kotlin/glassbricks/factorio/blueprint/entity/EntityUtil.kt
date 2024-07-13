@@ -23,11 +23,11 @@ inline fun buildEntityJson(
     position = Position.ZERO,
 ).apply(build)
 
-internal inline fun loadEntity(
+internal inline fun <reified T> loadEntity(
     name: String,
     blueprint: BlueprintJson? = null,
     build: EntityJson.() -> Unit = {},
-) = blueprintPrototypes.createEntityFromJson(buildEntityJson(name, build), blueprint)
+): T = blueprintPrototypes.createEntityFromJson(buildEntityJson(name, build), blueprint) as T
 
 internal inline fun <reified T : Entity> testSaveLoad(
     json: EntityJson,
