@@ -143,11 +143,8 @@ internal fun BlueprintJson.setEntitiesFrom(entities: Iterable<Entity>) {
             val cu0 = entity.left.exportPowerSwitch(entityMap)
             val cu1 = entity.right.exportPowerSwitch(entityMap)
             if (cu0 != null || cu1 != null)
-                json.connections = (json.connections ?: Connections())
-                    .apply {
-                        Cu0 = cu0
-                        Cu1 = cu1
-                    }
+                json.connections = json.connections?.copy(Cu0 = cu0, Cu1 = cu1)
+                    ?: Connections(Cu0 = cu0, Cu1 = cu1)
         }
     }
 

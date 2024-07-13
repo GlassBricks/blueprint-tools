@@ -1,8 +1,8 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Direction
-import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.prototypes.EntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
 
@@ -25,7 +25,9 @@ public interface Entity : EntityProps {
     public fun toJsonIsolated(entityNumber: EntityNumber): EntityJson
 }
 
-internal fun EntityJson.deepCopy() = copy() // todo: actually deep copy
+internal fun EntityJson.deepCopy() = copy(
+    control_behavior = control_behavior?.copy(),
+)
 
 public abstract class BaseEntity(json: EntityJson) : Entity {
     override var position: Position = json.position
@@ -41,7 +43,7 @@ public abstract class BaseEntity(json: EntityJson) : Entity {
 
     override fun toJsonIsolated(entityNumber: EntityNumber): EntityJson {
         return createEntityJson(entityNumber)
-            .apply { exportToJson(this) }
+            .also { exportToJson(it) }
     }
 
     protected abstract fun exportToJson(json: EntityJson)

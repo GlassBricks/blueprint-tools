@@ -225,7 +225,8 @@ public data class Entity(
     /** Used by [Programmable speaker](https://wiki.factorio.com/Programmable_speaker). */
     public var alert_parameters: AlertParameters? = null,
     /** Used by the rocket silo. Whether auto launch is enabled. */
-    public var auto_launch: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var auto_launch: Boolean = false,
     /** Used by [Prototype/SimpleEntityWithForce](https://wiki.factorio.com/Prototype/SimpleEntityWithForce) or [Prototype/SimpleEntityWithOwner](https://wiki.factorio.com/Prototype/SimpleEntityWithOwner). */
     public var variation: UByte? = null,
     /** Color of the [Prototype/SimpleEntityWithForce](https://wiki.factorio.com/Prototype/SimpleEntityWithForce), [Prototype/SimpleEntityWithOwner](https://wiki.factorio.com/Prototype/SimpleEntityWithOwner), or train station. */
@@ -298,9 +299,9 @@ public enum class FilterMode {
 @Serializable
 public data class Inventory(
     /** Array of item filters. */
-    public var filters: List<ItemFilter> = emptyList(),
+    public val filters: List<ItemFilter> = emptyList(),
     /** The index of the first inaccessible item slot due to limiting with the red "bar". */
-    public var bar: Int? = null,
+    public val bar: Int? = null,
 )
 
 /**
@@ -309,9 +310,9 @@ public data class Inventory(
 @Serializable
 public data class Schedule(
     /** Array of schedule records. */
-    public var schedule: List<ScheduleRecord>,
+    public val schedule: List<ScheduleRecord>,
     /** Array of entity numbers of locomotives using this schedule. */
-    public var locomotives: List<EntityNumber>,
+    public val locomotives: List<EntityNumber>,
 )
 
 /**
@@ -320,10 +321,10 @@ public data class Schedule(
 @Serializable
 public data class ScheduleRecord(
     /** The name of the stop for this schedule record. */
-    public var station: String,
+    public val station: String,
     /** Array of wait conditions. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
-    public var wait_conditions: List<WaitCondition> = emptyList(),
+    public val wait_conditions: List<WaitCondition> = emptyList(),
 )
 
 /**
@@ -332,13 +333,13 @@ public data class ScheduleRecord(
 @Serializable
 public data class WaitCondition(
     /** One of "time", "inactivity", "full", "empty", "item_count", "circuit", "robots_inactive", "fluid_count", "passenger_present", "passenger_not_present". */
-    public var type: WaitConditionType,
+    public val type: WaitConditionType,
     /** Either "and" or "or". Tells how this condition is to be compared with the preceding conditions in the corresponding wait_conditions array. */
-    public var compare_type: CompareType = CompareType.Or,
+    public val compare_type: CompareType = CompareType.Or,
     /** Number of ticks to wait or of inactivity. Only present when type is "time" or "inactivity". */
-    public var ticks: Int? = null,
+    public val ticks: Int? = null,
     /** Circuit condition, only present when type is "item_count", "circuit" or "fluid_count". */
-    public var condition: CircuitCondition? = null,
+    public val condition: CircuitCondition? = null,
 )
 
 @Serializable
@@ -391,7 +392,7 @@ public data class Tile(
     /** Prototype name of the tile (e.g. "concrete"). */
     public val name: String,
     /** Position of the entity within the blueprint. */
-    public var position: TilePosition,
+    public val position: TilePosition,
 )
 
 /**
@@ -400,13 +401,13 @@ public data class Tile(
 @Serializable
 public data class Connections(
     /** First connection point. The default for everything that doesn't have multiple connection points. */
-    public var `1`: ConnectionPoint? = null,
+    public val `1`: ConnectionPoint? = null,
     /** Second connection point. For example, the "output" part of an arithmetic combinator. */
-    public var `2`: ConnectionPoint? = null,
+    public val `2`: ConnectionPoint? = null,
     /** Only used by power switches */
-    public var Cu0: List<CableConnectionData>? = null,
+    public val Cu0: List<CableConnectionData>? = null,
     /** Only used by power switches */
-    public var Cu1: List<CableConnectionData>? = null,
+    public val Cu1: List<CableConnectionData>? = null,
 )
 
 /**
@@ -415,9 +416,9 @@ public data class Connections(
 @Serializable
 public data class ConnectionPoint(
     /** An array of connection data objects containing all the connections from this point created by red wire. */
-    public var red: List<ConnectionData>? = null,
+    public val red: List<ConnectionData>? = null,
     /** An array of connection data objects containing all the connections from this point created by green wire. */
-    public var green: List<ConnectionData>? = null,
+    public val green: List<ConnectionData>? = null,
 )
 
 /**
