@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.BoundingBox
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.EntityNumber
@@ -16,6 +17,11 @@ public interface Entity {
     public var tags: JsonObject?
 
     public fun toJsonIsolated(entityNumber: EntityNumber): EntityJson
+
+    public fun currentBoundingBox(): BoundingBox =
+        (prototype.collision_box ?: BoundingBox.EMPTY)
+            .rotateCardinal(direction)
+            .translate(position)
 }
 
 internal fun EntityJson.deepCopy() = copy(

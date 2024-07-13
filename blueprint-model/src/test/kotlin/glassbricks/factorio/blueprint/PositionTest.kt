@@ -10,6 +10,7 @@ class PositionTest {
         val position = Position(1.0, 2.0)
         assertEquals(1.0, position.x)
         assertEquals(2.0, position.y)
+        assertEquals("Position(1.0, 2.0)", position.toString())
 
         val position2 = Position(1.25, 2 + 1 / 256.0)
         assertEquals(1.25, position2.x)

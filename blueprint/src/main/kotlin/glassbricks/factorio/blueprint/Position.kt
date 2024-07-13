@@ -43,6 +43,7 @@ public data class Position private constructor(
     public fun squaredDistanceTo(other: Position): Double = (this - other).squaredLength()
     public fun distanceTo(other: Position): Double = (this - other).length()
 
+    override fun toString(): String = "Position($x, $y)"
     public companion object {
         public val ZERO: Position = Position(0, 0)
     }
@@ -67,6 +68,9 @@ public data class Position private constructor(
 
 public operator fun Double.times(position: Position): Position = position * this
 public operator fun Int.times(position: Position): Position = position * this
+
+/** Short for [Position] constructor. */
+public fun pos(x: Double, y: Double): Position = Position(x, y)
 
 /** Like [Position], but only uses integers. */
 @Serializable
