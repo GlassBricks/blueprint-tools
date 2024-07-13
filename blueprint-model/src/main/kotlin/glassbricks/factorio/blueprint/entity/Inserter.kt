@@ -28,7 +28,7 @@ public class Inserter(override val prototype: InserterPrototype, json: EntityJso
 }
 
 public class InserterControlBehavior(
-    prototype: InserterPrototype,
+    private val prototype: InserterPrototype,
     json: ControlBehaviorJson?,
 ) : GenericOnOffControlBehavior(json), ControlBehavior {
     public var modeOfOperation: InserterModeOfOperation =
@@ -36,7 +36,7 @@ public class InserterControlBehavior(
     public var readContentsMode: InserterHandReadMode? = json?.circuit_hand_read_mode
         ?.takeIf { json.circuit_read_hand_contents }
 
-    public val defaultStackSizeSignal: SignalID? = prototype.default_stack_control_input_signal
+    public val defaultStackSizeSignal: SignalID? get() = prototype.default_stack_control_input_signal
     public var setStackSizeSignal: SignalID? =
         json?.stack_control_input_signal.toSignalIdWithDefault(defaultStackSizeSignal)
             .takeIf { json?.circuit_set_stack_size == true }

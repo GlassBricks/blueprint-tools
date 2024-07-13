@@ -30,14 +30,14 @@ public class RailSignal(
 }
 
 public class RailSignalControlBehavior(
-    prototype: RailSignalPrototype,
+    private val prototype: RailSignalPrototype,
     source: ControlBehaviorJson? = null,
 ) : ControlBehavior {
     public var readSignal: Boolean = source?.circuit_read_signal ?: false
 
-    public val defaultRedSignal: SignalID? = prototype.default_red_output_signal
-    public val defaultOrangeSignal: SignalID? = prototype.default_orange_output_signal
-    public val defaultGreenSignal: SignalID? = prototype.default_green_output_signal
+    public val defaultRedSignal: SignalID? get() = prototype.default_red_output_signal
+    public val defaultOrangeSignal: SignalID? get() = prototype.default_orange_output_signal
+    public val defaultGreenSignal: SignalID? get() = prototype.default_green_output_signal
 
     public var redSignal: SignalID? = source?.red_output_signal.toSignalIdWithDefault(defaultRedSignal)
     public var orangeSignal: SignalID? = source?.orange_output_signal.toSignalIdWithDefault(defaultOrangeSignal)

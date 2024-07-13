@@ -23,10 +23,10 @@ public class Accumulator(
 }
 
 public class AccumulatorControlBehavior(
-    prototype: AccumulatorPrototype,
+    private val prototype: AccumulatorPrototype,
     source: ControlBehaviorJson?
 ) : ControlBehavior {
-    public val defaultOutputSignal: SignalID? = prototype.default_output_signal
+    public val defaultOutputSignal: SignalID? get() = prototype.default_output_signal
     public var outputSignal: SignalID? = source?.output_signal.toSignalIdWithDefault(defaultOutputSignal)
 
     override fun exportToJson(): ControlBehaviorJson? {
