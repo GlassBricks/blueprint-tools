@@ -7,8 +7,8 @@ import glassbricks.factorio.blueprint.prototypes.MiningDrillPrototype
 public class MiningDrill(
     public override val prototype: MiningDrillPrototype,
     json: EntityJson,
-) : BaseEntity(json), CircuitConnectable {
-    public override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
+    public override val circuitConnections: CircuitConnections = CircuitConnections(this)
     public override val controlBehavior: MiningDrillControlBehavior = MiningDrillControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
@@ -16,11 +16,12 @@ public class MiningDrill(
     }
 }
 
-public class MiningDrillControlBehavior(source: ControlBehaviorJson?) : GenericOnOffControlBehavior(source), ControlBehavior {
+public class MiningDrillControlBehavior(source: ControlBehaviorJson?) : GenericOnOffControlBehavior(source),
+    ControlBehavior {
     public var resourceReadMode: MiningDrillResourceReadMode? =
         source?.circuit_resource_read_mode?.takeIf { source.circuit_read_resources == true }
 
-    override fun exportToJson(): ControlBehaviorJson = super.baseExportToJson().apply { 
+    override fun exportToJson(): ControlBehaviorJson = super.baseExportToJson().apply {
         circuit_enable_disable = circuitCondition != null
         circuit_condition = circuitCondition
         circuit_read_resources = resourceReadMode != null

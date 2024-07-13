@@ -1,7 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitCondition
-import glassbricks.factorio.blueprint.json.CircuitID
 import glassbricks.factorio.blueprint.json.SignalID
 import glassbricks.factorio.blueprint.prototypes.RailChainSignalPrototype
 import glassbricks.factorio.blueprint.prototypes.RailSignalBasePrototype
@@ -10,17 +9,16 @@ import glassbricks.factorio.blueprint.prototypes.RailSignalPrototype
 
 public sealed class RailSignalBase(
     json: EntityJson,
-) : BaseEntity(json), CircuitConnectable {
+) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
     abstract override val prototype: RailSignalBasePrototype
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
 }
 
 
 public class RailSignal(
     override val prototype: RailSignalPrototype,
     json: EntityJson,
-) : RailSignalBase(json), CircuitConnectable2 {
-    override val connectionPoint2: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.Second)
+) : RailSignalBase(json) {
     override val controlBehavior: RailSignalControlBehavior =
         RailSignalControlBehavior(json.control_behavior)
 
@@ -42,7 +40,7 @@ public class RailSignalControlBehavior(
     public var closeSignalCondition: CircuitCondition? = source?.circuit_condition
         ?.takeIf { source.circuit_close_signal == true }
 
-    override fun exportToJson(): ControlBehaviorJson? {
+    override fun exportToJson(): ControlBehaviorJson {
         return ControlBehaviorJson(
             circuit_read_signal = readSignal,
             red_output_signal = redSignal.takeIf { readSignal },

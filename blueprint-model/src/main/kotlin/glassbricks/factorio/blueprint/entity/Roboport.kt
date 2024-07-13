@@ -6,8 +6,8 @@ import glassbricks.factorio.blueprint.prototypes.RoboportPrototype
 public class Roboport(
     override val prototype: RoboportPrototype,
     json: EntityJson,
-) : BaseEntity(json), CircuitConnectable {
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
     public override val controlBehavior: RoboportControlBehavior = RoboportControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
@@ -25,8 +25,8 @@ public class RoboportControlBehavior(json: ControlBehaviorJson?) : ControlBehavi
 
     override fun exportToJson(): ControlBehaviorJson? {
         if (readLogistics && !readRobotStats &&
-            availableLogisticOutputSignal == null && 
-            totalLogisticOutputSignal == null && 
+            availableLogisticOutputSignal == null &&
+            totalLogisticOutputSignal == null &&
             availableConstructionOutputSignal == null &&
             totalConstructionOutputSignal == null
         ) {

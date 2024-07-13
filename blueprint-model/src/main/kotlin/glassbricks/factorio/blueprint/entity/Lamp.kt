@@ -6,8 +6,8 @@ import glassbricks.factorio.blueprint.prototypes.LampPrototype
 public class Lamp(
     override val prototype: LampPrototype,
     json: EntityJson,
-) : BaseEntity(json), CircuitConnectable {
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
     public override val controlBehavior: LampControlBehavior = LampControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {

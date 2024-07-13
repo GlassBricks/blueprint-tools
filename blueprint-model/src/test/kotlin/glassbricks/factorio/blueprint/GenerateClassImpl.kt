@@ -1,3 +1,4 @@
+
 package glassbricks.factorio.blueprint
 
 import glassbricks.factorio.blueprint.entity.EntityJson
@@ -37,8 +38,9 @@ internal constructor(
     }
 }
 
+@Suppress("DEPRECATION")
 private fun getProps(gen: Gen): Pair<String, String> {
-    
+
     val props = gen.props.joinToString("\n") { prop ->
         val propCamel = prop.split("_").joinToString("") { it.capitalize() }
             .decapitalize()

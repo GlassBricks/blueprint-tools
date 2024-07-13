@@ -8,12 +8,12 @@ import glassbricks.factorio.blueprint.prototypes.TrainStopPrototype
 public class TrainStop(
     override val prototype: TrainStopPrototype,
     json: EntityJson,
-) : BaseEntity(json), CircuitConnectable, WithColor {
+) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior, WithColor {
     public var station: String? = json.station
     public override var color: Color? = json.color
     public var manualTrainsLimit: Int? = json.manual_trains_limit
 
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
     public override val controlBehavior: TrainStopControlBehavior = TrainStopControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {

@@ -23,6 +23,23 @@ internal fun BlueprintPrototypes.createEntity(
     return createEntityFromJson(json)
 }
 
+private val CircuitConnectable.connectionPoint1: CircuitConnectionPoint
+    get() = when (this) {
+        is CombinatorConnections -> input
+        is CircuitConnectionPoint -> this
+    }
+
+private val CircuitConnectable.connectionPoint2: CircuitConnectionPoint?
+    get() = when (this) {
+        is CombinatorConnections -> output
+        else -> null
+    }
+
+private fun CircuitConnectable.getConnectionPoint(id: CircuitID): CircuitConnectionPoint? = when (this) {
+    is CombinatorConnections -> this.getConnectionPoint(id)
+    is CircuitConnectionPoint -> if (id == CircuitID.First) this else null
+}
+
 
 internal fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entity>? {
     val jsonEntities = json.entities
@@ -50,8 +67,8 @@ internal fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Ent
         point: CircuitConnectionPoint,
         json: ConnectionPointJson,
     ) {
-        connectAtColor(point.red, json.red)
-        connectAtColor(point.green, json.green)
+        connectAtColor(point.circuitConnections.red, json.red)
+        connectAtColor(point.circuitConnections.green, json.green)
     }
 
     fun connectPowerSwitch(
@@ -114,8 +131,8 @@ internal fun BlueprintJson.setEntitiesFrom(entities: Iterable<Entity>) {
                 schedules.getOrPut(schedule, ::mutableListOf).add(json.entity_number)
         }
         if (entity is CircuitConnectable) {
-            val p1 = entity.connectionPoint1.export(entityMap)
-            val p2 = entity.connectionPoint2?.export(entityMap)
+            val p1 = entity.connectionPoint1.circuitConnections.export(entityMap)
+            val p2 = entity.connectionPoint2?.circuitConnections?.export(entityMap)
             if (p1 != null || p2 != null)
                 json.connections = Connections(p1, p2)
         }

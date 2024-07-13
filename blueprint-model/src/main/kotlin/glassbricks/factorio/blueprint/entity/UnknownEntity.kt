@@ -3,19 +3,16 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.*
-import glassbricks.factorio.blueprint.prototypes.EntityWithOwnerPrototype
-import glassbricks.factorio.blueprint.prototypes.SimpleEntityWithForcePrototype
 import glassbricks.factorio.blueprint.prototypes.SimpleEntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlin.reflect.jvm.internal.impl.descriptors.Visibilities.Unknown
 
 public class UnknownEntity(
     override val prototype: UnknownPrototype,
     json: EntityJson,
 ) : Entity,
     CableConnectionPoint,
-    CircuitConnectable2,
+    CircuitConnectionPoint,
+    CombinatorConnections,
     WithColor,
     WithBar,
     WithItemFilters {
@@ -29,9 +26,13 @@ public class UnknownEntity(
     override val filters: Array<String?> = json.filters.toFilters(128)
 
     override val cableConnections: CableConnectionSet = CableConnectionSet(this)
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.First)
-    override val connectionPoint2: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.Second)
-    override val controlBehavior: ControlBehavior? get() = null
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
+    override val input: CircuitConnectionPoint get() = this
+    override val output: CircuitConnectionPoint = object : CircuitConnectionPoint {
+        override val entity: Entity get() = this@UnknownEntity
+        override val circuitID: CircuitID get() = CircuitID.Second
+        override val circuitConnections: CircuitConnections = CircuitConnections(this)
+    }
 
     override val entity: Entity get() = this
 

@@ -6,8 +6,8 @@ import glassbricks.factorio.blueprint.prototypes.WallPrototype
 public class Wall (
     override val prototype: WallPrototype,
     json: EntityJson
-): BaseEntity(json), CircuitConnectable {
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+): BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
     override val controlBehavior: WallControlBehavior = WallControlBehavior(json.control_behavior)
     override fun exportToJson(json: EntityJson) {
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()

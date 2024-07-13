@@ -7,8 +7,8 @@ import glassbricks.factorio.blueprint.prototypes.AccumulatorPrototype
 public class Accumulator(
     public override val prototype: AccumulatorPrototype,
     json: EntityJson,
-) : BaseEntity(json), CircuitConnectable {
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
     public override val controlBehavior: AccumulatorControlBehavior = AccumulatorControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {

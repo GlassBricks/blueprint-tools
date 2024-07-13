@@ -13,8 +13,8 @@ public sealed interface TransportBeltConnectable : Entity {
 public class TransportBelt(
     override val prototype: TransportBeltPrototype,
     json: EntityJson,
-) : BaseEntity(json), TransportBeltConnectable, CircuitConnectable {
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+) : BaseEntity(json), TransportBeltConnectable, CircuitConnectionPoint, WithControlBehavior {
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
     public override val controlBehavior: TransportBeltControlBehavior =
         TransportBeltControlBehavior(json.control_behavior)
 
@@ -31,7 +31,7 @@ public class TransportBeltControlBehavior(
     /** If null, sets circuit_contents_read_mode to false. */
     public var readContentsMode: TransportBeltContentReadMode? =
         source?.circuit_contents_read_mode
-            ?.takeIf { source.circuit_read_hand_contents == true }
+            ?.takeIf { source.circuit_read_hand_contents }
 
     public val readHandContents: Boolean get() = readContentsMode != null
 

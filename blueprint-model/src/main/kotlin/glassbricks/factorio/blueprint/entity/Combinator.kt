@@ -11,20 +11,27 @@ import glassbricks.factorio.blueprint.json.ConstantCombinatorParameters as Const
 
 public sealed class Combinator(
     json: EntityJson,
-) : BaseEntity(json), CircuitConnectable {
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+) : BaseEntity(json), CombinatorConnections, WithControlBehavior {
+    override val input: CircuitConnectionPoint = ConnectionPoint(CircuitID.First)
+    override val output: CircuitConnectionPoint = ConnectionPoint(CircuitID.Second)
+
+    private inner class ConnectionPoint(
+        override val circuitID: CircuitID,
+    ) : CircuitConnectionPoint {
+        override val entity: Entity get() = this@Combinator
+        override val circuitConnections: CircuitConnections = CircuitConnections(this)
+    }
 }
 
 public class ArithmeticCombinator(
     override val prototype: ArithmeticCombinatorPrototype,
     json: EntityJson,
-) : Combinator(json), CircuitConnectable2 {
-    override val connectionPoint2: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.Second)
+) : Combinator(json) {
     override val controlBehavior: ArithmeticCombinatorControlBehavior =
         ArithmeticCombinatorControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
-       json.control_behavior = controlBehavior.exportToJson()
+        json.control_behavior = controlBehavior.exportToJson()
     }
 }
 
@@ -41,8 +48,7 @@ public class ArithmeticCombinatorControlBehavior(
 public class DeciderCombinator(
     override val prototype: DeciderCombinatorPrototype,
     json: EntityJson,
-) : Combinator(json), CircuitConnectable2 {
-    override val connectionPoint2: CircuitConnectionPoint = CircuitConnectionPoint(this, CircuitID.Second)
+) : Combinator(json) {
     override val controlBehavior: DeciderCombinatorControlBehavior =
         DeciderCombinatorControlBehavior(json.control_behavior)
 
@@ -62,7 +68,8 @@ public class DeciderCombinatorControlBehavior(
 public class ConstantCombinator(
     override val prototype: ConstantCombinatorPrototype,
     json: EntityJson,
-) : Combinator(json) {
+) : BaseEntity(json), WithControlBehavior, CircuitConnectionPoint {
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
     override val controlBehavior: ConstantCombinatorControlBehavior =
         ConstantCombinatorControlBehavior(prototype, json.control_behavior)
 

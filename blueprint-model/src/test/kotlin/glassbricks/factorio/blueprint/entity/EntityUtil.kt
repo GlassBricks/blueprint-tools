@@ -43,8 +43,8 @@ internal inline fun <reified T : Entity> testSaveLoad(
     )
 
     if (connectToNetwork) {
-        val other = UnknownEntity("foo", Position.ZERO).connectionPoint1
-        (entity as CircuitConnectable).connectionPoint1.red.add(other)
+        val other = UnknownEntity("foo", Position.ZERO)
+        (entity as CircuitConnectionPoint).circuitConnections.red.add(other)
     }
 
     val backToJson = entity.toJsonIsolated(EntityNumber(1))

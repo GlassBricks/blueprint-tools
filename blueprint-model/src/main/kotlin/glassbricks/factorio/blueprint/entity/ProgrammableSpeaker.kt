@@ -9,8 +9,8 @@ import glassbricks.factorio.blueprint.prototypes.ProgrammableSpeakerPrototype
 public class ProgrammableSpeaker(
     override val prototype: ProgrammableSpeakerPrototype,
     json: EntityJson,
-) : BaseEntity(json), CircuitConnectable {
-    override val connectionPoint1: CircuitConnectionPoint = CircuitConnectionPoint(this)
+) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
 
     public var allowPolyphony: Boolean = json.parameters?.allow_polyphony ?: false
     public var playbackGlobally: Boolean = json.parameters?.playback_globally ?: false

@@ -173,7 +173,7 @@ class ImportExportKtTest {
         val pole3 = entities[2] as ElectricPole
         assertTrue(switch1.left.cableConnections.contains(pole2))
         assertTrue(switch1.right.cableConnections.contains(pole3))
-        assertTrue(switch1.connectionPoint1.red.contains(pole2.connectionPoint1))
+        assertTrue(switch1.circuitConnections.red.contains(pole2))
         assertTrue(pole2.cableConnections.contains(switch1.left))
         assertTrue(pole3.cableConnections.contains(switch1.right))
     }
@@ -185,7 +185,7 @@ class ImportExportKtTest {
         val pole3 = loadEntity("small-electric-pole") as ElectricPole
         switch1.left.cableConnections.add(pole2)
         switch1.right.cableConnections.add(pole3)
-        switch1.connectionPoint1.red.add(pole2.connectionPoint1)
+        switch1.circuitConnections.red.add(pole2)
 
         val blueprint = emptyBlueprint()
         blueprint.setEntitiesFrom(listOf(switch1, pole2, pole3))
@@ -257,18 +257,18 @@ class ImportExportKtTest {
         val entities = blueprintPrototypes.entitiesFromJson(blueprint)
         assertNotNull(entities)
         val (entity1, entity2, entity3) = entities
-        assertTrue(entity1 is CircuitConnectable)
-        assertTrue(entity2 is CircuitConnectable)
-        assertTrue(entity3 is CircuitConnectable)
+        assertTrue(entity1 is CombinatorConnections)
+        assertTrue(entity2 is CombinatorConnections)
+        assertTrue(entity3 is CombinatorConnections)
 
-        assertEquals(setOf(entity2.connectionPoint1), entity1.connectionPoint1.red)
-        assertEquals(setOf(entity3.connectionPoint1), entity1.connectionPoint1.green)
-        assertEquals(setOf(entity3.connectionPoint2), entity1.connectionPoint2!!.red)
+        assertEquals(setOf(entity2.input), entity1.inputs.red)
+        assertEquals(setOf(entity3.input), entity1.inputs.green)
+        assertEquals(setOf(entity3.output), entity1.outputs.red)
 
-        assertEquals(setOf(entity1.connectionPoint1), entity2.connectionPoint1.red)
+        assertEquals(setOf(entity1.input), entity2.inputs.red)
 
-        assertEquals(setOf(entity1.connectionPoint1), entity3.connectionPoint1.green)
-        assertEquals(setOf(entity1.connectionPoint2), entity3.connectionPoint2!!.red)
+        assertEquals(setOf(entity1.input), entity3.inputs.green)
+        assertEquals(setOf(entity1.output), entity3.outputs.red)
     }
 
 
@@ -277,11 +277,11 @@ class ImportExportKtTest {
         val entity1 = UnknownEntity("foo1", Position.ZERO)
         val entity2 = UnknownEntity("foo2", Position.ZERO)
         val entity3 = UnknownEntity("foo3", Position.ZERO)
-        entity1.connectionPoint1.red.add(entity2.connectionPoint1)
-        entity1.connectionPoint1.green.add(entity3.connectionPoint1)
-        entity1.connectionPoint2.red.add(entity3.connectionPoint2)
+        entity1.circuitConnections.red.add(entity2)
+        entity1.circuitConnections.green.add(entity3)
+        entity1.outputs.red.add(entity3.output)
 
-        assertTrue(entity2.connectionPoint1.red.contains(entity1.connectionPoint1))
+        assertTrue(entity2.circuitConnections.red.contains(entity1))
 
         val blueprint = emptyBlueprint()
         blueprint.setEntitiesFrom(listOf(entity1, entity2, entity3))

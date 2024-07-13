@@ -441,7 +441,9 @@ public data class CableConnectionData internal constructor(
 
 @Serializable(with = CircuitID.Serializer::class)
 public enum class CircuitID {
+    /** The main circuit connection point, or combinator input. */
     First,
+    /** Combinator output. */
     Second;
 
     internal object Serializer : EnumOrdinalSerializer<CircuitID>(CircuitID::class, offset = 1)
