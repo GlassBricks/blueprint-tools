@@ -27,7 +27,7 @@ internal inline fun <reified T> loadEntity(
     name: String,
     blueprint: BlueprintJson? = null,
     build: EntityJson.() -> Unit = {},
-): T = blueprintPrototypes.createEntityFromJson(buildEntityJson(name, build), blueprint) as T
+): T = blueprintPrototypes.entityFromJson(buildEntityJson(name, build), blueprint) as T
 
 internal inline fun <reified T : Entity> testSaveLoad(
     json: EntityJson,
@@ -42,7 +42,7 @@ internal fun <T : Entity> testSaveLoad(
     klass: KClass<T>,
 ): T {
     json.entity_number = EntityNumber(1)
-    val entity = blueprintPrototypes.createEntityFromJson(json, blueprint)
+    val entity = blueprintPrototypes.entityFromJson(json, blueprint)
     assertTrue(klass.isInstance(entity), "Expected $klass but got ${entity.javaClass}")
 
     assertEquals(

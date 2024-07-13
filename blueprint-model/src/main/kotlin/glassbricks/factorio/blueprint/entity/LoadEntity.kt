@@ -2,11 +2,12 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.prototypes.*
 
-internal fun createEntityFromPrototype(
+public fun createEntity(
     prototype: EntityWithOwnerPrototype,
     source: EntityJson,
-    blueprint: BlueprintJson?,
+    blueprint: BlueprintJson? = null,
 ): Entity {
+    require(source.name == prototype.name) { "Mismatched entity name: ${source.name} != ${prototype.name}" }
     return getConstructorForPrototype(prototype)(prototype, source, blueprint)
 }
 

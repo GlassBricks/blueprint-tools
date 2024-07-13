@@ -6,21 +6,21 @@ import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 
 
-internal fun BlueprintPrototypes.createEntityFromJson(
+public fun BlueprintPrototypes.entityFromJson(
     json: EntityJson,
     blueprint: BlueprintJson? = null,
 ): Entity {
     val prototype = this.blueprintableEntities[json.name] ?: UnknownPrototype(json.name)
-    return createEntityFromPrototype(prototype, json, blueprint)
+    return createEntity(prototype, json, blueprint)
 }
 
-internal fun BlueprintPrototypes.createEntity(
+public fun BlueprintPrototypes.createEntity(
     name: String,
     position: Position,
     direction: Direction = Direction.North,
 ): Entity {
     val json = EntityJson(EntityNumber(1), name, position, direction)
-    return createEntityFromJson(json)
+    return entityFromJson(json)
 }
 
 private val CircuitConnectable.connectionPoint1: CircuitConnectionPoint
@@ -46,7 +46,7 @@ internal fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Ent
     if (jsonEntities.isNullOrEmpty()) return null
 
     val indexByEntityNumber = jsonEntities.indices.associateBy { jsonEntities[it].entity_number }
-    val entities = jsonEntities.map { createEntityFromJson(it, json) }
+    val entities = jsonEntities.map { entityFromJson(it, json) }
 
     // connect circuit wires and copper wires
     fun connectAtColor(
