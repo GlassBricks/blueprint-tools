@@ -3,10 +3,10 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.prototypes.WallPrototype
 
-public class Wall (
+public class Wall(
     override val prototype: WallPrototype,
     json: EntityJson
-): BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
+) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
     override val controlBehavior: WallControlBehavior = WallControlBehavior(json.control_behavior)
     override fun exportToJson(json: EntityJson) {
@@ -14,15 +14,15 @@ public class Wall (
     }
 }
 
-public class WallControlBehavior(source: ControlBehaviorJson?) : ControlBehavior{
+public class WallControlBehavior(source: ControlBehaviorJson?) : ControlBehavior {
     // todo: make this correct
     public var openCondition: CircuitCondition? = source?.circuit_condition
         ?.takeIf { source.circuit_open_gate == true }
     public var readSensor: Boolean = source?.circuit_read_sensor == true
 
     override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(
-        circuit_condition = openCondition,
         circuit_open_gate = openCondition != null,
+        circuit_condition = openCondition.takeUnless { it == CircuitCondition.DEFAULT },
         circuit_read_sensor = readSensor
     )
 }
