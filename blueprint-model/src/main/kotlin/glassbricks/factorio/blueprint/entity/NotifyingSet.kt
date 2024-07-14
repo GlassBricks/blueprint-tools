@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-internal abstract class UpdatingSet<T : Any> : AbstractMutableSet<T>() {
+internal abstract class NotifyingSet<T : Any> : AbstractMutableSet<T>() {
     protected val inner: MutableSet<T> = LinkedHashSet()
 
     protected abstract fun onAdd(element: T): Boolean

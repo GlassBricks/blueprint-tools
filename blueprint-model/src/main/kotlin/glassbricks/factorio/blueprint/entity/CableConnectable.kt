@@ -26,7 +26,7 @@ public sealed interface CableConnections : MutableSet<CableConnectionPoint> {
 
 public fun CableConnections(parent: CableConnectionPoint): CableConnections = CableConnectionSetImpl(parent)
 
-private class CableConnectionSetImpl(override val parent: CableConnectionPoint) : UpdatingSet<CableConnectionPoint>(),
+private class CableConnectionSetImpl(override val parent: CableConnectionPoint) : NotifyingSet<CableConnectionPoint>(),
     CableConnections {
     override fun onAdd(element: CableConnectionPoint): Boolean {
         if (element.entity == parent.entity) return false

@@ -64,7 +64,7 @@ public class CircuitConnections(public val parent: CircuitConnectionPoint) {
         green.clear()
     }
 
-    internal inner class ConnectionSetImpl(override val color: WireColor) : UpdatingSet<CircuitConnectionPoint>(),
+    internal inner class ConnectionSetImpl(override val color: WireColor) : NotifyingSet<CircuitConnectionPoint>(),
         CircuitConnectionSet {
         override fun onAdd(element: CircuitConnectionPoint): Boolean {
             if (element == parent) return false
