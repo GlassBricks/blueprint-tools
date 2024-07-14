@@ -3,9 +3,13 @@ package glassbricks.factorio.blueprint
 import glassbricks.factorio.blueprint.Direction.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.math.ceil
+import kotlin.math.floor
 
 /**
- * Represents a simple bounding box (axis aligned).
+ * Represents an axis-aligned bounding box.
+ *
+ * Intersection checks are inclusive of lower bounds, exclusive of upper bounds.
  */
 @Serializable
 public data class BoundingBox(
@@ -22,13 +26,13 @@ public data class BoundingBox(
     public val maxX: Double get() = rightBottom.x
     public val maxY: Double get() = rightBottom.y
 
-    public val width: Double get() = maxX - minX
-    public val height: Double get() = maxY - minY
+    /** Returns true if the given point is inside the bounding box; all bounds are exclusive. */
+    public operator fun contains(point: Position): Boolean =
+        point.x in minX..<maxX && point.y in minY..<maxY
 
-    public operator fun contains(point: Position): Boolean = point.x in minX..maxX && point.y in minY..maxY
-
-    public infix fun intersects(other: BoundingBox?): Boolean =
-        other != null && minX < other.maxX && maxX > other.minX && minY < other.maxY && maxY > other.minY
+    /** Returns true if the given bounding box intersects with this one. Touching boxes are not considered intersecting. */
+    public infix fun intersects(other: BoundingBox): Boolean =
+        minX < other.maxX && maxX > other.minX && minY < other.maxY && maxY > other.minY
 
     public fun translate(amount: Position): BoundingBox = BoundingBox(leftTop + amount, rightBottom + amount)
     public fun translate(x: Double, y: Double): BoundingBox =
@@ -64,3 +68,52 @@ public fun bbox(
 ): BoundingBox = BoundingBox(minX, minY, maxX, maxY)
 
 public fun bbox(leftTop: Position, rightBottom: Position): BoundingBox = BoundingBox(leftTop, rightBottom)
+
+public data class TileBoundingBox(
+    val leftTop: TilePosition,
+    val rightBottomExclusive: TilePosition
+) {
+    public constructor(minX: Int, minY: Int, maxX: Int, maxY: Int) :
+            this(TilePosition(minX, minY), TilePosition(maxX, maxY))
+
+    public val minX: Int get() = leftTop.x
+    public val minY: Int get() = leftTop.y
+    public val maxXExclusive: Int get() = rightBottomExclusive.x
+    public val maxYExclusive: Int get() = rightBottomExclusive.y
+
+    public operator fun contains(tile: TilePosition): Boolean =
+        tile.x in minX..<maxXExclusive && tile.y in minY..<maxYExclusive
+
+    public fun iterateTiles(): Iterator<TilePosition> = object : Iterator<TilePosition> {
+        private var current = leftTop
+        override fun hasNext(): Boolean = current.y < maxYExclusive && current.x < maxXExclusive
+        override fun next(): TilePosition {
+            val result = current
+            current = if (current.x + 1 < maxXExclusive) TilePosition(current.x + 1, current.y)
+            else TilePosition(minX, current.y + 1)
+            return result
+        }
+    }
+}
+
+
+public fun BoundingBox.roundOutToTileBbox(): TileBoundingBox =
+    TileBoundingBox(
+        floor(minX).toInt(),
+        floor(minY).toInt(),
+        ceil(maxX).toInt(),
+        ceil(maxY).toInt()
+    )
+
+public fun TileBoundingBox.toBoundingBox(): BoundingBox =
+    bbox(minX.toDouble(), minY.toDouble(), maxXExclusive.toDouble(), maxYExclusive.toDouble())
+
+public fun tileBbox(
+    minX: Int,
+    minY: Int,
+    maxXExclusive: Int,
+    maxYExclusive: Int
+): TileBoundingBox = TileBoundingBox(minX, minY, maxXExclusive, maxYExclusive)
+
+public fun tileBbox(leftTop: TilePosition, rightBottomExclusive: TilePosition): TileBoundingBox =
+    TileBoundingBox(leftTop, rightBottomExclusive)

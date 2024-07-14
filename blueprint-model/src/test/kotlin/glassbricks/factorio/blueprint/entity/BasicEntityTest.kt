@@ -22,7 +22,7 @@ class BasicEntityTest {
                 type = "test"
                 name = "foo"
                 collision_box = BoundingBox(-0.3, -0.5, 0.3, 0.5)
-                collision_mask = CollisionMask.DEFAULT_COLLISION_MASKS["accumulator"]!!
+                collision_mask = CollisionMask.DEFAULT_MASKS["accumulator"]!!
             }
         }
         val entity = BasicEntity(testPrototype, EntityJson(EntityNumber(1), "foo", pos(2.0, 3.0), Direction.East))
@@ -35,9 +35,9 @@ class BasicEntityTest {
 
         assertEquals(
             BoundingBox(-0.5, -0.3, 0.5, 0.3).translate(2.0, 3.0),
-            entity.boundingBox
+            entity.collisionBox
         )
-        assertEquals(CollisionMask.DEFAULT_COLLISION_MASKS["accumulator"]!!, entity.collisionMask)
+        assertEquals(CollisionMask.DEFAULT_MASKS["accumulator"]!!, entity.collisionMask)
 
         val json = entity.toJsonIsolated(EntityNumber(2))
         val expected = EntityJson(EntityNumber(2), "foo", pos(2.0, 3.0), Direction.East)

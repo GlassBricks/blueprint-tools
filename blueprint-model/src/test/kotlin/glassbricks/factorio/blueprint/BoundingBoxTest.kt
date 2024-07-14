@@ -15,9 +15,6 @@ class BoundingBoxTest {
         assertEquals(10.0, boundingBox.maxX)
         assertEquals(12.0, boundingBox.maxY)
 
-        assertEquals(10.0, boundingBox.width)
-        assertEquals(11.0, boundingBox.height)
-
         assertEquals("BoundingBox(pos(0.0, 1.0), pos(10.0, 12.0))", boundingBox.toString())
     }
 

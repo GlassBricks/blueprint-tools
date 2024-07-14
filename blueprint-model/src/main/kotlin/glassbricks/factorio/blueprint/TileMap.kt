@@ -1,6 +1,5 @@
-package glassbricks.factorio.blueprint.model
+package glassbricks.factorio.blueprint
 
-import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.json.Tile
 
 /**

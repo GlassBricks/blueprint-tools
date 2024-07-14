@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -33,6 +34,10 @@ public data class Position private constructor(
         Position((xAsInt * scale).roundToInt(), (yAsInt * scale).roundToInt())
 
     public operator fun times(scale: Int): Position = Position(xAsInt * scale, yAsInt * scale)
+    public operator fun div(scale: Double): Position =
+        Position((xAsInt / scale).roundToInt(), (yAsInt / scale).roundToInt())
+
+    public operator fun div(scale: Int): Position = Position(xAsInt / scale, yAsInt / scale)
 
     public operator fun unaryPlus(): Position = this
     public operator fun unaryMinus(): Position = Position(-xAsInt, -yAsInt)
@@ -43,7 +48,15 @@ public data class Position private constructor(
     public fun squaredDistanceTo(other: Position): Double = (this - other).squaredLength()
     public fun distanceTo(other: Position): Double = (this - other).length()
 
+    /**
+     * Returns the tile position of the tile this position is in.
+     */
+    public fun occupiedTile(): TilePosition = TilePosition(floor(x).toInt(), floor(y).toInt())
+
+
     override fun toString(): String = "Position($x, $y)"
+
+
     public companion object {
         public val ZERO: Position = Position(0, 0)
     }
@@ -72,7 +85,11 @@ public operator fun Int.times(position: Position): Position = position * this
 /** Short for [Position] constructor. */
 public fun pos(x: Double, y: Double): Position = Position(x, y)
 
-/** Like [Position], but only uses integers. */
+/**
+ * Like [Position], but represents only tiles as integers.
+ *
+ * The top left corner of a tile is the tile's position as a MapPosition.
+ */
 @Serializable
 public data class TilePosition(val x: Int, val y: Int) {
     public operator fun plus(other: TilePosition): TilePosition = TilePosition(x + other.x, y + other.y)
@@ -91,10 +108,15 @@ public data class TilePosition(val x: Int, val y: Int) {
 
     public fun isZero(): Boolean = x == 0 && y == 0
 
+
+    /** Gets the map position bounding box of this tile. */
+    public fun mapBoundingBox(): BoundingBox = BoundingBox(pos(x.toDouble(), y.toDouble()), pos(x + 1.0, y + 1.0))
+
     public companion object {
         public val ZERO: TilePosition = TilePosition(0, 0)
     }
 }
 
-public operator fun Int.times(position: TilePosition): TilePosition = TilePosition(this * position.x, this * position.y)
-public fun Position.roundToTilePosition(): TilePosition = TilePosition(x.roundToInt(), y.roundToInt())
+public operator fun Int.times(position: TilePosition): TilePosition = position * this
+
+public fun tilePos(x: Int, y: Int): TilePosition = TilePosition(x, y)

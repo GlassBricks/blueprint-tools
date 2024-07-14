@@ -6,66 +6,80 @@ import kotlin.test.assertEquals
 
 class PositionTest {
     @Test
-    fun `creating a position`() {
-        val position = Position(1.0, 2.0)
-        assertEquals(1.0, position.x)
-        assertEquals(2.0, position.y)
-        assertEquals("Position(1.0, 2.0)", position.toString())
+    fun `creating a pos`() {
+        val pos = pos(1.0, 2.0)
+        assertEquals(1.0, pos.x)
+        assertEquals(2.0, pos.y)
+        assertEquals("pos(1.0, 2.0)", pos.toString())
 
-        val position2 = Position(1.25, 2 + 1 / 256.0)
-        assertEquals(1.25, position2.x)
-        assertEquals(2 + 1 / 256.0, position2.y)
+        val pos2 = pos(1.25, 2 + 1 / 256.0)
+        assertEquals(1.25, pos2.x)
+        assertEquals(2 + 1 / 256.0, pos2.y)
     }
 
     @Test
     fun add() {
-        val position = Position(1.0, 2.0)
-        val position2 = Position(3.0, 4.0)
-        val result = position + position2
+        val pos = pos(1.0, 2.0)
+        val pos2 = pos(3.0, 4.0)
+        val result = pos + pos2
         assertEquals(4.0, result.x)
         assertEquals(6.0, result.y)
     }
 
     @Test
     fun minus() {
-        val position = Position(1.0, 2.0)
-        val position2 = Position(3.0, 5.0)
-        val result = position - position2
+        val pos = pos(1.0, 2.0)
+        val pos2 = pos(3.0, 5.0)
+        val result = pos - pos2
         assertEquals(-2.0, result.x)
         assertEquals(-3.0, result.y)
     }
 
     @Test
     fun timesDouble() {
-        val position = Position(1.0, 2.0)
-        val result = position * 1.5
+        val pos = pos(1.0, 2.0)
+        val result = pos * 1.5
         assertEquals(1.5, result.x)
         assertEquals(3.0, result.y)
     }
 
     @Test
     fun timesInt() {
-        val position = Position(1.0, 2.0)
-        val result = position * 3
+        val result = pos(1.0, 2.0) * 3
         assertEquals(3.0, result.x)
         assertEquals(6.0, result.y)
     }
 
     @Test
+    fun divDouble() {
+        val pos = pos(3.0, 6.0)
+        val result = pos / 1.5
+        assertEquals(2.0, result.x)
+        assertEquals(4.0, result.y)
+    }
+
+    @Test
+    fun divInt() {
+        val result = pos(3.0, 6.0) / 3
+        assertEquals(1.0, result.x)
+        assertEquals(2.0, result.y)
+    }
+
+    @Test
     fun unaryMinus() {
-        val position = Position(1.0, 2.0)
-        val result = -position
+        val pos = pos(1.0, 2.0)
+        val result = -pos
         assertEquals(-1.0, result.x)
         assertEquals(-2.0, result.y)
     }
 
     @Test
     fun length() {
-        val position = Position(3.0, 4.0)
-        assertEquals(25.0, position.squaredLength())
-        assertEquals(5.0, position.length())
+        val pos = pos(3.0, 4.0)
+        assertEquals(25.0, pos.squaredLength())
+        assertEquals(5.0, pos.length())
 
-        val bigPosition = Position(
+        val bigPosition = pos(
             (1 shl 20) * 3.0,
             (1 shl 20) * 4.0
         )
@@ -74,18 +88,101 @@ class PositionTest {
 
     @Test
     fun distance() {
-        val position = Position(1.0, 2.0)
-        val position2 = Position(4.0, 6.0)
-        assertEquals(25.0, position.squaredDistanceTo(position2))
-        assertEquals(5.0, position.distanceTo(position2))
+        val pos = pos(1.0, 2.0)
+        val pos2 = pos(4.0, 6.0)
+        assertEquals(25.0, pos.squaredDistanceTo(pos2))
+        assertEquals(5.0, pos.distanceTo(pos2))
     }
 
     @Test
     fun serialize() {
-        val position = Position(1.0, 2.0)
-        val json = Json.encodeToString(Position.serializer(), position)
+        val pos = pos(1.0, 2.0)
+        val json = Json.encodeToString(Position.serializer(), pos)
         assertEquals("""{"x":1,"y":2}""", json)
         val deserialized = Json.decodeFromString(Position.serializer(), json)
-        assertEquals(position, deserialized)
+        assertEquals(pos, deserialized)
+    }
+
+    @Test
+    fun occupiedTile() {
+        assertEquals(TilePosition(1, 2), pos(1.0, 2.0).occupiedTile())
+        assertEquals(TilePosition(2, 3), pos(2.9, 3.9).occupiedTile())
+        assertEquals(TilePosition(-2, -3), pos(-1.9, -2.9).occupiedTile())
+    }
+}
+
+class TilePositionTest {
+    @Test
+    fun `creating a tile pos`() {
+        val pos = TilePosition(1, 2)
+        assertEquals(1, pos.x)
+        assertEquals(2, pos.y)
+    }
+
+    @Test
+    fun add() {
+        val pos = TilePosition(1, 2)
+        val pos2 = TilePosition(3, 4)
+        val result = pos + pos2
+        assertEquals(4, result.x)
+        assertEquals(6, result.y)
+    }
+
+    @Test
+    fun minus() {
+        val pos = TilePosition(1, 2)
+        val pos2 = TilePosition(3, 5)
+        val result = pos - pos2
+        assertEquals(-2, result.x)
+        assertEquals(-3, result.y)
+    }
+
+    @Test
+    fun timesInt() {
+        val pos = TilePosition(1, 2)
+        val result = pos * 3
+        assertEquals(3, result.x)
+        assertEquals(6, result.y)
+    }
+
+    @Test
+    fun unaryMinus() {
+        val pos = TilePosition(1, 2)
+        val result = -pos
+        assertEquals(-1, result.x)
+        assertEquals(-2, result.y)
+    }
+
+    @Test
+    fun length() {
+        val pos = TilePosition(3, 4)
+        assertEquals(25, pos.squaredLength())
+        assertEquals(5.0, pos.length())
+    }
+
+    @Test
+    fun center() {
+        val pos = TilePosition(1, 2)
+        assertEquals(pos(1.5, 2.5), pos.center())
+    }
+
+    @Test
+    fun topLeftCorner() {
+        val pos = TilePosition(1, 2)
+        assertEquals(pos(1.0, 2.0), pos.topLeftCorner())
+    }
+
+    @Test
+    fun isZero() {
+        val pos = TilePosition(0, 0)
+        assertEquals(true, pos.isZero())
+        val pos2 = TilePosition(1, 0)
+        assertEquals(false, pos2.isZero())
+    }
+
+    @Test
+    fun tileBoundingBox() {
+        val pos = TilePosition(1, 2)
+        assertEquals(bbox(1.0, 2.0, 2.0, 3.0), pos.mapBoundingBox())
     }
 }

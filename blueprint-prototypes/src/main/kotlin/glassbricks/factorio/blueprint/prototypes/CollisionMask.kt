@@ -53,18 +53,23 @@ public data class CollisionMask(
         public val EMPTY: CollisionMask = CollisionMask(EnumSet.noneOf(CollisionMaskLayer::class.java))
 
         /** A map of default collision masks for each entity type (used in this library). */
-        public val DEFAULT_COLLISION_MASKS: Map<String, CollisionMask>
+        public val DEFAULT_MASKS: Map<String, CollisionMask>
+
+        /**
+         * The default collision mask used by most entities.
+         */
+        public val PLAIN_OBJECT_MASK: CollisionMask = CollisionMask(
+            EnumSet.of(
+                CollisionMaskLayer.`item-layer`,
+                CollisionMaskLayer.`object-layer`,
+                CollisionMaskLayer.`player-layer`,
+                CollisionMaskLayer.`water-tile`
+            )
+        )
 
         init {
             val sets = arrayOf(
-                CollisionMask(
-                    EnumSet.of(
-                        CollisionMaskLayer.`item-layer`,
-                        CollisionMaskLayer.`object-layer`,
-                        CollisionMaskLayer.`player-layer`,
-                        CollisionMaskLayer.`water-tile`
-                    )
-                ),
+                PLAIN_OBJECT_MASK,
                 CollisionMask(EnumSet.of(CollisionMaskLayer.`train-layer`)),
                 CollisionMask(
                     EnumSet.of(
@@ -122,7 +127,7 @@ public data class CollisionMask(
                     )
                 ),
             )
-            DEFAULT_COLLISION_MASKS = mapOf(
+            DEFAULT_MASKS = mapOf(
                 "accumulator" to sets[0],
                 "ammo-turret" to sets[0],
                 "arithmetic-combinator" to sets[0],

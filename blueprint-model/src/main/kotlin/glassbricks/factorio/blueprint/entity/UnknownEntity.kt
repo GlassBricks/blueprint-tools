@@ -20,7 +20,7 @@ public class UnknownEntity(
     WithColor,
     WithInventory {
     public val json: EntityJson = json.deepCopy()
-    override val boundingBox: BoundingBox get() = BoundingBox(position, position)
+    override val collisionBox: BoundingBox get() = BoundingBox(position, position)
 
     override var position: Position by json::position
     override var tags: JsonObject? by json::tags

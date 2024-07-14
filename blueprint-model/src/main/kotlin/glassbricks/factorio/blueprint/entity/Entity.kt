@@ -3,6 +3,7 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.BoundingBox
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.Spatial
 import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.prototypes.CollisionMask
 import glassbricks.factorio.blueprint.prototypes.EntityWithOwnerPrototype
@@ -14,9 +15,9 @@ public interface Entity : Spatial {
     public val name: String get() = prototype.name
 
     override val collisionMask: CollisionMask get() = prototype.collision_mask ?: CollisionMask.EMPTY
-    override val boundingBox: BoundingBox
+    override val collisionBox: BoundingBox
 
-    public var position: Position
+    public override var position: Position
     public var direction: Direction
     public var tags: JsonObject?
 
@@ -37,13 +38,13 @@ public abstract class BaseEntity(json: EntityJson) : Entity {
     override var tags: JsonObject? = json.tags
 
     protected var cachedBoundingBox: BoundingBox? = null
-    override val boundingBox: BoundingBox
+    override val collisionBox: BoundingBox
         get() = cachedBoundingBox ?: (prototype.collision_box?.rotateCardinal(direction)?.translate(position)
             ?: BoundingBox(position, position))
             .also { cachedBoundingBox = it }
 
     public override val collisionMask: CollisionMask
-        get() = prototype.collision_mask ?: CollisionMask.DEFAULT_COLLISION_MASKS[prototype.type]!!
+        get() = prototype.collision_mask ?: CollisionMask.DEFAULT_MASKS[prototype.type]!!
 
     private fun createEntityJson(entityNumber: EntityNumber): EntityJson = EntityJson(
         entity_number = entityNumber,
