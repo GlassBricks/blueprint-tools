@@ -38,7 +38,7 @@ public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entit
             val index = indexByEntityNumber[data.entity_id] ?: continue
             val entity = entities[index]
             if (entity !is CircuitConnectable) continue
-            val connectionPoint = entity.getConnectionPoint(data.circuit_id) ?: continue
+            val connectionPoint = entity.getCableConnectionPoint(data.circuit_id) ?: continue
             set.add(connectionPoint)
         }
     }
@@ -82,7 +82,7 @@ public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entit
                 }
             }
         }
-        if (entity is PowerSwitchConnectionPoints) jsonEntity.connections?.let { connections ->
+        if (entity is PowerSwitchConnections) jsonEntity.connections?.let { connections ->
             connections.Cu0?.let { connectPowerSwitch(entity.left, it) }
             connections.Cu1?.let { connectPowerSwitch(entity.right, it) }
         }
@@ -119,7 +119,7 @@ internal fun BlueprintJson.setEntitiesFrom(entities: Iterable<Entity>) {
         if (entity is CableConnectionPoint) {
             json.neighbours = entity.exportNeighbors(entityMap)
         }
-        if (entity is PowerSwitchConnectionPoints) {
+        if (entity is PowerSwitchConnections) {
             val cu0 = entity.left.exportPowerSwitch(entityMap)
             val cu1 = entity.right.exportPowerSwitch(entityMap)
             if (cu0 != null || cu1 != null)
@@ -151,7 +151,7 @@ private val CircuitConnectable.connectionPoint2: CircuitConnectionPoint?
         else -> null
     }
 
-private fun CircuitConnectable.getConnectionPoint(id: CircuitID): CircuitConnectionPoint? = when (this) {
-    is CombinatorConnections -> this.getConnectionPoint(id)
+private fun CircuitConnectable.getCableConnectionPoint(id: CircuitID): CircuitConnectionPoint? = when (this) {
+    is CombinatorConnections -> this.getCircuitConnectionPoint(id)
     is CircuitConnectionPoint -> if (id == CircuitID.First) this else null
 }

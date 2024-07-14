@@ -36,9 +36,9 @@ public interface CombinatorConnections : CircuitConnectable {
     public val output: CircuitConnectionPoint
 }
 
-public val CombinatorConnections.inputs: CircuitConnections get() = input.circuitConnections
-public val CombinatorConnections.outputs: CircuitConnections get() = output.circuitConnections
-public fun CombinatorConnections.getConnectionPoint(id: CircuitID): CircuitConnectionPoint = when (id) {
+public val CombinatorConnections.inputConnections: CircuitConnections get() = input.circuitConnections
+public val CombinatorConnections.outputConnections: CircuitConnections get() = output.circuitConnections
+public fun CombinatorConnections.getCircuitConnectionPoint(id: CircuitID): CircuitConnectionPoint = when (id) {
     CircuitID.First -> input
     CircuitID.Second -> output
 }

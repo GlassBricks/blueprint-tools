@@ -9,8 +9,10 @@ import glassbricks.factorio.blueprint.json.LogisticFilter as LogisticFilterJson
 public open class Container(
     prototype_: ContainerPrototype,
     json: EntityJson,
-) : BaseEntity(json), WithInventory, WithItemFilters {
+) : BaseEntity(json), WithInventory, WithItemFilters, CircuitConnectionPoint {
     override val prototype: ContainerPrototype = prototype_
+    override val circuitConnections: CircuitConnections = CircuitConnections(this)
+    override val entity: Entity get() = this
 
     public override var bar: Int? = json.bar
     override val inventorySize: ItemStackIndex get() = prototype.inventory_size

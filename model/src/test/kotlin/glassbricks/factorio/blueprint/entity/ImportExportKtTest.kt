@@ -279,14 +279,14 @@ class ImportExportKtTest {
         assertTrue(entity2 is CombinatorConnections)
         assertTrue(entity3 is CombinatorConnections)
 
-        assertEquals(setOf(entity2.input), entity1.inputs.red)
-        assertEquals(setOf(entity3.input), entity1.inputs.green)
-        assertEquals(setOf(entity3.output), entity1.outputs.red)
+        assertEquals(setOf(entity2.input), entity1.inputConnections.red)
+        assertEquals(setOf(entity3.input), entity1.inputConnections.green)
+        assertEquals(setOf(entity3.output), entity1.outputConnections.red)
 
-        assertEquals(setOf(entity1.input), entity2.inputs.red)
+        assertEquals(setOf(entity1.input), entity2.inputConnections.red)
 
-        assertEquals(setOf(entity1.input), entity3.inputs.green)
-        assertEquals(setOf(entity1.output), entity3.outputs.red)
+        assertEquals(setOf(entity1.input), entity3.inputConnections.green)
+        assertEquals(setOf(entity1.output), entity3.outputConnections.red)
     }
 
 
@@ -297,7 +297,7 @@ class ImportExportKtTest {
         val entity3 = UnknownEntity("foo3", Position.ZERO)
         entity1.circuitConnections.red.add(entity2)
         entity1.circuitConnections.green.add(entity3)
-        entity1.outputs.red.add(entity3.output)
+        entity1.outputConnections.red.add(entity3.output)
 
         assertTrue(entity2.circuitConnections.red.contains(entity1))
 

@@ -8,9 +8,9 @@ import glassbricks.factorio.blueprint.prototypes.PowerSwitchPrototype
 public class PowerSwitch(
     override val prototype: PowerSwitchPrototype,
     json: EntityJson,
-) : BaseEntity(json), PowerSwitchConnectionPoints, CircuitConnectionPoint, WithControlBehavior {
-    public override val left: CableConnectionPoint = ConnectionPoint()
-    public override val right: CableConnectionPoint = ConnectionPoint()
+) : BaseEntity(json), PowerSwitchConnections, CircuitConnectionPoint, WithControlBehavior {
+    public override val left: PowerSwitchConnectionPoint = ConnectionPoint(PowerSwitchConnectionSide.Left)
+    public override val right: PowerSwitchConnectionPoint = ConnectionPoint(PowerSwitchConnectionSide.Right)
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
     override val controlBehavior: PowerSwitchControlBehavior = PowerSwitchControlBehavior(json.control_behavior)
 
@@ -21,7 +21,7 @@ public class PowerSwitch(
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    private inner class ConnectionPoint : CableConnectionPoint {
+    private inner class ConnectionPoint(override val side: PowerSwitchConnectionSide) : PowerSwitchConnectionPoint {
         override val entity: PowerSwitch get() = this@PowerSwitch
         override val cableConnections: CableConnections = CableConnections(this)
     }

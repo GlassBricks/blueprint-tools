@@ -9,13 +9,27 @@ public interface CableConnectionPoint {
     public val entity: Entity
 }
 
-public interface PowerSwitchConnectionPoints {
-    public val left: CableConnectionPoint
-    public val right: CableConnectionPoint
+public enum class PowerSwitchConnectionSide { Left, Right }
+
+
+public interface PowerSwitchConnectionPoint : CableConnectionPoint {
+    public val side: PowerSwitchConnectionSide
+    public override val entity: PowerSwitchConnections
 }
 
-public val PowerSwitchConnectionPoints.leftConnections: CableConnections get() = left.cableConnections
-public val PowerSwitchConnectionPoints.rightConnections: CableConnections get() = right.cableConnections
+public interface PowerSwitchConnections : Entity {
+    public val left: PowerSwitchConnectionPoint
+    public val right: PowerSwitchConnectionPoint
+}
+
+public fun PowerSwitchConnections.getCableConnectionPoint(side: PowerSwitchConnectionSide): PowerSwitchConnectionPoint =
+    when (side) {
+        PowerSwitchConnectionSide.Left -> left
+        PowerSwitchConnectionSide.Right -> right
+    }
+
+public val PowerSwitchConnections.leftConnections: CableConnections get() = left.cableConnections
+public val PowerSwitchConnections.rightConnections: CableConnections get() = right.cableConnections
 
 
 /**
@@ -27,7 +41,8 @@ public sealed interface CableConnections : MutableSet<CableConnectionPoint> {
 
 public fun CableConnections(parent: CableConnectionPoint): CableConnections = CableConnectionSetImpl(parent)
 
-private class CableConnectionSetImpl(override val parent: CableConnectionPoint) : NotifyingSet<CableConnectionPoint>(),
+internal open class CableConnectionSetImpl(override val parent: CableConnectionPoint) :
+    NotifyingSet<CableConnectionPoint>(),
     CableConnections {
     override fun onAdd(element: CableConnectionPoint): Boolean {
         if (element.entity == parent.entity) return false
@@ -40,7 +55,7 @@ private class CableConnectionSetImpl(override val parent: CableConnectionPoint) 
 
     override fun equals(other: Any?): Boolean = this === other
     override fun hashCode(): Int = System.identityHashCode(this)
-    override fun toString(): String = "CableConnectionSet(parent=$parent)"
+    override fun toString(): String = "CableConnections(parent=$parent)"
 }
 
 internal fun CableConnectionPoint.exportNeighbors(

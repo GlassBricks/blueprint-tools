@@ -24,6 +24,7 @@ public interface Entity : Spatial {
 
     public fun toJsonIsolated(entityNumber: EntityNumber): EntityJson
 
+    /** Creates a copy of this entity, but without any connections to other entities. */
     public fun copyIsolated(): Entity
 }
 
