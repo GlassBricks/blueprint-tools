@@ -9,7 +9,7 @@ repositories {
 
 dependencies {
     api(project(":blueprint"))
-    implementation(project(":blueprint-prototypes"))
+    implementation(project(":prototypes"))
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test"))
 }

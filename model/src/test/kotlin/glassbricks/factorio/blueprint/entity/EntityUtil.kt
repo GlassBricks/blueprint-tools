@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 
 
 val blueprintPrototypes by lazy {
-    val file = File("../blueprint-prototypes/src/test/resources/data-raw-dump.json")
+    val file = File("../prototypes/src/test/resources/data-raw-dump.json")
     BlueprintPrototypes.loadFromDataRaw(file)
 }
 

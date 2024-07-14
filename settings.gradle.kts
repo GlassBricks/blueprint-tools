@@ -4,6 +4,6 @@ plugins {
 rootProject.name = "factorio-tools"
 
 include("blueprint")
-include("blueprint-prototypes")
-include("blueprint-prototypes:codegen")
-include("blueprint-model")
+include("prototypes")
+include("prototypes:codegen")
+include("model")

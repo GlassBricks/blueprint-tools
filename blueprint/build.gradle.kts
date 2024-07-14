@@ -4,16 +4,14 @@ plugins {
     `java-library`
 }
 
+group = "glassbricks.factorio"
+
 repositories {
     mavenCentral()
 }
 
-group = "glassbricks.factorio"
-
-fun kotlinx(module: String, version: String? = null): String =
-    "org.jetbrains.kotlinx:kotlinx-$module${version?.let { ":$it" } ?: ""}"
 dependencies {
-    api(kotlinx("serialization-json", "1.7.0"))
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
     testImplementation(kotlin("test"))
 }
 
