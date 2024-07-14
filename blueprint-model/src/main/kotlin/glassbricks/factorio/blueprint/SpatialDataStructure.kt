@@ -31,3 +31,8 @@ public interface SpatialDataStructure<T : Spatial> : Collection<T> {
 }
 
 public interface MutableSpatialDataStructure<T : Spatial> : SpatialDataStructure<T>, MutableCollection<T>
+
+
+// todo: replace this with DI?
+public fun <T : Spatial> DefaultSpatialDataStructure(): MutableSpatialDataStructure<T> =
+    SpatialTileHashMap()

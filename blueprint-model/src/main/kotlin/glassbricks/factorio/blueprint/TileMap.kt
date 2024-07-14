@@ -18,5 +18,5 @@ public fun List<Tile>?.toTileMap(): TileMap {
 
 public fun TileMap.toTileList(): List<Tile>? {
     if (isEmpty()) return null
-    return entries.sortedWith(compareBy({ it.key.x }, { it.key.y })).map { Tile(name = it.value, position = it.key) }
+    return entries.sortedBy { it.key }.map { Tile(position = it.key, name = it.value) }
 }

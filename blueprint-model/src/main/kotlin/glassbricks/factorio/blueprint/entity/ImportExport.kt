@@ -5,7 +5,6 @@ import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 
-
 public fun BlueprintPrototypes.entityFromJson(
     json: EntityJson,
     blueprint: BlueprintJson? = null,
@@ -23,27 +22,8 @@ public fun BlueprintPrototypes.createEntity(
     return entityFromJson(json)
 }
 
-private val CircuitConnectable.connectionPoint1: CircuitConnectionPoint
-    get() = when (this) {
-        is CombinatorConnections -> input
-        is CircuitConnectionPoint -> this
-    }
-
-private val CircuitConnectable.connectionPoint2: CircuitConnectionPoint?
-    get() = when (this) {
-        is CombinatorConnections -> output
-        else -> null
-    }
-
-private fun CircuitConnectable.getConnectionPoint(id: CircuitID): CircuitConnectionPoint? = when (this) {
-    is CombinatorConnections -> this.getConnectionPoint(id)
-    is CircuitConnectionPoint -> if (id == CircuitID.First) this else null
-}
-
-
-internal fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entity>? {
-    val jsonEntities = json.entities
-    if (jsonEntities.isNullOrEmpty()) return null
+public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entity> {
+    val jsonEntities = json.entities ?: return emptyList()
 
     val indexByEntityNumber = jsonEntities.indices.associateBy { jsonEntities[it].entity_number }
     val entities = jsonEntities.map { entityFromJson(it, json) }
@@ -156,4 +136,22 @@ internal fun BlueprintJson.setEntitiesFrom(entities: Iterable<Entity>) {
 
     this.entities = entityMap.values.toList()
     this.schedules = schedulesJson
+}
+
+
+private val CircuitConnectable.connectionPoint1: CircuitConnectionPoint
+    get() = when (this) {
+        is CombinatorConnections -> input
+        is CircuitConnectionPoint -> this
+    }
+
+private val CircuitConnectable.connectionPoint2: CircuitConnectionPoint?
+    get() = when (this) {
+        is CombinatorConnections -> output
+        else -> null
+    }
+
+private fun CircuitConnectable.getConnectionPoint(id: CircuitID): CircuitConnectionPoint? = when (this) {
+    is CombinatorConnections -> this.getConnectionPoint(id)
+    is CircuitConnectionPoint -> if (id == CircuitID.First) this else null
 }

@@ -21,7 +21,7 @@ import kotlin.math.sqrt
 public data class Position private constructor(
     public val xAsInt: Int,
     public val yAsInt: Int,
-) {
+) : Comparable<Position> {
     public constructor(x: Double, y: Double) : this((x * 256).roundToInt(), (y * 256).roundToInt())
 
     val x: Double get() = xAsInt / 256.0
@@ -55,6 +55,11 @@ public data class Position private constructor(
 
 
     override fun toString(): String = "Position($x, $y)"
+
+    override fun compareTo(other: Position): Int {
+        val xComp = xAsInt.compareTo(other.xAsInt)
+        return if (xComp != 0) xComp else yAsInt.compareTo(other.yAsInt)
+    }
 
 
     public companion object {
@@ -91,7 +96,7 @@ public fun pos(x: Double, y: Double): Position = Position(x, y)
  * The top left corner of a tile is the tile's position as a MapPosition.
  */
 @Serializable
-public data class TilePosition(val x: Int, val y: Int) {
+public data class TilePosition(val x: Int, val y: Int) : Comparable<TilePosition> {
     public operator fun plus(other: TilePosition): TilePosition = TilePosition(x + other.x, y + other.y)
     public operator fun minus(other: TilePosition): TilePosition = TilePosition(x - other.x, y - other.y)
 
@@ -111,6 +116,11 @@ public data class TilePosition(val x: Int, val y: Int) {
 
     /** Gets the map position bounding box of this tile. */
     public fun mapBoundingBox(): BoundingBox = BoundingBox(pos(x.toDouble(), y.toDouble()), pos(x + 1.0, y + 1.0))
+
+    override fun compareTo(other: TilePosition): Int {
+        val xComp = x.compareTo(other.x)
+        return if (xComp != 0) xComp else y.compareTo(other.y)
+    }
 
     public companion object {
         public val ZERO: TilePosition = TilePosition(0, 0)
