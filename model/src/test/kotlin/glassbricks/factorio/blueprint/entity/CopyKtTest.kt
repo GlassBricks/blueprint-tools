@@ -85,7 +85,7 @@ class CopyKtTest {
         val entity2 = blueprintPrototypes.createEntity("iron-chest", pos(1.0, 1.0)) as Container
         val entity3 = blueprintPrototypes.createEntity("iron-chest", pos(2.0, 2.0)) as Container
         val entities = listOf(entity1, entity2, entity3)
-        val copies = listOf(entity1, entity2, entity3).copyEntitiesWithConnections()
+        val copies = copyEntitiesWithConnections(listOf(entity1, entity2, entity3))
         assertEquals(entities.size, copies.size)
         for (entity in entities) {
             val copy = copies[entity]!!
@@ -105,7 +105,7 @@ class CopyKtTest {
         pole1.cableConnections.add(pole2)
         pole1.circuitConnections.red.add(chest1)
         pole1.circuitConnections.green.add(chest2)
-        val copies = entities.copyEntitiesWithConnections()
+        val copies = copyEntitiesWithConnections(entities)
         val pole1Copy = copies[pole1] as ElectricPole
         val pole2Copy = copies[pole2] as ElectricPole
         val chest1Copy = copies[chest1] as Container
@@ -127,7 +127,7 @@ class CopyKtTest {
         powerSwitch.leftConnections.add(pole1)
         powerSwitch.rightConnections.add(pole2)
         powerSwitch.circuitConnections.red.add(pole1)
-        val copies = entities.copyEntitiesWithConnections()
+        val copies = copyEntitiesWithConnections(entities)
         val powerSwitchCopy = copies[powerSwitch] as PowerSwitch
         val pole1Copy = copies[pole1] as ElectricPole
         val pole2Copy = copies[pole2] as ElectricPole
@@ -147,7 +147,7 @@ class CopyKtTest {
         val entities = listOf(combinator, pole1, pole2)
         combinator.inputConnections.red.add(pole1)
         combinator.outputConnections.green.add(pole2)
-        val copies = entities.copyEntitiesWithConnections()
+        val copies = copyEntitiesWithConnections(entities)
         val combinatorCopy = copies[combinator] as ArithmeticCombinator
         val pole1Copy = copies[pole1] as ElectricPole
         val pole2Copy = copies[pole2] as ElectricPole

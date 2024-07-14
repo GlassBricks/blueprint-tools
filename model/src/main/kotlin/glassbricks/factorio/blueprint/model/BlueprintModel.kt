@@ -1,9 +1,7 @@
 package glassbricks.factorio.blueprint.model
 
 import glassbricks.factorio.blueprint.*
-import glassbricks.factorio.blueprint.entity.Entity
-import glassbricks.factorio.blueprint.entity.entitiesFromJson
-import glassbricks.factorio.blueprint.entity.setEntitiesFrom
+import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 
@@ -80,9 +78,21 @@ private constructor(
         bp.setEntitiesFrom(entities.sortedBy { it.position })
     }
 
+    public fun deepCopy(): BlueprintModel = BlueprintModel(
+        label = label,
+        label_color = label_color,
+        description = description,
+        iconsArr = iconsArr.copyOf(),
+        tiles = tiles.toMutableMap(),
+        entities = entities.copyEntities(),
+        snapToGridSettings = snapToGridSettings?.copy(),
+        item = item,
+        version = version
+    )
+
 }
 
-public class SnapToGridSettings(
+public data class SnapToGridSettings(
     /** The dimensions of the grid to snap to. */
     public val snapToGrid: TilePosition,
     /** If not null, then absolute snapping is used. */

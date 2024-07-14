@@ -1,6 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
+import glassbricks.factorio.blueprint.MutableSpatialDataStructure
 import glassbricks.factorio.blueprint.SpatialDataStructure
 
 
@@ -106,9 +107,9 @@ private fun copyCircuitConnections(
  *
  * Returns a map of old entities to new entities.
  */
-public fun <T : Entity> Iterable<T>.copyEntitiesWithConnections(): Map<T, T> {
+public fun <T : Entity> copyEntitiesWithConnections(entities: Iterable<T>): Map<T, T> {
     @Suppress("UNCHECKED_CAST")
-    val resultMap = this.associateWith { it.copyIsolated() as T }
+    val resultMap = entities.associateWith { it.copyIsolated() as T }
     for ((old, new) in resultMap) {
         if (old is CableConnectionPoint) {
             copyCableConnections(old, new as CableConnectionPoint, resultMap)
@@ -130,9 +131,9 @@ public fun <T : Entity> Iterable<T>.copyEntitiesWithConnections(): Map<T, T> {
     return resultMap
 }
 
-public fun <T : Entity> SpatialDataStructure<T>.copyEntities(): SpatialDataStructure<T> {
+public fun <T : Entity> SpatialDataStructure<T>.copyEntities(): MutableSpatialDataStructure<T> {
     return DefaultSpatialDataStructure<T>()
         .also {
-            it.addAll(this.copyEntitiesWithConnections().values)
+            it.addAll(copyEntitiesWithConnections(this).values)
         }
 }
