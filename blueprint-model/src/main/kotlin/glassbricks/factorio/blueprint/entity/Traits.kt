@@ -46,6 +46,10 @@ public interface WithInventory : WithItemFilters {
 internal fun List<ItemFilter>?.toFilterArray(size: Int): Array<String?> =
     indexListToArray(size, ItemFilter::index, ItemFilter::name)
 
+internal fun itemFilterList(vararg origFilters: String?): List<ItemFilter>? =
+    origFilters.arrayToIndexList { index, name -> ItemFilter(name = name, index = index) }
+        .takeIf { it.isNotEmpty() }
+
 internal inline fun <T, reified R> List<T>?.indexListToArray(
     size: Int,
     getIndex: (T) -> Int,
@@ -63,7 +67,3 @@ internal inline fun <T, R> Array<out R?>.arrayToIndexList(getValue: (Int, R) -> 
     this.mapIndexedNotNull { index, item ->
         item?.let { getValue(index + 1, it) }
     }
-
-internal fun itemFilterList(vararg origFilters: String?): List<ItemFilter>? =
-    origFilters.arrayToIndexList { index, name -> ItemFilter(name = name, index = index) }
-        .takeIf { it.isNotEmpty() }

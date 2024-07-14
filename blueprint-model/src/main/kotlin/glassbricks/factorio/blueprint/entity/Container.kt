@@ -36,7 +36,7 @@ public open class LogisticContainer(
     public val requestFilters: Array<LogisticRequest?> = json.request_filters.toFilterArray(
         prototype.max_logistic_slots?.toInt() ?: prototype.inventory_size.toInt()
     )
-    public val requestFromBuffers: Boolean = json.request_from_buffers
+    public var requestFromBuffers: Boolean = json.request_from_buffers
 
     public val controlBehavior: LogisticContainerControlBehavior =
         LogisticContainerControlBehavior(json.control_behavior)
@@ -58,9 +58,7 @@ public class LogisticContainerControlBehavior(
 
     override fun exportToJson(): ControlBehaviorJson? {
         if (modeOfOperation == LogisticContainerModeOfOperation.SendContents) return null
-        return ControlBehaviorJson(
-            circuit_mode_of_operation = modeOfOperation.asMode(),
-        )
+        return ControlBehaviorJson(circuit_mode_of_operation = modeOfOperation.asMode())
     }
 }
 

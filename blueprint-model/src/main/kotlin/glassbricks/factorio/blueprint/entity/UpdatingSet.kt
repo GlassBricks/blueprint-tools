@@ -21,8 +21,7 @@ internal abstract class UpdatingSet<T : Any> : AbstractMutableSet<T>() {
         inner.clear()
     }
 
-    private inner class Iterator(val iterator: MutableIterator<T>) :
-        MutableIterator<T> {
+    private inner class Iterator(val iterator: MutableIterator<T>) : MutableIterator<T> {
         private var last: T? = null
         override fun hasNext(): Boolean = iterator.hasNext()
         override fun next(): T = iterator.next().also { last = it }
