@@ -1,7 +1,10 @@
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
+    `java-library`
 }
+
+group = "glassbricks.factorio"
 
 repositories {
     mavenCentral()
@@ -9,7 +12,7 @@ repositories {
 
 dependencies {
     api(project(":blueprint"))
-    implementation(project(":prototypes"))
+    api(project(":prototypes"))
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test"))
 }

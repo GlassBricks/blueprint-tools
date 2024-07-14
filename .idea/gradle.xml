@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/blueprint" />
             <option value="$PROJECT_DIR$/model" />
+            <option value="$PROJECT_DIR$/pole-optimizer" />
             <option value="$PROJECT_DIR$/prototypes" />
             <option value="$PROJECT_DIR$/prototypes/codegen" />
           </set>
