@@ -1,6 +1,9 @@
 package glassbricks.factorio.blueprint
 
-import glassbricks.factorio.blueprint.json.*
+import glassbricks.factorio.blueprint.json.Importable
+import glassbricks.factorio.blueprint.json.bpJson
+import glassbricks.factorio.blueprint.json.exportBlueprint
+import glassbricks.factorio.blueprint.json.importBlueprint
 import kotlinx.serialization.encodeToString
 import java.io.File
 import kotlin.test.Test
@@ -10,10 +13,10 @@ class ImportExportKtTest {
 
     private fun testLoadBlueprint(fileName: String) {
         val blueprintFile = File("test-blueprints/$fileName.txt")
-        val bp = importBlueprintFromStream(blueprintFile.inputStream())
+        val bp = importBlueprint(blueprintFile.inputStream())
         println(bp)
 
-        val roundTrip = bpJson.decodeFromString(ImportableBlueprint.serializer(), bpJson.encodeToString<ImportableBlueprint>(bp))
+        val roundTrip = bpJson.decodeFromString(Importable.serializer(), bpJson.encodeToString<Importable>(bp))
         assert(roundTrip == bp)
 
         val str = exportBlueprint(bp)

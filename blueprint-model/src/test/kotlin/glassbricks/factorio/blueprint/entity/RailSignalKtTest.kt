@@ -3,6 +3,7 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.SignalType
 import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.json.CompareOperation
+import glassbricks.factorio.blueprint.json.ControlBehaviorJson
 import glassbricks.factorio.blueprint.json.SignalIDJson
 import kotlin.test.Test
 import kotlin.test.assertEquals

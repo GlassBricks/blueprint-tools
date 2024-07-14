@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.ItemPrototypeName
 import glassbricks.factorio.blueprint.prototypes.AssemblingMachinePrototype
 import glassbricks.factorio.blueprint.prototypes.CraftingMachinePrototype

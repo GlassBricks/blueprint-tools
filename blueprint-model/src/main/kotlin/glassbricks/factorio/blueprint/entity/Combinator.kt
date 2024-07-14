@@ -62,7 +62,8 @@ public class DeciderCombinatorControlBehavior(
     public var parameters: DeciderCombinatorParameters = source?.decider_conditions
         ?: DeciderCombinatorParameters.DEFAULT
 
-    override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(decider_conditions = parameters)
+    override fun exportToJson(): ControlBehaviorJson =
+        ControlBehaviorJson(decider_conditions = parameters)
 }
 
 public class ConstantCombinator(

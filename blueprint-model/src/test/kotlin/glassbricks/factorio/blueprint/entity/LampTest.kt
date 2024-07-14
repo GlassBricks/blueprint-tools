@@ -2,6 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.json.CompareOperation
+import glassbricks.factorio.blueprint.json.ControlBehaviorJson
 import kotlin.test.Test
 
 class LampTest {

@@ -13,21 +13,19 @@ import java.util.*
 import java.util.zip.DeflaterOutputStream
 import java.util.zip.InflaterInputStream
 
-public fun importBlueprint(string: String): ImportableBlueprint {
-    return importBlueprintFromStream(string.byteInputStream())
-}
-public fun importBlueprintFromFile(file: File): ImportableBlueprint {
-    return importBlueprintFromStream(file.inputStream())
+public fun importBlueprint(string: String): Importable {
+    return importBlueprint(string.byteInputStream())
 }
 
-internal fun <T> importBlueprint(string: String, serializer: KSerializer<T>): T =
-    importBlueprintFromStream(string.byteInputStream(), serializer)
-
-public fun importBlueprintFromStream(stream: InputStream): ImportableBlueprint {
-    return importBlueprintFromStream(stream, ImportableBlueprint.serializer())
+public fun importBlueprint(file: File): Importable {
+    return importBlueprint(file.inputStream())
 }
 
-internal fun <T> importBlueprintFromStream(stream: InputStream, serializer: KSerializer<T>): T {
+public fun importBlueprint(stream: InputStream): Importable {
+    return importBlueprint(stream, Importable.serializer())
+}
+
+internal fun <T> importBlueprint(stream: InputStream, serializer: KSerializer<T>): T {
     val firstChar = skipWhitespaceTillFirstChar(stream)
     if (firstChar != '0') throw SerializationException("Invalid version identifier: $firstChar")
     return stream
@@ -40,25 +38,24 @@ internal fun <T> importBlueprintFromStream(stream: InputStream, serializer: KSer
 }
 
 
-public fun exportBlueprint(bp: ImportableBlueprint): String {
-    val writeStream = ByteArrayOutputStream()
-    exportBlueprintToStream(bp, writeStream)
+public fun exportBlueprint(bp: Importable): String {
+    val writeStream = ByteArrayOutputStream(1024)
+    exportBlueprintTo(bp, writeStream)
     return writeStream.toString()
 }
 
-public fun exportBlueprintToFile(bp: ImportableBlueprint, file: File) {
-    exportBlueprintToStream(bp, file.outputStream())
+public fun exportBlueprintTo(bp: Importable, file: File) {
+    exportBlueprintTo(bp, file.outputStream())
 }
 
-public fun exportBlueprintToStream(bp: ImportableBlueprint, stream: OutputStream) {
+public fun exportBlueprintTo(bp: Importable, stream: OutputStream) {
     stream.write('0'.code)
     stream
         .let { Base64.getEncoder().wrap(it) }
         .let { DeflaterOutputStream(it) }
-        .let {
+        .use {
             @OptIn(ExperimentalSerializationApi::class)
-            bpJson.encodeToStream(ImportableBlueprint.serializer(), bp, it)
-            it.close()
+            bpJson.encodeToStream(Importable.serializer(), bp, it)
         }
 }
 
@@ -69,5 +66,4 @@ private fun skipWhitespaceTillFirstChar(bytes: InputStream): Char {
         val char = byte.toChar()
         if (!char.isWhitespace()) return char
     }
-
 }

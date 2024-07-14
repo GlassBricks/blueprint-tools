@@ -2,6 +2,8 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitID
 import glassbricks.factorio.blueprint.json.ConnectionData
+import glassbricks.factorio.blueprint.json.ConnectionPointJson
+import glassbricks.factorio.blueprint.json.EntityJson
 
 public sealed interface CircuitConnectable
 

@@ -54,7 +54,7 @@ public data class Position private constructor(
     public fun occupiedTile(): TilePosition = TilePosition(floor(x).toInt(), floor(y).toInt())
 
 
-    override fun toString(): String = "Position($x, $y)"
+    override fun toString(): String = "pos($x, $y)"
 
     override fun compareTo(other: Position): Int {
         val xComp = xAsInt.compareTo(other.xAsInt)

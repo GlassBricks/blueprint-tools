@@ -3,7 +3,7 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.json.CircuitCondition
 import glassbricks.factorio.blueprint.json.Color
 import glassbricks.factorio.blueprint.json.CompareOperation
-import glassbricks.factorio.blueprint.json.ControlBehavior
+import glassbricks.factorio.blueprint.json.ControlBehaviorJson
 import kotlin.test.Test
 
 class TrainStopTest {
@@ -11,7 +11,7 @@ class TrainStopTest {
     fun `can load train stop`() {
         testSaveLoad(TrainStop::class, "train-stop")
         testSaveLoad(TrainStop::class, "train-stop", connectToNetwork = true) {
-            control_behavior = ControlBehavior()
+            control_behavior = ControlBehaviorJson()
         }
         testSaveLoad(TrainStop::class, "train-stop", null, false) {
             station = "foo"

@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.json.ControlBehaviorJson
 import kotlin.test.Test
 
 class RoboportTest {

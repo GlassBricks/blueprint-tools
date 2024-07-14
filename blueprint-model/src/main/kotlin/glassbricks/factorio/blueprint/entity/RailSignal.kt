@@ -1,9 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.SignalID
-import glassbricks.factorio.blueprint.json.CircuitCondition
-import glassbricks.factorio.blueprint.json.toJsonWithDefault
-import glassbricks.factorio.blueprint.json.toSignalIdWithDefault
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.RailChainSignalPrototype
 import glassbricks.factorio.blueprint.prototypes.RailSignalBasePrototype
 import glassbricks.factorio.blueprint.prototypes.RailSignalPrototype
@@ -84,16 +82,17 @@ public class RailChainSignalControlBehavior(
     public var greenSignal: SignalID? = source?.green_output_signal.toSignalIdWithDefault(defaultGreenSignal)
     public var blueSignal: SignalID? = source?.blue_output_signal.toSignalIdWithDefault(defaultBlueSignal)
 
-    override fun exportToJson(): ControlBehaviorJson? = if (redSignal == defaultRedSignal &&
-        orangeSignal == defaultOrangeSignal &&
-        greenSignal == defaultGreenSignal &&
-        blueSignal == defaultBlueSignal
-    ) {
-        null
-    } else ControlBehaviorJson(
-        red_output_signal = redSignal.toJsonWithDefault(defaultRedSignal),
-        orange_output_signal = orangeSignal.toJsonWithDefault(defaultOrangeSignal),
-        green_output_signal = greenSignal.toJsonWithDefault(defaultGreenSignal),
-        blue_output_signal = blueSignal.toJsonWithDefault(defaultBlueSignal),
-    )
+    override fun exportToJson(): ControlBehaviorJson? =
+        if (redSignal == defaultRedSignal &&
+            orangeSignal == defaultOrangeSignal &&
+            greenSignal == defaultGreenSignal &&
+            blueSignal == defaultBlueSignal
+        ) {
+            null
+        } else ControlBehaviorJson(
+            red_output_signal = redSignal.toJsonWithDefault(defaultRedSignal),
+            orange_output_signal = orangeSignal.toJsonWithDefault(defaultOrangeSignal),
+            green_output_signal = greenSignal.toJsonWithDefault(defaultGreenSignal),
+            blue_output_signal = blueSignal.toJsonWithDefault(defaultBlueSignal),
+        )
 }

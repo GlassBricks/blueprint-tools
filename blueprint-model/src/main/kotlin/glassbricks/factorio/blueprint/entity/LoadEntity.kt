@@ -1,5 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.json.BlueprintJson
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.prototypes.*
 
 public fun createEntity(
@@ -103,10 +105,10 @@ private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Construc
 private fun getConstructorForPrototype(prototype: EntityWithOwnerPrototype): Constructor =
     getConstructorForClass(prototype.javaClass)
 
-private fun getConstructorForClass(class_: Class<out EntityWithOwnerPrototype>): Constructor =
-    matcherMap.getOrPut(class_) {
+private fun getConstructorForClass(clazz: Class<out EntityWithOwnerPrototype>): Constructor =
+    matcherMap.getOrPut(clazz) {
         @Suppress("UNCHECKED_CAST")
-        val superclass = class_.superclass as? Class<out EntityWithOwnerPrototype>
+        val superclass = clazz.superclass as? Class<out EntityWithOwnerPrototype>
             ?: throw AssertionError("All prototypes should be caught by UnknownEntity")
 
         getConstructorForClass(superclass)

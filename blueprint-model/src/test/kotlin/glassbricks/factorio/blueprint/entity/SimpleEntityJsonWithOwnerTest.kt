@@ -2,7 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import kotlin.test.Test
 
-class SimpleEntityWithOwnerTest {
+class SimpleEntityJsonWithOwnerTest {
     @Test
     fun `can save load`() {
         testSaveLoad(SimpleEntityWithOwner::class, "simple-entity-with-owner", null, false) {

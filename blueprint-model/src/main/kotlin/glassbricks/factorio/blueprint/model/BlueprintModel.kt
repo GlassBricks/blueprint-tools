@@ -22,7 +22,7 @@ private constructor(
 
     public constructor(
         prototypes: BlueprintPrototypes,
-        blueprint: Blueprint
+        blueprint: BlueprintJson
     ) : this(
         label = blueprint.label,
         label_color = blueprint.label_color,
@@ -65,7 +65,7 @@ private constructor(
         return listOf(Icon(1, SignalIDJson(name = item, type = SignalType.item)))
     }
 
-    public fun toBlueprint(): Blueprint = Blueprint(
+    public fun toBlueprint(): BlueprintJson = BlueprintJson(
         item = item,
         label = label,
         label_color = label_color,

@@ -1,17 +1,18 @@
 package glassbricks.factorio.blueprint.model
 
-import glassbricks.factorio.blueprint.json.Blueprint
-import glassbricks.factorio.blueprint.json.importBlueprintFromFile
+import glassbricks.factorio.blueprint.entity.blueprintPrototypes
+import glassbricks.factorio.blueprint.json.BlueprintJson
+import glassbricks.factorio.blueprint.json.importBlueprint
 import glassbricks.factorio.blueprint.toTileList
 import glassbricks.factorio.blueprint.toTileMap
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.io.File
 import kotlin.test.Test
 
-class BlueprintModelTest {
+class BlueprintJsonModelTest {
 
     fun assertBpMatches(
-        bp: Blueprint,
+        bp: BlueprintJson,
         model: BlueprintModel
     ) {
         assertEquals(bp.label, model.label)
@@ -32,10 +33,10 @@ class BlueprintModelTest {
 
     @Test
     fun canImport() {
-        val bp = importBlueprintFromFile(File("../blueprint/test-blueprints/bp1.txt"))
-        bp as Blueprint
+        val bp = importBlueprint(File("../blueprint/test-blueprints/bp1.txt"))
+        bp as BlueprintJson
 
-        val model = BlueprintModel(bp)
+        val model = BlueprintModel(blueprintPrototypes, bp)
         assertBpMatches(bp, model)
     }
 

@@ -1,6 +1,8 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitCondition
+import glassbricks.factorio.blueprint.json.ControlBehaviorJson
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.prototypes.PowerSwitchPrototype
 
 public class PowerSwitch(

@@ -19,7 +19,7 @@ fun main() {
         } catch (e: Exception) {
             println("As simple json")
             try {
-                val backToString = importBlueprint(str, JsonElement.serializer())
+                val backToString = importBlueprint(str.byteInputStream(), JsonElement.serializer())
                 val pretty = bpJsonPretty.encodeToString(backToString)
                 println(pretty)
             } catch (e: Exception) {

@@ -1,7 +1,7 @@
 
 package glassbricks.factorio.blueprint
 
-import glassbricks.factorio.blueprint.entity.EntityJson
+import glassbricks.factorio.blueprint.json.EntityJson
 import kotlin.reflect.full.declaredMemberProperties
 
 class Gen(
@@ -24,7 +24,7 @@ fun main() {
         // language=kotlin
         println(
             """
-public class $Class
+ class $Class
 internal constructor(
     override val prototype: ${Class}Prototype,
     json: EntityInit<${Class}>,

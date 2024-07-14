@@ -4,6 +4,7 @@ import glassbricks.factorio.blueprint.BoundingBox
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.Spatial
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.prototypes.CollisionMask
 import glassbricks.factorio.blueprint.prototypes.EntityWithOwnerPrototype

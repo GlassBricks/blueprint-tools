@@ -1,9 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.AlertParameters
-import glassbricks.factorio.blueprint.json.CircuitCondition
-import glassbricks.factorio.blueprint.json.ProgrammableSpeakerCircuitParameters
-import glassbricks.factorio.blueprint.json.SpeakerParameters
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.ProgrammableSpeakerPrototype
 
 public class ProgrammableSpeaker(
@@ -39,18 +36,20 @@ public class ProgrammableSpeaker(
     }
 }
 
-public class ProgrammableSpeakerControlBehavior(json: ControlBehaviorJson?) : ControlBehavior {
+public class ProgrammableSpeakerControlBehavior(json: ControlBehaviorJson?) :
+    ControlBehavior {
     public var circuitCondition: CircuitCondition = json?.circuit_condition ?: CircuitCondition.DEFAULT
     public var signalValueIsPitch: Boolean = json?.circuit_parameters?.signal_value_is_pitch ?: false
     public var instrumentId: Int = json?.circuit_parameters?.instrument_id ?: 0
     public var noteId: Int = json?.circuit_parameters?.note_id ?: 0
 
-    override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(
-        circuit_condition = circuitCondition,
-        circuit_parameters = ProgrammableSpeakerCircuitParameters(
-            signal_value_is_pitch = signalValueIsPitch,
-            instrument_id = instrumentId,
-            note_id = noteId
+    override fun exportToJson(): ControlBehaviorJson =
+        ControlBehaviorJson(
+            circuit_condition = circuitCondition,
+            circuit_parameters = ProgrammableSpeakerCircuitParameters(
+                signal_value_is_pitch = signalValueIsPitch,
+                instrument_id = instrumentId,
+                note_id = noteId
+            )
         )
-    )
 }

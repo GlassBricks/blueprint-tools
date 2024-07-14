@@ -2,6 +2,8 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.SignalID
 import glassbricks.factorio.blueprint.SignalType
+import glassbricks.factorio.blueprint.json.ControlBehaviorJson
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.SignalIDJson
 import glassbricks.factorio.blueprint.prototypes.AccumulatorPrototype
 import kotlin.test.Test

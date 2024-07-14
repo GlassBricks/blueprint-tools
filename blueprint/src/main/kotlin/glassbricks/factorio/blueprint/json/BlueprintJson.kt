@@ -13,6 +13,9 @@ import kotlinx.serialization.json.JsonObject
 
 public typealias ItemPrototypeName = String
 
+/**
+ * Represents either a blueprint or a blueprint book.
+ */
 public interface BlueprintItem {
     /** The name of the item that was saved */
     public val item: ItemPrototypeName
@@ -35,7 +38,7 @@ public interface BlueprintItem {
 
 
 @Serializable(with = BlueprintItemSerializer::class)
-public sealed interface ImportableBlueprint : BlueprintItem {
+public sealed interface Importable : BlueprintItem {
     public companion object
 }
 
@@ -43,7 +46,7 @@ public sealed interface ImportableBlueprint : BlueprintItem {
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#Blueprint_book_object)
  */
 @Serializable
-public data class BlueprintBook(
+public data class BlueprintBookJson(
     /** The name of the item that was saved ("blueprint-book" in vanilla). */
     public override var item: ItemPrototypeName = "blueprint-book",
     /** The name of the blueprint set by the user. */
@@ -60,7 +63,7 @@ public data class BlueprintBook(
     public override var description: String? = null,
     /** The map version of the map the blueprint was created in. */
     public override var version: FactorioVersion = FactorioVersion.DEFAULT,
-) : ImportableBlueprint {
+) : Importable {
     override fun toString(): String = toStringImpl("BlueprintBook")
 }
 
@@ -68,14 +71,14 @@ public data class BlueprintBook(
 public data class BlueprintIndex(
     /** 0-based index */
     public val index: Int,
-    public val blueprint: Blueprint,
+    public val blueprint: BlueprintJson,
 )
 
 /**
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#Blueprint_object)
  */
 @Serializable
-public data class Blueprint(
+public data class BlueprintJson(
     /** The name of the item that was saved ("blueprint" in vanilla). */
     public override var item: ItemPrototypeName = "blueprint",
     /** The name of the blueprint set by the user. */
@@ -83,7 +86,7 @@ public data class Blueprint(
     /** The color of the label of this blueprint. */
     public override var label_color: Color? = null,
     /** The actual content of the blueprint. */
-    public var entities: List<Entity>? = null,
+    public var entities: List<EntityJson>? = null,
     /** The tiles included in the blueprint. */
     public var tiles: List<Tile>? = null,
     /** The icons of the blueprint set by the user. */
@@ -104,7 +107,7 @@ public data class Blueprint(
     public var position_relative_to_grid: TilePosition? = null,
     /** The map version of the map the blueprint was created in. */
     public override var version: FactorioVersion = FactorioVersion.DEFAULT,
-) : ImportableBlueprint {
+) : Importable {
     override fun toString(): String = toStringImpl("Blueprint")
 }
 
@@ -177,7 +180,7 @@ public value class EntityNumber(public val id: Int) {
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#Entity_object)
  */
 @Serializable
-public data class Entity(
+public data class EntityJson(
     /** Index of the entity, 1-based. */
     public var entity_number: EntityNumber,
     /** Prototype name of the entity (e.g. "offshore-pump"). */
@@ -194,7 +197,7 @@ public data class Entity(
     /** Copper wire connections. */
     public var neighbours: List<EntityNumber>? = null,
     /** Control behavior of this entity. */
-    public var control_behavior: ControlBehavior? = null,
+    public var control_behavior: ControlBehaviorJson? = null,
     /** Item requests by this entity. */
     public var items: ItemRequests? = null,
     /** Name of the recipe prototype this assembling machine is set to. */
@@ -270,7 +273,7 @@ public data class Entity(
     override fun toString(): String = bpJson.encodeToString(serializer(), this)
 
 
-    public fun deepCopy(): Entity = copy(control_behavior = control_behavior?.copy())
+    public fun deepCopy(): EntityJson = copy(control_behavior = control_behavior?.copy())
 }
 
 
@@ -414,9 +417,9 @@ public data class Tile(
 @Serializable
 public data class Connections(
     /** First connection point. The default for everything that doesn't have multiple connection points. */
-    public val `1`: ConnectionPoint? = null,
+    public val `1`: ConnectionPointJson? = null,
     /** Second connection point. For example, the "output" part of an arithmetic combinator. */
-    public val `2`: ConnectionPoint? = null,
+    public val `2`: ConnectionPointJson? = null,
     /** Only used by power switches */
     public val Cu0: List<CableConnectionData>? = null,
     /** Only used by power switches */
@@ -427,7 +430,7 @@ public data class Connections(
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#Connection_point_object)
  */
 @Serializable
-public data class ConnectionPoint(
+public data class ConnectionPointJson(
     /** An array of connection data objects containing all the connections from this point created by red wire. */
     public val red: List<ConnectionData>? = null,
     /** An array of connection data objects containing all the connections from this point created by green wire. */
@@ -628,7 +631,7 @@ public data class Color(
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#Control_behavior_object)
  */
 @Serializable
-public data class ControlBehavior(
+public data class ControlBehaviorJson(
     public var logistic_condition: CircuitCondition? = null,
     /** Whether this entity is connected to the logistic network and enables/disables based on logistic_condition. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
@@ -869,20 +872,20 @@ public enum class CompareOperation {
     NotEqual,
 }
 
-private fun ImportableBlueprint.toStringImpl(name: String) = buildString {
+private fun Importable.toStringImpl(name: String) = buildString {
     append(name)
     append('(')
     if (label != null) {
         append('"').append(label).append("\" ")
     }
-    if (this@toStringImpl is Blueprint) {
+    if (this@toStringImpl is BlueprintJson) {
         if (!entities.isNullOrEmpty() || tiles.isNullOrEmpty()) {
             append("with ").append(entities!!.size).append(" entities")
         } else {
             append("with ").append(tiles!!.size).append(" tiles")
         }
     } else {
-        this@toStringImpl as BlueprintBook
+        this@toStringImpl as BlueprintBookJson
         append("with ").append(blueprints.size).append(" items")
     }
     val description = description

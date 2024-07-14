@@ -1,8 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.IOType
-import glassbricks.factorio.blueprint.json.SplitterPriority
-import glassbricks.factorio.blueprint.json.TransportBeltContentReadMode
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.*
 
 

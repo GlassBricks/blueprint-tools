@@ -1,10 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Position
-import glassbricks.factorio.blueprint.json.CircuitCondition
-import glassbricks.factorio.blueprint.json.CompareOperation
-import glassbricks.factorio.blueprint.json.InserterModeOfOperation
-import glassbricks.factorio.blueprint.json.asMode
+import glassbricks.factorio.blueprint.json.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

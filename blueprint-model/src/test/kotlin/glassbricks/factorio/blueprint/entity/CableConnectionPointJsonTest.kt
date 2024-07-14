@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 
-class CableConnectionPointTest {
+class CableConnectionPointJsonTest {
     lateinit var point1: CableConnectionPoint
     lateinit var point2: CableConnectionPoint
     lateinit var point3: CableConnectionPoint

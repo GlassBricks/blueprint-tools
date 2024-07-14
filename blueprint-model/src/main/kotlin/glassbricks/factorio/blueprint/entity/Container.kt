@@ -1,9 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.InfinityFilterMode
-import glassbricks.factorio.blueprint.json.InfinitySettings
-import glassbricks.factorio.blueprint.json.LogisticContainerModeOfOperation
-import glassbricks.factorio.blueprint.json.asMode
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.*
 import glassbricks.factorio.blueprint.json.InfinityFilter as InfinityFilterJson
 import glassbricks.factorio.blueprint.json.LogisticFilter as LogisticFilterJson

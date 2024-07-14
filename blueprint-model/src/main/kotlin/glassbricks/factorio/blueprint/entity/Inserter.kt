@@ -41,23 +41,24 @@ public class InserterControlBehavior(
         json?.stack_control_input_signal.toSignalIdWithDefault(defaultStackSizeSignal)
             .takeIf { json?.circuit_set_stack_size == true }
 
-    override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(
-        circuit_mode_of_operation = modeOfOperation.asMode(),
-        circuit_condition = circuitCondition
-            .takeIf { modeOfOperation == InserterModeOfOperation.EnableDisable }
-            .takeUnless { it == CircuitCondition.DEFAULT },
+    override fun exportToJson(): ControlBehaviorJson =
+        ControlBehaviorJson(
+            circuit_mode_of_operation = modeOfOperation.asMode(),
+            circuit_condition = circuitCondition
+                .takeIf { modeOfOperation == InserterModeOfOperation.EnableDisable }
+                .takeUnless { it == CircuitCondition.DEFAULT },
 
-        connect_to_logistic_network = logisticCondition != null,
-        logistic_condition = logisticCondition,
+            connect_to_logistic_network = logisticCondition != null,
+            logistic_condition = logisticCondition,
 
-        circuit_read_hand_contents = readContentsMode != null,
-        circuit_hand_read_mode = readContentsMode,
+            circuit_read_hand_contents = readContentsMode != null,
+            circuit_hand_read_mode = readContentsMode,
 
-        circuit_set_stack_size = setStackSizeSignal != null,
-        // Note the important ?. below. this output null (in the json) if the signal (in this class) is null, instead of
-        // the signal for "no signal" instead of default.
-        // This does mean it's impossible to have circuit_set_stack_size to be true, but the signal to be null,
-        // however that's likely never actually useful.
-        stack_control_input_signal = setStackSizeSignal?.toJsonWithDefault(defaultStackSizeSignal),
-    )
+            circuit_set_stack_size = setStackSizeSignal != null,
+            // Note the important ?. below. this output null (in the json) if the signal (in this class) is null, instead of
+            // the signal for "no signal" instead of default.
+            // This does mean it's impossible to have circuit_set_stack_size to be true, but the signal to be null,
+            // however that's likely never actually useful.
+            stack_control_input_signal = setStackSizeSignal?.toJsonWithDefault(defaultStackSizeSignal),
+        )
 }

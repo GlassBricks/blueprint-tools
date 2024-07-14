@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 
 public class ElectricPole(

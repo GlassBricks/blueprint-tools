@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 
-class BlueprintPrototypesTest {
+class BlueprintJsonPrototypesTest {
     private val blueprintPrototypes = BlueprintPrototypes.loadFromDataRaw(dataRawFile)
 
     @Test

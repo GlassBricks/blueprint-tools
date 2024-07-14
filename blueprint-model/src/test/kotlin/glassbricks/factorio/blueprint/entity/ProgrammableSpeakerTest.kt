@@ -1,9 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.AlertParameters
-import glassbricks.factorio.blueprint.json.CircuitCondition
-import glassbricks.factorio.blueprint.json.ProgrammableSpeakerCircuitParameters
-import glassbricks.factorio.blueprint.json.SpeakerParameters
+import glassbricks.factorio.blueprint.json.*
 import org.junit.jupiter.api.Test
 
 class ProgrammableSpeakerTest {

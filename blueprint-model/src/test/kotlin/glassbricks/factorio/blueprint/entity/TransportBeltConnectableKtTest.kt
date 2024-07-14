@@ -2,7 +2,6 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.json.*
-import glassbricks.factorio.blueprint.json.ControlBehavior
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -11,7 +10,7 @@ class TransportBeltConnectableKtTest {
     fun `can load transport belt`() {
         testSaveLoad(TransportBelt::class, "transport-belt")
         testSaveLoad(TransportBelt::class, "transport-belt", connectToNetwork = true) {
-            control_behavior = ControlBehavior(
+            control_behavior = ControlBehaviorJson(
                 circuit_enable_disable = false
             )
         }
@@ -19,7 +18,7 @@ class TransportBeltConnectableKtTest {
             connectToNetwork = true,
             build = fun EntityJson.() {
                 direction = Direction.East
-                control_behavior = ControlBehavior(
+                control_behavior = ControlBehaviorJson(
                     circuit_enable_disable = true,
                     circuit_condition = CircuitCondition(
                         comparator = CompareOperation.Equal,

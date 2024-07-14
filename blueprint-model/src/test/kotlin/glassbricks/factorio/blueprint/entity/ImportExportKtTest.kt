@@ -143,7 +143,7 @@ class ImportExportKtTest {
             buildEntityJson("power-switch") {
                 entity_number = EntityNumber(1)
                 connections = Connections(
-                    `1` = ConnectionPoint(
+                    `1` = ConnectionPointJson(
                         red = listOf(ConnectionData(EntityNumber(2)))
                     ),
                     Cu0 = listOf(
@@ -189,7 +189,7 @@ class ImportExportKtTest {
         val switch1Json = blueprint.entities!![0]
         assertEquals(
             Connections(
-                `1` = ConnectionPoint(
+                `1` = ConnectionPointJson(
                     red = listOf(ConnectionData(EntityNumber(2)))
                 ),
                 Cu0 = listOf(
@@ -223,11 +223,11 @@ class ImportExportKtTest {
                 name = "foo1",
                 position = Position.ZERO,
                 connections = Connections(
-                    `1` = ConnectionPoint(
+                    `1` = ConnectionPointJson(
                         red = listOf(ConnectionData(EntityNumber(2), CircuitID.First)),
                         green = listOf(ConnectionData(EntityNumber(3), CircuitID.First)),
                     ),
-                    `2` = ConnectionPoint(
+                    `2` = ConnectionPointJson(
                         red = listOf(ConnectionData(EntityNumber(3), CircuitID.Second))
                     )
                 )
@@ -237,7 +237,14 @@ class ImportExportKtTest {
                 name = "foo2",
                 position = Position.ZERO,
                 connections = Connections(
-                    `1` = ConnectionPoint(red = listOf(ConnectionData(EntityNumber(1), CircuitID.First)))
+                    `1` = ConnectionPointJson(
+                        red = listOf(
+                            ConnectionData(
+                                EntityNumber(1),
+                                CircuitID.First
+                            )
+                        )
+                    )
                 )
             ),
             EntityJson(
@@ -245,8 +252,22 @@ class ImportExportKtTest {
                 name = "foo3",
                 position = Position.ZERO,
                 connections = Connections(
-                    `1` = ConnectionPoint(green = listOf(ConnectionData(EntityNumber(1), CircuitID.First))),
-                    `2` = ConnectionPoint(red = listOf(ConnectionData(EntityNumber(1), CircuitID.Second))),
+                    `1` = ConnectionPointJson(
+                        green = listOf(
+                            ConnectionData(
+                                EntityNumber(1),
+                                CircuitID.First
+                            )
+                        )
+                    ),
+                    `2` = ConnectionPointJson(
+                        red = listOf(
+                            ConnectionData(
+                                EntityNumber(1),
+                                CircuitID.Second
+                            )
+                        )
+                    ),
                 )
             )
         )
@@ -286,11 +307,11 @@ class ImportExportKtTest {
         assertEquals("foo1", entity1.name)
         assertEquals(
             Connections(
-                ConnectionPoint(
+                ConnectionPointJson(
                     red = listOf(ConnectionData(EntityNumber(2), CircuitID.First)),
                     green = listOf(ConnectionData(EntityNumber(3), CircuitID.First)),
                 ),
-                ConnectionPoint(
+                ConnectionPointJson(
                     red = listOf(ConnectionData(EntityNumber(3), CircuitID.Second))
                 )
             ),
@@ -300,7 +321,14 @@ class ImportExportKtTest {
         assertEquals("foo2", entity2.name)
         assertEquals(
             Connections(
-                `1` = ConnectionPoint(red = listOf(ConnectionData(EntityNumber(1), CircuitID.First)))
+                `1` = ConnectionPointJson(
+                    red = listOf(
+                        ConnectionData(
+                            EntityNumber(1),
+                            CircuitID.First
+                        )
+                    )
+                )
             ),
             entity2Json.connections
         )
@@ -309,8 +337,23 @@ class ImportExportKtTest {
         assertEquals("foo3", entity3.name)
         assertEquals(
             Connections(
-                `1` = ConnectionPoint(green = listOf(ConnectionData(EntityNumber(1), CircuitID.First))),
-                `2` = ConnectionPoint(red = listOf(ConnectionData(EntityNumber(1), CircuitID.Second))),
+                `1` = ConnectionPointJson(
+                    green = listOf(
+                        ConnectionData(
+                            EntityNumber(
+                                1
+                            ), CircuitID.First
+                        )
+                    )
+                ),
+                `2` = ConnectionPointJson(
+                    red = listOf(
+                        ConnectionData(
+                            EntityNumber(1),
+                            CircuitID.Second
+                        )
+                    )
+                ),
             ),
             entity3Json.connections
         )

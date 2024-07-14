@@ -1,6 +1,8 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.SignalID
+import glassbricks.factorio.blueprint.json.ControlBehaviorJson
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.toJsonWithDefault
 import glassbricks.factorio.blueprint.json.toSignalIdWithDefault
 import glassbricks.factorio.blueprint.prototypes.AccumulatorPrototype

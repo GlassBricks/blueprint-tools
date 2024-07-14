@@ -17,16 +17,16 @@ internal val bpJson = Json {
     encodeDefaults = true
 }
 
-internal object BlueprintItemSerializer : KSerializer<ImportableBlueprint> {
+internal object BlueprintItemSerializer : KSerializer<Importable> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor(
         "BlueprintItem",
     ) {
-        element("blueprint", Blueprint.serializer().descriptor, isOptional = true)
+        element("blueprint", BlueprintJson.serializer().descriptor, isOptional = true)
     }
 
-    override fun deserialize(decoder: Decoder): ImportableBlueprint = decoder.decodeStructure(descriptor) {
+    override fun deserialize(decoder: Decoder): Importable = decoder.decodeStructure(descriptor) {
         val result = when (decodeElementIndex(descriptor)) {
-            0 -> decodeSerializableElement(descriptor, 0, Blueprint.serializer())
+            0 -> decodeSerializableElement(descriptor, 0, BlueprintJson.serializer())
             CompositeDecoder.DECODE_DONE -> throw SerializationException("Expected some key, none found")
             CompositeDecoder.UNKNOWN_NAME -> throw SerializationException("Unknown key in root object")
             else -> throw SerializationException("Unexpected index")
@@ -38,10 +38,10 @@ internal object BlueprintItemSerializer : KSerializer<ImportableBlueprint> {
     }
 
 
-    override fun serialize(encoder: Encoder, value: ImportableBlueprint) = encoder.encodeStructure(descriptor) {
+    override fun serialize(encoder: Encoder, value: Importable) = encoder.encodeStructure(descriptor) {
         when (value) {
-            is Blueprint -> encodeSerializableElement(descriptor, 0, Blueprint.serializer(), value)
-            is BlueprintBook -> TODO()
+            is BlueprintJson -> encodeSerializableElement(descriptor, 0, BlueprintJson.serializer(), value)
+            is BlueprintBookJson -> TODO()
         }
     }
 }

@@ -1,6 +1,8 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.CircuitCondition
+import glassbricks.factorio.blueprint.json.ControlBehaviorJson
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.prototypes.WallPrototype
 
 public class Wall(
@@ -20,9 +22,10 @@ public class WallControlBehavior(source: ControlBehaviorJson?) : ControlBehavior
         ?.takeIf { source.circuit_open_gate == true }
     public var readSensor: Boolean = source?.circuit_read_sensor == true
 
-    override fun exportToJson(): ControlBehaviorJson = ControlBehaviorJson(
-        circuit_open_gate = openCondition != null,
-        circuit_condition = openCondition.takeUnless { it == CircuitCondition.DEFAULT },
-        circuit_read_sensor = readSensor
-    )
+    override fun exportToJson(): ControlBehaviorJson =
+        ControlBehaviorJson(
+            circuit_open_gate = openCondition != null,
+            circuit_condition = openCondition.takeUnless { it == CircuitCondition.DEFAULT },
+            circuit_read_sensor = readSensor
+        )
 }

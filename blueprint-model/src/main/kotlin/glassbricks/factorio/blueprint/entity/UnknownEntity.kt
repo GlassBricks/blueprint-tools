@@ -5,6 +5,7 @@ import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.CircuitID
 import glassbricks.factorio.blueprint.json.Color
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.prototypes.ItemStackIndex
 import glassbricks.factorio.blueprint.prototypes.SimpleEntityWithOwnerPrototype
@@ -55,7 +56,10 @@ public fun UnknownEntity(
     position: Position,
     direction: Direction = Direction.North,
 ): UnknownEntity {
-    return UnknownEntity(UnknownPrototype(name), EntityJson(EntityNumber(1), name, position, direction))
+    return UnknownEntity(
+        UnknownPrototype(name),
+        EntityJson(EntityNumber(1), name, position, direction)
+    )
 }
 
 public class UnknownPrototype(name: String) : SimpleEntityWithOwnerPrototype() {

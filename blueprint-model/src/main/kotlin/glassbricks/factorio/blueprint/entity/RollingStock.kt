@@ -1,9 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.json.Color
-import glassbricks.factorio.blueprint.json.Inventory
-import glassbricks.factorio.blueprint.json.ItemPrototypeName
-import glassbricks.factorio.blueprint.json.ScheduleRecord
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.CargoWagonPrototype
 import glassbricks.factorio.blueprint.prototypes.ItemStackIndex
 import glassbricks.factorio.blueprint.prototypes.LocomotivePrototype

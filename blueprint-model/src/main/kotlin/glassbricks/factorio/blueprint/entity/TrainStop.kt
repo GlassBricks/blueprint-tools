@@ -1,9 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.SignalID
-import glassbricks.factorio.blueprint.json.Color
-import glassbricks.factorio.blueprint.json.toJsonWithDefault
-import glassbricks.factorio.blueprint.json.toSignalIdWithDefault
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.TrainStopPrototype
 
 
@@ -49,15 +47,16 @@ public class TrainStopControlBehavior(
         .toSignalIdWithDefault(defaultTrainsCountSignal)
         ?.takeIf { json?.read_trains_count == true }
 
-    override fun exportToJson(): ControlBehaviorJson = super.baseExportToJson().apply {
-        circuit_enable_disable = if (circuitCondition != null) true else null
-        send_to_train = sendToTrain
-        read_from_train = readFromTrain
-        read_stopped_train = trainStoppedSignal != null
-        train_stopped_signal = trainStoppedSignal?.toJsonWithDefault(defaultTrainStoppedSignal)
-        set_trains_limit = trainsLimitSignal != null
-        trains_limit_signal = trainsLimitSignal?.toJsonWithDefault(defaultTrainsLimitSignal)
-        read_trains_count = trainsCountSignal != null
-        trains_count_signal = trainsCountSignal?.toJsonWithDefault(defaultTrainsCountSignal)
-    }
+    override fun exportToJson(): ControlBehaviorJson =
+        super.baseExportToJson().apply {
+            circuit_enable_disable = if (circuitCondition != null) true else null
+            send_to_train = sendToTrain
+            read_from_train = readFromTrain
+            read_stopped_train = trainStoppedSignal != null
+            train_stopped_signal = trainStoppedSignal?.toJsonWithDefault(defaultTrainStoppedSignal)
+            set_trains_limit = trainsLimitSignal != null
+            trains_limit_signal = trainsLimitSignal?.toJsonWithDefault(defaultTrainsLimitSignal)
+            read_trains_count = trainsCountSignal != null
+            trains_count_signal = trainsCountSignal?.toJsonWithDefault(defaultTrainsCountSignal)
+        }
 }

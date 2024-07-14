@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.InfinityMode
 import glassbricks.factorio.blueprint.json.InfinitySettings
 import glassbricks.factorio.blueprint.prototypes.InfinityPipePrototype

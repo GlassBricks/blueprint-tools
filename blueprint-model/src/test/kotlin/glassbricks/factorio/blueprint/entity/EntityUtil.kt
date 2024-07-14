@@ -1,6 +1,8 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.json.BlueprintJson
+import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import java.io.File
