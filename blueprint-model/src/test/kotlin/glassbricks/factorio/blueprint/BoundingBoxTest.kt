@@ -36,11 +36,26 @@ class BoundingBoxTest {
     }
 
     @Test
+    fun intersects() {
+        val boundingBox = bbox(pos(0.0, 1.0), pos(10.0, 12.0))
+        assertTrue(boundingBox intersects bbox(pos(5.0, 6.0), pos(15.0, 18.0)))
+        assertFalse(boundingBox intersects bbox(pos(11.0, 12.0), pos(15.0, 18.0)))
+    }
+
+    @Test
+    fun `intersects returns false on border`() {
+        val boundingBox = bbox(pos(0.0, 1.0), pos(10.0, 12.0))
+        assertFalse(boundingBox intersects bbox(pos(10.0, 10.0), pos(15.0, 18.0)))
+    }
+
+    @Test
     fun translate() {
         val boundingBox = bbox(pos(0.0, 1.0), pos(10.0, 12.0))
         val translated = boundingBox.translate(pos(5.0, 6.0))
         val expected = bbox(5.0, 7.0, 15.0, 18.0)
         assertEquals(expected, translated)
+
+        assertEquals(translated, boundingBox.translate(5.0, 6.0))
     }
 
     @Test

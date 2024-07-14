@@ -406,4 +406,12 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             addModifiers(KModifier.OVERRIDE)
         }
     }
+
+    println(this.prototypes.values
+        .mapNotNull {
+            it.typeName?.let {
+                "\"$it\""
+            }
+        }
+    )
 }

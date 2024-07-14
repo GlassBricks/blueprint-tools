@@ -4,30 +4,46 @@ import glassbricks.factorio.blueprint.BoundingBox
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.EntityNumber
+import glassbricks.factorio.blueprint.prototypes.CollisionMask
 import glassbricks.factorio.blueprint.prototypes.EntityWithOwnerPrototype
 import kotlinx.serialization.json.JsonObject
 
-public interface Entity {
+public interface Entity : Spatial {
     public val prototype: EntityWithOwnerPrototype
     public val type: String get() = prototype.type
     public val name: String get() = prototype.name
+
+    override val collisionMask: CollisionMask get() = prototype.collision_mask ?: CollisionMask.EMPTY
+    override val boundingBox: BoundingBox
 
     public var position: Position
     public var direction: Direction
     public var tags: JsonObject?
 
     public fun toJsonIsolated(entityNumber: EntityNumber): EntityJson
-
-    public fun currentBoundingBox(): BoundingBox =
-        (prototype.collision_box ?: BoundingBox.EMPTY)
-            .rotateCardinal(direction)
-            .translate(position)
 }
 
 public abstract class BaseEntity(json: EntityJson) : Entity {
     override var position: Position = json.position
+        set(value) {
+            if (field != value) cachedBoundingBox = null
+            field = value
+        }
     override var direction: Direction = json.direction
+        set(value) {
+            if (field != value) cachedBoundingBox = null
+            field = value
+        }
     override var tags: JsonObject? = json.tags
+
+    protected var cachedBoundingBox: BoundingBox? = null
+    override val boundingBox: BoundingBox
+        get() = cachedBoundingBox ?: (prototype.collision_box?.rotateCardinal(direction)?.translate(position)
+            ?: BoundingBox(position, position))
+            .also { cachedBoundingBox = it }
+
+    public override val collisionMask: CollisionMask
+        get() = prototype.collision_mask ?: CollisionMask.DEFAULT_COLLISION_MASKS[prototype.type]!!
 
     private fun createEntityJson(entityNumber: EntityNumber): EntityJson = EntityJson(
         entity_number = entityNumber,

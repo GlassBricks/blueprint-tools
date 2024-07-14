@@ -27,7 +27,12 @@ public data class BoundingBox(
 
     public operator fun contains(point: Position): Boolean = point.x in minX..maxX && point.y in minY..maxY
 
+    public infix fun intersects(other: BoundingBox?): Boolean =
+        other != null && minX < other.maxX && maxX > other.minX && minY < other.maxY && maxY > other.minY
+
     public fun translate(amount: Position): BoundingBox = BoundingBox(leftTop + amount, rightBottom + amount)
+    public fun translate(x: Double, y: Double): BoundingBox =
+        BoundingBox(leftTop + Position(x, y), rightBottom + Position(x, y))
 
     /**
      * If the given direction is not a cardinal direction, will snap to the next lowest cardinal direction.
@@ -41,8 +46,6 @@ public data class BoundingBox(
         West, Northwest -> BoundingBox(minY, -maxX, maxY, -minX)
     }
 
-    public fun isEmpty(): Boolean = leftTop == rightBottom
-
     override fun toString(): String = "BoundingBox(pos($minX, $minY), pos($maxX, $maxY))"
 
     public companion object {
@@ -50,8 +53,6 @@ public data class BoundingBox(
             point: Position,
             radius: Double
         ): BoundingBox = bbox(point.x - radius, point.y - radius, point.x + radius, point.y + radius)
-
-        public val EMPTY: BoundingBox = BoundingBox(Position.ZERO, Position.ZERO)
     }
 }
 

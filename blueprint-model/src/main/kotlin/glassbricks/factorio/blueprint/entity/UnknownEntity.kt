@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.BoundingBox
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.CircuitID
@@ -19,6 +20,7 @@ public class UnknownEntity(
     WithColor,
     WithInventory {
     public val json: EntityJson = json.deepCopy()
+    override val boundingBox: BoundingBox get() = BoundingBox(position, position)
 
     override var position: Position by json::position
     override var tags: JsonObject? by json::tags
