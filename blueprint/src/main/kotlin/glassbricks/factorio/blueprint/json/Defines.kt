@@ -35,9 +35,11 @@ public fun CircuitModeOption.asMode(): CircuitModeOfOperation = CircuitModeOfOpe
 public enum class InserterModeOfOperation : CircuitModeOption {
     EnableDisable,
     SetFilters,
+
     /** This is not actually used. */
     ReadHandContents,
     None,
+
     /** This is not actually used. */
     SetStackSize
 }

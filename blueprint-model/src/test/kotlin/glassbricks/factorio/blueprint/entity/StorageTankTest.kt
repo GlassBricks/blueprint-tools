@@ -1,4 +1,3 @@
-
 import glassbricks.factorio.blueprint.entity.StorageTank
 import glassbricks.factorio.blueprint.entity.testSaveLoad
 import kotlin.test.Test

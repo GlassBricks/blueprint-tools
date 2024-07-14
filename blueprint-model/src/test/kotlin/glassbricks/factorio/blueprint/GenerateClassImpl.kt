@@ -1,4 +1,3 @@
-
 package glassbricks.factorio.blueprint
 
 import glassbricks.factorio.blueprint.json.EntityJson

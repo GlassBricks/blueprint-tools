@@ -10,7 +10,7 @@ import kotlin.math.roundToInt
 public class InfinityPipe(
     override val prototype: InfinityPipePrototype,
     json: EntityJson,
-): BaseEntity(json) {
+) : BaseEntity(json) {
     public var infinitySettings: InfinityPipeSettings? = json.infinity_settings?.let {
         val name = it.name ?: return@let null
         val percentage = it.percentage ?: 1.0

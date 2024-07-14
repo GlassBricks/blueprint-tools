@@ -10,7 +10,7 @@ import glassbricks.factorio.blueprint.json.Tile
 public typealias TileMap = MutableMap<TilePosition, String>
 
 public fun List<Tile>?.toTileMap(): TileMap {
-    if(this == null) return HashMap()
+    if (this == null) return HashMap()
     val tileMap = HashMap<TilePosition, String>(size)
     for (tile in this) tileMap[tile.position] = tile.name
     return tileMap

@@ -29,6 +29,7 @@ class ImportExportKtTest {
     fun `load bp1`() {
         testLoadBlueprint("bp1")
     }
+
     @Test
     fun `test base8`() {
         testLoadBlueprint("base8")
