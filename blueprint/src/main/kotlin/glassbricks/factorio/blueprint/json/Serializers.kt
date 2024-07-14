@@ -1,14 +1,14 @@
 package glassbricks.factorio.blueprint.json
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlin.reflect.KClass
 
@@ -17,32 +17,60 @@ internal val bpJson = Json {
     encodeDefaults = true
 }
 
-internal object BlueprintItemSerializer : KSerializer<Importable> {
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor(
-        "BlueprintItem",
-    ) {
-        element("blueprint", BlueprintJson.serializer().descriptor, isOptional = true)
+@Serializable
+private class BlueprintProxy(
+    val blueprint: BlueprintJson? = null,
+    val blueprint_book: BlueprintBookJson? = null,
+)
+
+internal object ImportableSerializer : KSerializer<Importable> {
+    @OptIn(ExperimentalSerializationApi::class)
+    override val descriptor: SerialDescriptor = SerialDescriptor(
+        Importable::class.qualifiedName!!,
+        BlueprintProxy.serializer().descriptor
+    )
+
+    override fun deserialize(decoder: Decoder): Importable {
+        val proxy = decoder.decodeSerializableValue(BlueprintProxy.serializer())
+        return proxy.blueprint ?: proxy.blueprint_book!!
     }
 
-    override fun deserialize(decoder: Decoder): Importable = decoder.decodeStructure(descriptor) {
-        val result = when (decodeElementIndex(descriptor)) {
-            0 -> decodeSerializableElement(descriptor, 0, BlueprintJson.serializer())
-            CompositeDecoder.DECODE_DONE -> throw SerializationException("Expected some key, none found")
-            CompositeDecoder.UNKNOWN_NAME -> throw SerializationException("Unknown key in root object")
-            else -> throw SerializationException("Unexpected index")
+
+    override fun serialize(encoder: Encoder, value: Importable) {
+        val proxy = when (value) {
+            is BlueprintJson -> BlueprintProxy(blueprint = value)
+            is BlueprintBookJson -> BlueprintProxy(blueprint_book = value)
         }
-        if (decodeElementIndex(descriptor) != CompositeDecoder.DECODE_DONE) {
-            throw SerializationException("Expected end of object")
-        }
-        result
+        encoder.encodeSerializableValue(BlueprintProxy.serializer(), proxy)
+    }
+}
+
+@Serializable
+private class BlueprintIndexProxy(
+    val index: Int,
+    val blueprint: BlueprintJson? = null,
+    val blueprint_book: BlueprintBookJson? = null,
+)
+
+internal object BlueprintIndexSerializer : KSerializer<BlueprintIndex> {
+    @OptIn(ExperimentalSerializationApi::class)
+    override val descriptor: SerialDescriptor = SerialDescriptor(
+        BlueprintIndex::class.qualifiedName!!,
+        BlueprintIndexProxy.serializer().descriptor
+    )
+
+    override fun deserialize(decoder: Decoder): BlueprintIndex {
+        val proxy = decoder.decodeSerializableValue(BlueprintIndexProxy.serializer())
+        val item = proxy.blueprint ?: proxy.blueprint_book!!
+        return BlueprintIndex(index = proxy.index, item = item)
     }
 
-
-    override fun serialize(encoder: Encoder, value: Importable) = encoder.encodeStructure(descriptor) {
-        when (value) {
-            is BlueprintJson -> encodeSerializableElement(descriptor, 0, BlueprintJson.serializer(), value)
-            is BlueprintBookJson -> TODO()
+    override fun serialize(encoder: Encoder, value: BlueprintIndex) {
+        val proxy = when (val item = value.item) {
+            is BlueprintJson -> BlueprintIndexProxy(index = value.index, blueprint = item)
+            is BlueprintBookJson -> BlueprintIndexProxy(index = value.index, blueprint_book = item)
         }
+        encoder.encodeSerializableValue(BlueprintIndexProxy.serializer(), proxy)
     }
 }
 

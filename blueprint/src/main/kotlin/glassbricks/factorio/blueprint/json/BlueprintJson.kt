@@ -37,7 +37,7 @@ public interface BlueprintItem {
 }
 
 
-@Serializable(with = BlueprintItemSerializer::class)
+@Serializable(with = ImportableSerializer::class)
 public sealed interface Importable : BlueprintItem {
     public companion object
 }
@@ -67,12 +67,16 @@ public data class BlueprintBookJson(
     override fun toString(): String = toStringImpl("BlueprintBook")
 }
 
-@Serializable
+@Serializable(with = BlueprintIndexSerializer::class)
 public data class BlueprintIndex(
     /** 0-based index */
     public val index: Int,
-    public val blueprint: BlueprintJson,
-)
+    public val item: Importable
+) {
+    val blueprint: BlueprintJson? get() = item as? BlueprintJson
+    val blueprint_book: BlueprintBookJson? get() = item as? BlueprintBookJson
+}
+
 
 /**
  * [Online Documentation](https://wiki.factorio.com/Blueprint_string_format#Blueprint_object)

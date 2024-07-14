@@ -35,4 +35,9 @@ class ImportExportKtTest {
         testLoadBlueprint("base8")
     }
 
+    @Test
+    fun `test blueprint book`() {
+        testLoadBlueprint("random-book")
+    }
+
 }
