@@ -268,6 +268,9 @@ public data class Entity(
     public var tags: JsonObject? = null,
 ) {
     override fun toString(): String = bpJson.encodeToString(serializer(), this)
+
+
+    public fun deepCopy(): Entity = copy(control_behavior = control_behavior?.copy())
 }
 
 

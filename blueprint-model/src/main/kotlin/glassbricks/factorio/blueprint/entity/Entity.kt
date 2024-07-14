@@ -24,10 +24,6 @@ public interface Entity {
             .translate(position)
 }
 
-internal fun EntityJson.deepCopy() = copy(
-    control_behavior = control_behavior?.copy(),
-)
-
 public abstract class BaseEntity(json: EntityJson) : Entity {
     override var position: Position = json.position
     override var direction: Direction = json.direction
