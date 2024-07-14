@@ -15,7 +15,9 @@ class GeneratedPrototypes(
     val prototypes: Map<String, GeneratedPrototype>,
     val concepts: Map<String, GeneratedConcept>,
     val extraSealedIntfs: List<SealedIntf>,
-    val allSubclassGetters: List<String>
+    val allSubclassGetters: List<String>,
+    val builtins: Map<String, TypeName>,
+    val predefined: Map<String, TypeName>
 )
 
 sealed interface GeneratedValue {
@@ -60,6 +62,9 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
     val origConcepts = docs.types.associateBy { it.name }
     val prototypes = mutableMapOf<String, GeneratedPrototype>()
     val concepts = mutableMapOf<String, GeneratedConcept>()
+
+    var builtins: MutableMap<String, TypeName> = mutableMapOf()
+    var predefined: MutableMap<String, TypeName> = mutableMapOf()
 
     private val extraSealedIntfs = mutableListOf<SealedIntf>()
     val allSubclassGetters = mutableListOf<String>()
@@ -125,7 +130,14 @@ class GeneratedPrototypesBuilder(docs: PrototypeApiDocs) {
                 "Extra sealed interface value $value not found"
             }
         }
-        return GeneratedPrototypes(prototypes, concepts, extraSealedIntfs, allSubclassGetters)
+        return GeneratedPrototypes(
+            prototypes = prototypes,
+            concepts = concepts,
+            extraSealedIntfs = extraSealedIntfs,
+            allSubclassGetters = allSubclassGetters,
+            builtins = builtins,
+            predefined = builtins + predefined
+        )
     }
 }
 

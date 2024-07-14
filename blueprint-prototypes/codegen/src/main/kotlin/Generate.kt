@@ -13,27 +13,12 @@ import kotlinx.serialization.json.doubleOrNull
 const val PACKAGE_NAME = "glassbricks.factorio.blueprint.prototypes"
 const val PAR_PACKAGE_NAME = "glassbricks.factorio.blueprint"
 
-private val builtins = mapOf(
-    "bool" to Boolean::class.asClassName(),
-    "double" to Double::class.asClassName(),
-    "float" to Float::class.asClassName(),
-    "int8" to Byte::class.asClassName(),
-    "int16" to Short::class.asClassName(),
-    "int32" to Int::class.asClassName(),
-    "string" to String::class.asClassName(),
-    "uint8" to UByte::class.asClassName(),
-    "uint16" to UShort::class.asClassName(),
-    "uint32" to UInt::class.asClassName(),
-    "uint64" to ULong::class.asClassName(),
-)
-val predefined = builtins + mapOf(
-    "BoundingBox" to ClassName(PAR_PACKAGE_NAME, "BoundingBox"),
-    "Direction" to ClassName(PAR_PACKAGE_NAME, "Direction"),
-)
 
 @OptIn(ExperimentalSerializationApi::class)
 class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
     private val file = FileSpec.builder(PACKAGE_NAME, "Prototypes")
+    private val builtins get() = input.builtins
+    private val predefined get() = input.predefined
 
     private val hasInheritors = mutableSetOf<String>()
     private val extraSealedSupertypes =

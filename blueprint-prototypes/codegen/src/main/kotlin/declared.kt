@@ -1,11 +1,28 @@
 package glassbricks.factorio
 
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import kotlinx.serialization.Serializable
 
 
 fun GeneratedPrototypesBuilder.getGeneratedClasses() {
+    builtins = mutableMapOf(
+        "bool" to Boolean::class.asClassName(),
+        "double" to Double::class.asClassName(),
+        "float" to Float::class.asClassName(),
+        "int8" to Byte::class.asClassName(),
+        "int16" to Short::class.asClassName(),
+        "int32" to Int::class.asClassName(),
+        "string" to String::class.asClassName(),
+        "uint8" to UByte::class.asClassName(),
+        "uint16" to UShort::class.asClassName(),
+        "uint32" to UInt::class.asClassName(),
+        "uint64" to ULong::class.asClassName(),
+    )
+    predefined = mutableMapOf(
+        "BoundingBox" to ClassName(PAR_PACKAGE_NAME, "BoundingBox"),
+        "Direction" to ClassName(PAR_PACKAGE_NAME, "Direction"),
+    )
+
     extraSealedIntf("EVEnergySource", listOf("EnergySource"), "ElectricEnergySource", "VoidEnergySource")
     extraSealedIntf("BVEnergySource", listOf("EnergySource"), "BurnerEnergySource", "VoidEnergySource")
     extraSealedIntf(
@@ -269,9 +286,9 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             overrideType(ClassName(PAR_PACKAGE_NAME, "Position"))
         }
 
-        "CollisionMask" {
-            overrideType(List::class.parameterizedBy(String::class))
-        }
+        "CollisionMaskLayer" {}
+
+        this@getGeneratedClasses.predefined["CollisionMask"] = ClassName(PACKAGE_NAME, "CollisionMask")
 
         "EntityPrototypeFlags" {
             innerEnumName = "EntityPrototypeFlag"
