@@ -24,6 +24,7 @@ public class TrainStop(
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
 
+    override fun copyIsolated(): TrainStop = TrainStop(prototype, toDummyJson())
 }
 
 public class TrainStopControlBehavior(

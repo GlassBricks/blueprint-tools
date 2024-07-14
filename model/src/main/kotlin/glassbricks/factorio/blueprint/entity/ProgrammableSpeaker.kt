@@ -34,6 +34,8 @@ public class ProgrammableSpeaker(
         if (this.hasCircuitConnections())
             json.control_behavior = controlBehavior.exportToJson()
     }
+
+    override fun copyIsolated(): ProgrammableSpeaker = ProgrammableSpeaker(prototype, toDummyJson())
 }
 
 public class ProgrammableSpeakerControlBehavior(json: ControlBehaviorJson?) :

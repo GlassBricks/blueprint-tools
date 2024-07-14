@@ -6,6 +6,8 @@ import glassbricks.factorio.blueprint.prototypes.*
 
 public sealed interface TransportBeltConnectable : Entity {
     override val prototype: TransportBeltConnectablePrototype
+
+    override fun copyIsolated(): TransportBeltConnectable
 }
 
 public class TransportBelt(
@@ -19,6 +21,8 @@ public class TransportBelt(
     override fun exportToJson(json: EntityJson) {
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
+
+    override fun copyIsolated(): TransportBelt = TransportBelt(prototype, toDummyJson())
 }
 
 public class TransportBeltControlBehavior(
@@ -48,6 +52,8 @@ public class UndergroundBelt(
     override fun exportToJson(json: EntityJson) {
         json.type = ioMode
     }
+
+    override fun copyIsolated(): UndergroundBelt = UndergroundBelt(prototype, toDummyJson())
 }
 
 public class Splitter(
@@ -63,6 +69,8 @@ public class Splitter(
         json.output_priority = outputPriority
         json.filter = filter
     }
+
+    override fun copyIsolated(): Splitter = Splitter(prototype, toDummyJson())
 }
 
 public class Loader(
@@ -77,6 +85,8 @@ public class Loader(
         json.filters = filtersAsIndexList()
         json.type = ioType
     }
+
+    override fun copyIsolated(): Loader = Loader(prototype, toDummyJson())
 }
 
 public class LinkedBelt(
@@ -89,4 +99,6 @@ public class LinkedBelt(
         json.link_id = linkId
         json.type = ioType
     }
+
+    override fun copyIsolated(): LinkedBelt = LinkedBelt(prototype, toDummyJson())
 }

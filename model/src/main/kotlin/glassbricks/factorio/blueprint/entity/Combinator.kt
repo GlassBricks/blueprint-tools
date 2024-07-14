@@ -8,6 +8,11 @@ import glassbricks.factorio.blueprint.prototypes.ConstantCombinatorPrototype
 import glassbricks.factorio.blueprint.prototypes.DeciderCombinatorPrototype
 import glassbricks.factorio.blueprint.json.ConstantCombinatorParameters as ConstantCombinatorParametersJson
 
+/**
+ * Represents either an [ArithmeticCombinator], [DeciderCombinator].
+ *
+ * [ConstantCombinator]s are _not_ a subclass of this.
+ */
 public sealed class Combinator(
     json: EntityJson,
 ) : BaseEntity(json), CombinatorConnections, WithControlBehavior {
@@ -15,6 +20,8 @@ public sealed class Combinator(
     override val output: CircuitConnectionPoint = ConnectionPoint(CircuitID.Second)
 
     abstract override val prototype: CombinatorPrototype
+
+    abstract override fun copyIsolated(): Combinator
 
     private inner class ConnectionPoint(override val circuitID: CircuitID) : CircuitConnectionPoint {
         override val entity: Entity get() = this@Combinator
@@ -32,6 +39,8 @@ public class ArithmeticCombinator(
     override fun exportToJson(json: EntityJson) {
         json.control_behavior = controlBehavior.exportToJson()
     }
+
+    override fun copyIsolated(): ArithmeticCombinator = ArithmeticCombinator(prototype, toDummyJson())
 }
 
 public class ArithmeticCombinatorControlBehavior(
@@ -54,6 +63,8 @@ public class DeciderCombinator(
     override fun exportToJson(json: EntityJson) {
         json.control_behavior = controlBehavior.exportToJson()
     }
+
+    override fun copyIsolated(): DeciderCombinator = DeciderCombinator(prototype, toDummyJson())
 }
 
 public class DeciderCombinatorControlBehavior(
@@ -77,6 +88,8 @@ public class ConstantCombinator(
     override fun exportToJson(json: EntityJson) {
         json.control_behavior = controlBehavior.exportToJson()
     }
+
+    override fun copyIsolated(): ConstantCombinator = ConstantCombinator(prototype, toDummyJson())
 }
 
 public class ConstantCombinatorControlBehavior(
@@ -95,7 +108,6 @@ public class ConstantCombinatorControlBehavior(
             is_on = isOn,
             filters = parameters.toIndexList(),
         )
-
     }
 }
 

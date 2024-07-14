@@ -9,6 +9,7 @@ public class StorageTank(
 ) : BaseEntity(json), CircuitConnectionPoint {
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
 
-    override fun exportToJson(json: EntityJson) {
-    }
+    override fun exportToJson(json: EntityJson) {}
+
+    override fun copyIsolated(): StorageTank = StorageTank(prototype, toDummyJson())
 }

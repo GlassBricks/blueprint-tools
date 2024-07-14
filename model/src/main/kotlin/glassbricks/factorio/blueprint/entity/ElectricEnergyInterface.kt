@@ -18,4 +18,6 @@ public class ElectricEnergyInterface(
         json.power_production = powerProduction
         json.power_usage = powerUsage
     }
+
+    override fun copyIsolated(): ElectricEnergyInterface = ElectricEnergyInterface(prototype, toDummyJson())
 }

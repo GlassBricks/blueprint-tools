@@ -15,6 +15,8 @@ public class Lamp(
     override fun exportToJson(json: EntityJson) {
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
+
+    override fun copyIsolated(): Lamp = Lamp(prototype, toDummyJson())
 }
 
 public class LampControlBehavior(json: ControlBehaviorJson?) : ControlBehavior {

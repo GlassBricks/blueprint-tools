@@ -16,6 +16,8 @@ public sealed class CraftingMachine(json: EntityJson) : BaseEntity(json), WithIt
     override fun exportToJson(json: EntityJson) {
         json.items = itemRequests.takeIf { it.isNotEmpty() }
     }
+
+    override abstract fun copyIsolated(): CraftingMachine
 }
 
 
@@ -29,6 +31,8 @@ public open class AssemblingMachine(
         super.exportToJson(json)
         json.recipe = recipe
     }
+
+    override fun copyIsolated(): AssemblingMachine = AssemblingMachine(prototype, toDummyJson())
 }
 
 public class RocketSilo(
@@ -43,9 +47,13 @@ public class RocketSilo(
             json.recipe = prototype.fixed_recipe
         json.auto_launch = autoLaunch
     }
+
+    override fun copyIsolated(): RocketSilo = RocketSilo(prototype, toDummyJson())
 }
 
 public class Furnace(
     override val prototype: FurnacePrototype,
     json: EntityJson,
-) : CraftingMachine(json)
+) : CraftingMachine(json) {
+    override fun copyIsolated(): Furnace = Furnace(prototype, toDummyJson())
+}

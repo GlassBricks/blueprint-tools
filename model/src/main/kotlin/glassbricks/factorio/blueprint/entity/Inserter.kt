@@ -25,6 +25,8 @@ public class Inserter(override val prototype: InserterPrototype, json: EntityJso
         json.pickup_position = pickupPosition
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
+
+    override fun copyIsolated(): Inserter = Inserter(prototype, toDummyJson())
 }
 
 public class InserterControlBehavior(

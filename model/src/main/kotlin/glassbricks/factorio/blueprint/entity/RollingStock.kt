@@ -10,6 +10,8 @@ import glassbricks.factorio.blueprint.prototypes.RollingStockPrototype
 public sealed interface RollingStock : Entity {
     override val prototype: RollingStockPrototype
     public var orientation: Double
+
+    override fun copyIsolated(): RollingStock
 }
 
 internal fun getSchedule(
@@ -43,6 +45,8 @@ public class CargoWagon(
             json.inventory = Inventory(filters = filters.orEmpty(), bar = bar)
         }
     }
+
+    override fun copyIsolated(): CargoWagon = CargoWagon(prototype, toDummyJson())
 }
 
 public class Locomotive(
@@ -64,6 +68,10 @@ public class Locomotive(
         json.items = itemRequests.takeIf { it.isNotEmpty() }
         // schedule handled by blueprint export
     }
+
+    override fun copyIsolated(): Locomotive =
+        Locomotive(prototype, toDummyJson(), null)
+            .also { it.schedule = this.schedule }
 }
 
 public class OtherRollingStock(
@@ -76,4 +84,6 @@ public class OtherRollingStock(
     override fun exportToJson(json: EntityJson) {
         json.orientation = orientation
     }
+
+    override fun copyIsolated(): OtherRollingStock = OtherRollingStock(prototype, toDummyJson())
 }

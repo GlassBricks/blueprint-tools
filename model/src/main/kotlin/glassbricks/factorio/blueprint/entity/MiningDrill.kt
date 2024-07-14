@@ -16,6 +16,8 @@ public class MiningDrill(
     override fun exportToJson(json: EntityJson) {
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
+
+    override fun copyIsolated(): MiningDrill = MiningDrill(prototype, toDummyJson())
 }
 
 public class MiningDrillControlBehavior(json: ControlBehaviorJson?) : GenericOnOffControlBehavior(json),

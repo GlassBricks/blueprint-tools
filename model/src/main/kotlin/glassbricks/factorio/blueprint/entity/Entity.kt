@@ -23,6 +23,8 @@ public interface Entity : Spatial {
     public var tags: JsonObject?
 
     public fun toJsonIsolated(entityNumber: EntityNumber): EntityJson
+
+    public fun copyIsolated(): Entity
 }
 
 public abstract class BaseEntity(json: EntityJson) : Entity {
@@ -60,6 +62,8 @@ public abstract class BaseEntity(json: EntityJson) : Entity {
     }
 
     protected abstract fun exportToJson(json: EntityJson)
+
+    protected fun toDummyJson(): EntityJson = toJsonIsolated(EntityNumber(1))
 }
 
 /**
@@ -71,6 +75,6 @@ public class BasicEntity<out P : EntityWithOwnerPrototype>(
     override val prototype: P,
     json: EntityJson,
 ) : BaseEntity(json) {
-    override fun exportToJson(json: EntityJson) {
-    }
+    override fun exportToJson(json: EntityJson) {}
+    override fun copyIsolated(): BasicEntity<P> = BasicEntity(prototype, toDummyJson())
 }

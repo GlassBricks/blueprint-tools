@@ -18,6 +18,8 @@ public class Roboport(
     override fun exportToJson(json: EntityJson) {
         if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
     }
+
+    override fun copyIsolated(): Roboport = Roboport(prototype, toDummyJson())
 }
 
 public class RoboportControlBehavior(

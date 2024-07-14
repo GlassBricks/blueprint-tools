@@ -72,6 +72,13 @@ class RollingStockKtTest {
         )
     }
 
+    @Test
+    fun `copying a locomotive keeps the schedule`() {
+        val (_, loco) = setupLocomotive()
+        val loco2 = loco.copyIsolated() as Locomotive
+        assertEquals(loco2.schedule, loco.schedule)
+    }
+
     private fun setupLocomotive(): Pair<List<ScheduleRecord>, Locomotive> {
         val schedule = listOf(
             ScheduleRecord("load", listOf(WaitCondition(WaitConditionType.Full))),

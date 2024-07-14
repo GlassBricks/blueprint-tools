@@ -16,4 +16,6 @@ public class HeatInterface(
         json.temperature = temperature
         json.mode = mode
     }
+
+    override fun copyIsolated(): HeatInterface = HeatInterface(prototype, toDummyJson())
 }

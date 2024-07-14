@@ -49,6 +49,8 @@ public class UnknownEntity(
         neighbours = null,
         filters = this.filtersAsIndexList(),
     )
+
+    override fun copyIsolated(): Entity = UnknownEntity(prototype, toJsonIsolated(EntityNumber(0)))
 }
 
 public fun UnknownEntity(

@@ -15,4 +15,6 @@ public class ElectricPole(
     override fun exportToJson(json: EntityJson) {
         // all connections handled by ImportExport
     }
+
+    override fun copyIsolated(): ElectricPole = ElectricPole(prototype, toDummyJson())
 }

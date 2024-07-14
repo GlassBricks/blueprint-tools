@@ -14,4 +14,6 @@ public class Beacon(
     override fun exportToJson(json: EntityJson) {
         json.items = itemRequests.takeIf { it.isNotEmpty() }
     }
+
+    override fun copyIsolated(): Beacon = Beacon(prototype, toDummyJson())
 }

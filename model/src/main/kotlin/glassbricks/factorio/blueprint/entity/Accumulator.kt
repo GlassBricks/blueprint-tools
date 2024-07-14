@@ -22,6 +22,8 @@ public class Accumulator(
         if (this.hasCircuitConnections())
             json.control_behavior = controlBehavior.exportToJson()
     }
+
+    override fun copyIsolated(): Accumulator = Accumulator(prototype, toDummyJson())
 }
 
 public class AccumulatorControlBehavior(
