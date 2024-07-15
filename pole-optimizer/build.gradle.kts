@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     api(project(":model"))
-    implementation("com.google.ortools:ortools-java:9.10.4067")
+    api("com.google.ortools:ortools-java:9.10.4067")
 
     testImplementation(kotlin("test"))
 }

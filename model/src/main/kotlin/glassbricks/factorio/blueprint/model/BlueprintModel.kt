@@ -1,7 +1,11 @@
 package glassbricks.factorio.blueprint.model
 
-import glassbricks.factorio.blueprint.*
-import glassbricks.factorio.blueprint.entity.*
+import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
+import glassbricks.factorio.blueprint.SignalType
+import glassbricks.factorio.blueprint.TilePosition
+import glassbricks.factorio.blueprint.entity.Entity
+import glassbricks.factorio.blueprint.entity.entitiesFromJson
+import glassbricks.factorio.blueprint.entity.setEntitiesFrom
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
@@ -90,6 +94,8 @@ private constructor(
         item = item,
         version = version
     )
+
+    override fun toString(): String = "BlueprintModel(label=$label, ${entities.size} entities, ${tiles.size} tiles)"
 
 }
 

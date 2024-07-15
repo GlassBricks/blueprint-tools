@@ -6,24 +6,21 @@ group = "glassbricks.factorio"
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io")
 }
 
 dependencies {
-    testImplementation(project(":model"))
-    testImplementation(project(":pole-optimizer"))
-    testImplementation(kotlin("test"))
+    api(project(":model"))
+    api(project(":pole-optimizer"))
+    api("org.jetbrains.kotlinx:kotlin-jupyter-lib-ext:0.12.0-236")
+    api("org.apache.xmlgraphics:batik-svggen:1.17")
+    api("org.apache.xmlgraphics:batik-svg-dom:1.17")
+    api("com.github.nwillc.ksvg:ksvg:master-SNAPSHOT")
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
+
 sourceSets {
-    main{
-        kotlin {
-            srcDirs.clear()
-        }
-    }
-    test {
+    main {
         kotlin {
             setSrcDirs(listOf("src"))
         }

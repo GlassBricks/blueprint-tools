@@ -126,3 +126,42 @@ public fun <T : Entity> copyEntitiesWithConnections(entities: Iterable<T>): Map<
 
     return resultMap
 }
+
+
+/** Removes all cable and circuit connections from this entity. */
+public fun Entity.removeAllConnections() {
+    if (this is CableConnectionPoint) {
+        cableConnections.clear()
+    } else if (this is PowerSwitchConnections) {
+        left.cableConnections.clear()
+        right.cableConnections.clear()
+    }
+    if (this is CircuitConnectionPoint) {
+        circuitConnections.red.clear()
+        circuitConnections.green.clear()
+    } else if (this is CombinatorConnections) {
+        inputConnections.clear()
+        outputConnections.clear()
+    }
+}
+
+public fun <T : Entity> MutableCollection<T>.removeWithConnections(entity: T) {
+    if (remove(entity)) {
+        entity.removeAllConnections()
+    }
+}
+
+public fun <T : Entity> MutableCollection<T>.removeAllWithConnections(entities: Iterable<T>) {
+    for (entity in entities) {
+        removeWithConnections(entity)
+    }
+}
+
+public inline fun <T : Entity> MutableCollection<T>.removeWithConnectionsIf(crossinline predicate: (T) -> Boolean): Boolean =
+    removeIf {
+        predicate(it).also { removed ->
+            if (removed) {
+                it.removeAllConnections()
+            }
+        }
+    }

@@ -13,7 +13,7 @@ import java.util.*
 import java.util.zip.DeflaterOutputStream
 import java.util.zip.InflaterInputStream
 
-public fun importBlueprint(string: String): Importable {
+public fun importBlueprintString(string: String): Importable {
     return importBlueprint(string.byteInputStream())
 }
 
@@ -38,24 +38,24 @@ internal fun <T> importBlueprint(stream: InputStream, serializer: KSerializer<T>
 }
 
 
-public fun exportBlueprint(bp: Importable): String {
+public fun Importable.exportToString(): String {
     val writeStream = ByteArrayOutputStream(1024)
-    exportBlueprintTo(bp, writeStream)
+    this.exportTo(writeStream)
     return writeStream.toString()
 }
 
-public fun exportBlueprintTo(bp: Importable, file: File) {
-    exportBlueprintTo(bp, file.outputStream())
+public fun Importable.exportTo(file: File) {
+    this.exportTo(file.outputStream())
 }
 
-public fun exportBlueprintTo(bp: Importable, stream: OutputStream) {
+public fun Importable.exportTo(stream: OutputStream) {
     stream.write('0'.code)
     stream
         .let { Base64.getEncoder().wrap(it) }
         .let { DeflaterOutputStream(it) }
         .use {
             @OptIn(ExperimentalSerializationApi::class)
-            bpJson.encodeToStream(Importable.serializer(), bp, it)
+            bpJson.encodeToStream(Importable.serializer(), this, it)
         }
 }
 

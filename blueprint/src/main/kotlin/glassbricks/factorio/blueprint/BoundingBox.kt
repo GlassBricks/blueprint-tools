@@ -100,6 +100,9 @@ public data class TileBoundingBox(
     public val maxXExclusive: Int get() = rightBottomExclusive.x
     public val maxYExclusive: Int get() = rightBottomExclusive.y
 
+    val width: Int get() = maxXExclusive - minX
+    val height: Int get() = maxYExclusive - minY
+
     public operator fun contains(tile: TilePosition): Boolean =
         tile.x in minX..<maxXExclusive && tile.y in minY..<maxYExclusive
 

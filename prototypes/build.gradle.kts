@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
@@ -50,6 +52,9 @@ dependencies {
 
 kotlin {
     explicitApi()
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+    }
 }
 tasks {
     test {
@@ -75,9 +80,7 @@ tasks {
         outputs.file(outputFile)
     }
 
-    processResources {
-        dependsOn(generateVanillaDataRaw)
-    }
+    processResources { dependsOn(generateVanillaDataRaw) }
 
     val generatePrototypes by registering(JavaExec::class) {
         group = "generate"
@@ -87,7 +90,5 @@ tasks {
         outputs.dir(generatedSrcDir)
     }
 
-    compileKotlin {
-        dependsOn(generatePrototypes)
-    }
+    compileKotlin { dependsOn(generatePrototypes) }
 }

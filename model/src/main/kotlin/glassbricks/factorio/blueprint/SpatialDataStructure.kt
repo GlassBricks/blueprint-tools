@@ -33,7 +33,7 @@ public interface SpatialDataStructure<out T : Spatial> : Collection<T> {
     /**
      * Iterates over all tiles in the data structure that contain entities.
      */
-    public fun occupiedTiles(): Sequence<TilePosition>
+    public fun occupiedTiles(): Iterable<TilePosition>
 
     /**
      * Gets the minimal size bounding box to enclose all entities.
@@ -60,4 +60,7 @@ public interface MutableSpatialDataStructure<T : Spatial> : SpatialDataStructure
 
 
 public fun <T : Spatial> DefaultSpatialDataStructure(): MutableSpatialDataStructure<T> =
-    SpatialTileHashMap()
+    TileHashMap()
+
+public fun <T : Spatial> DefaultSpatialDataStructure(items: Iterable<T>): MutableSpatialDataStructure<T> =
+    TileHashMap<T>().also { it.addAll(items) }

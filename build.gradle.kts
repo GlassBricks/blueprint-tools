@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
     kotlin("jvm") version "2.0.0" apply false
@@ -10,10 +10,9 @@ repositories {
 }
 
 subprojects {
-    extensions.findByName("kotlin")?.apply {
-        this as KotlinProjectExtension
-        jvmToolchain(21)
+    afterEvaluate {
+        extensions.configure<KotlinJvmProjectExtension> {
+            jvmToolchain(17)
+        }
     }
 }
-
-group = "glassbricks.factorio"
