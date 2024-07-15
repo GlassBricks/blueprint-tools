@@ -12,8 +12,7 @@ import kotlin.test.Test
 class ImportExportKtTest {
 
     private fun testLoadBlueprint(fileName: String) {
-        val blueprintFile = File("test-blueprints/$fileName.txt")
-        val bp = importBlueprint(blueprintFile.inputStream())
+        val bp = importBlueprint(File("../test-blueprints/$fileName"))
         println(bp)
 
         val roundTrip = bpJson.decodeFromString(Importable.serializer(), bpJson.encodeToString<Importable>(bp))
@@ -27,17 +26,17 @@ class ImportExportKtTest {
 
     @Test
     fun `load bp1`() {
-        testLoadBlueprint("bp1")
+        testLoadBlueprint("bp1.txt")
     }
 
     @Test
     fun `test base8`() {
-        testLoadBlueprint("base8")
+        testLoadBlueprint("base8.txt")
     }
 
     @Test
     fun `test blueprint book`() {
-        testLoadBlueprint("random-book")
+        testLoadBlueprint("book.txt")
     }
 
 }

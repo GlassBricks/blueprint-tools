@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint
 
-import glassbricks.factorio.blueprint.entity.blueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.FurnacePrototype
+import glassbricks.factorio.blueprintPrototypes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

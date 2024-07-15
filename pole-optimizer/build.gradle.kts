@@ -14,6 +14,7 @@ dependencies {
     implementation("com.google.ortools:ortools-java:9.10.4067")
 
     testImplementation(kotlin("test"))
+    testImplementation(project(":test-util"))
 }
 
 tasks.test {

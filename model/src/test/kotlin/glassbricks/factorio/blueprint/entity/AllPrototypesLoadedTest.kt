@@ -1,6 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprintPrototypes
 import kotlin.test.Test
 import kotlin.test.fail
 

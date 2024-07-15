@@ -5,16 +5,12 @@ import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.EntityNumber
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
+import glassbricks.factorio.blueprintPrototypes
 import java.io.File
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-
-val blueprintPrototypes by lazy {
-    val file = File("../prototypes/src/test/resources/data-raw-dump.json")
-    BlueprintPrototypes.loadFromDataRaw(file)
-}
 
 inline fun buildEntityJson(
     name: String,

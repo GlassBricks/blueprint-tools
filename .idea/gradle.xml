@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/prototypes" />
             <option value="$PROJECT_DIR$/prototypes/codegen" />
             <option value="$PROJECT_DIR$/scripts" />
+            <option value="$PROJECT_DIR$/test-util" />
           </set>
         </option>
       </GradleProjectSettings>

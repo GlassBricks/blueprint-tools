@@ -2,6 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.pos
+import glassbricks.factorio.blueprintPrototypes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

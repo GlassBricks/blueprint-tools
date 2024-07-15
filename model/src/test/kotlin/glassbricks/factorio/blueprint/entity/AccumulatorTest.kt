@@ -6,6 +6,7 @@ import glassbricks.factorio.blueprint.json.ControlBehaviorJson
 import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.SignalIDJson
 import glassbricks.factorio.blueprint.prototypes.AccumulatorPrototype
+import glassbricks.factorio.blueprintPrototypes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

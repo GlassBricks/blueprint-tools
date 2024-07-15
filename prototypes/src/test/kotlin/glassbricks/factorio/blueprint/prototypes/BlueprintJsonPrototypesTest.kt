@@ -1,11 +1,10 @@
 package glassbricks.factorio.blueprint.prototypes
 
+import glassbricks.factorio.blueprintPrototypes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
-
-val blueprintPrototypes by lazy { BlueprintPrototypes.loadFromDataRaw(dataRawFile) }
 
 class BlueprintJsonPrototypesTest {
 

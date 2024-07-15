@@ -13,6 +13,7 @@ repositories {
 dependencies {
     api(project(":blueprint"))
     testImplementation(kotlin("test"))
+    testImplementation(project(":test-util"))
 }
 
 tasks.test {

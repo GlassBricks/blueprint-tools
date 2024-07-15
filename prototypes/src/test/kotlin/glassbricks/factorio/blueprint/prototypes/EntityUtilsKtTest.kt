@@ -3,6 +3,7 @@ package glassbricks.factorio.blueprint.prototypes
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.pos
 import glassbricks.factorio.blueprint.tilePos
+import glassbricks.factorio.blueprintPrototypes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
