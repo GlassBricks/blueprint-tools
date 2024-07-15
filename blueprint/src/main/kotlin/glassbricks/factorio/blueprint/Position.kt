@@ -18,14 +18,14 @@ import kotlin.math.sqrt
  */
 @Suppress("DataClassPrivateConstructor")
 @Serializable(with = Position.Serializer::class)
-public data class Position private constructor(
+public class Position private constructor(
     public val xAsInt: Int,
     public val yAsInt: Int,
 ) : Comparable<Position> {
     public constructor(x: Double, y: Double) : this((x * 256).roundToInt(), (y * 256).roundToInt())
 
-    val x: Double get() = xAsInt / 256.0
-    val y: Double get() = yAsInt / 256.0
+    public val x: Double get() = xAsInt / 256.0
+    public val y: Double get() = yAsInt / 256.0
 
     public operator fun plus(other: Position): Position = Position(xAsInt + other.xAsInt, yAsInt + other.yAsInt)
     public operator fun minus(other: Position): Position = Position(xAsInt - other.xAsInt, yAsInt - other.yAsInt)
@@ -54,7 +54,16 @@ public data class Position private constructor(
     public fun occupiedTile(): TilePosition = TilePosition(floor(x).toInt(), floor(y).toInt())
 
 
+    public operator fun component1(): Double = x
+    public operator fun component2(): Double = y
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Position) return false
+        return xAsInt == other.xAsInt && yAsInt == other.yAsInt
+    }
     override fun toString(): String = "pos($x, $y)"
+    override fun hashCode(): Int = 31 * xAsInt + yAsInt
 
     override fun compareTo(other: Position): Int {
         val xComp = xAsInt.compareTo(other.xAsInt)

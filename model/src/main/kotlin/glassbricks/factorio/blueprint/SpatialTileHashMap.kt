@@ -11,6 +11,8 @@ public class SpatialTileHashMap<T : Spatial> :
     private val entities = hashSetOf<T>()
     private val byTile = hashMapOf<TilePosition, HashSet<T>>()
 
+    public fun byTile(): Map<TilePosition, Set<T>> = byTile
+
     override val size: Int get() = entities.size
     override fun contains(element: T): Boolean = entities.contains(element)
 
@@ -75,6 +77,16 @@ public class SpatialTileHashMap<T : Spatial> :
     override fun getAtPoint(position: Position): Sequence<T> =
         getInTile(position.occupiedTile())
             .filter { position in it.collisionBox }
+
+    override fun getColliding(other: Spatial): Sequence<T> {
+        val otherBox = other.collisionBox
+        return getInArea(otherBox.roundOutToTileBbox())
+            .filter { it collidesWith other }
+    }
+
+    override fun tileIsOccupied(tile: TilePosition): Boolean = tile in byTile
+
+    override fun occupiedTiles(): Sequence<TilePosition> = byTile.keys.asSequence()
 
     override fun getPosInCircle(center: Position, radius: Double): Sequence<T> =
         BoundingBox.around(center, radius).roundOutToTileBbox()

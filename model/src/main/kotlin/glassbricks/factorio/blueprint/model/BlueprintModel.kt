@@ -12,7 +12,7 @@ private constructor(
     public override var description: String? = null,
     public val iconsArr: Array<SignalIDJson?>,
     public val tiles: TileMap = HashMap(),
-    public val entities: MutableSpatialDataStructure<Entity> = DefaultSpatialDataStructure(),
+    public val entities: MutableEntityMap = DefaultSpatialDataStructure(),
     public var snapToGridSettings: SnapToGridSettings? = null,
     public override var item: String = "blueprint",
     public override val version: FactorioVersion = FactorioVersion.DEFAULT

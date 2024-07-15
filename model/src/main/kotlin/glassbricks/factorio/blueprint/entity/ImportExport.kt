@@ -2,8 +2,10 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
+import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 
 public fun BlueprintPrototypes.entityFromJson(
     json: EntityJson,
@@ -18,9 +20,24 @@ public fun BlueprintPrototypes.createEntity(
     position: Position,
     direction: Direction = Direction.North,
 ): Entity {
-    val json = EntityJson(EntityNumber(1), name, position, direction)
-    return entityFromJson(json)
+    return entityFromJson(basicEntityJson(name, position, direction))
 }
+
+public fun BlueprintPrototypes.createTileSnappedEntity(
+    name: String,
+    topLeftTile: TilePosition,
+    direction: Direction = Direction.North,
+): Entity {
+    val prototype = this.blueprintableEntities[name] ?: UnknownPrototype(name)
+    val position = prototype.tileSnappedPosition(topLeftTile, direction)
+    return createEntity(prototype, basicEntityJson(name, position, direction))
+}
+
+public fun basicEntityJson(
+    name: String,
+    position: Position,
+    direction: Direction = Direction.North,
+): EntityJson = EntityJson(EntityNumber(1), name, position, direction)
 
 public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entity> {
     val jsonEntities = json.entities ?: return emptyList()

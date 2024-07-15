@@ -5,8 +5,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 
+val blueprintPrototypes by lazy { BlueprintPrototypes.loadFromDataRaw(dataRawFile) }
+
 class BlueprintJsonPrototypesTest {
-    private val blueprintPrototypes = BlueprintPrototypes.loadFromDataRaw(dataRawFile)
 
     @Test
     fun `can load blueprint prototypes`() {

@@ -4,7 +4,7 @@ package glassbricks.factorio.blueprint
 /**
  * A data structure to store 2d entities and query them by their position.
  */
-public interface SpatialDataStructure<T : Spatial> : Collection<T> {
+public interface SpatialDataStructure<out T : Spatial> : Collection<T> {
 
     /** Gets all entities that intersect with the given area. */
     public fun getInArea(area: BoundingBox): Sequence<T>
@@ -26,13 +26,38 @@ public interface SpatialDataStructure<T : Spatial> : Collection<T> {
     public fun getPosInCircle(center: Position, radius: Double): Sequence<T>
 
     /** Gets all entities that collide with the given entity. */
-    public fun getColliding(other: Spatial): Sequence<T> =
-        getInArea(other.collisionBox).filter { it collidesWith other }
+    public fun getColliding(other: Spatial): Sequence<T>
+
+    public fun tileIsOccupied(tile: TilePosition): Boolean = getInTile(tile).any()
+
+    /**
+     * Iterates over all tiles in the data structure that contain entities.
+     */
+    public fun occupiedTiles(): Sequence<TilePosition>
+
+    /**
+     * Gets the minimal size bounding box to enclose all entities.
+     */
+    public fun enclosingBox(): BoundingBox {
+        var minX = Double.POSITIVE_INFINITY
+        var minY = Double.POSITIVE_INFINITY
+        var maxX = Double.NEGATIVE_INFINITY
+        var maxY = Double.NEGATIVE_INFINITY
+        for (entity in this) {
+            val box = entity.collisionBox
+            minX = minOf(minX, box.minX)
+            minY = minOf(minY, box.minY)
+            maxX = maxOf(maxX, box.maxX)
+            maxY = maxOf(maxY, box.maxY)
+        }
+        return BoundingBox(minX, minY, maxX, maxY)
+    }
 }
 
-public interface MutableSpatialDataStructure<T : Spatial> : SpatialDataStructure<T>, MutableCollection<T>
+public interface MutableSpatialDataStructure<T : Spatial> : SpatialDataStructure<T>, MutableCollection<T> {
+    public fun addIfNotColliding(entity: T): Boolean = getColliding(entity).none() && add(entity)
+}
 
 
-// todo: replace this with DI?
 public fun <T : Spatial> DefaultSpatialDataStructure(): MutableSpatialDataStructure<T> =
     SpatialTileHashMap()

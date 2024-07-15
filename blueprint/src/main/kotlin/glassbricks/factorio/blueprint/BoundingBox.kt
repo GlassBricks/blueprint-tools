@@ -26,9 +26,20 @@ public data class BoundingBox(
     public val maxX: Double get() = rightBottom.x
     public val maxY: Double get() = rightBottom.y
 
+    public val width: Double get() = maxX - minX
+    public val height: Double get() = maxY - minY
+
     /** Returns true if the given point is inside the bounding box; all bounds are exclusive. */
     public operator fun contains(point: Position): Boolean =
         point.x in minX..<maxX && point.y in minY..<maxY
+
+    /**
+     * Returns true if this bounding box fully contains the given bounding box.
+     *
+     * Touching edges are considered contained.
+     */
+    public operator fun contains(other: BoundingBox): Boolean =
+        minX <= other.minX && minY <= other.minY && maxX >= other.maxX && maxY >= other.maxY
 
     /** Returns true if the given bounding box intersects with this one. Touching boxes are not considered intersecting. */
     public infix fun intersects(other: BoundingBox): Boolean =
@@ -50,6 +61,12 @@ public data class BoundingBox(
         West, Northwest -> BoundingBox(minY, -maxX, maxY, -minX)
     }
 
+    /**
+     * Expands the bounding box by the given amount in all directions.
+     */
+    public fun expand(amount: Double): BoundingBox =
+        BoundingBox(minX - amount, minY - amount, maxX + amount, maxY + amount)
+
     override fun toString(): String = "BoundingBox(pos($minX, $minY), pos($maxX, $maxY))"
 
     public companion object {
@@ -57,6 +74,8 @@ public data class BoundingBox(
             point: Position,
             radius: Double
         ): BoundingBox = bbox(point.x - radius, point.y - radius, point.x + radius, point.y + radius)
+
+        public val EMPTY: BoundingBox = BoundingBox(Position.ZERO, Position.ZERO)
     }
 }
 
@@ -84,14 +103,16 @@ public data class TileBoundingBox(
     public operator fun contains(tile: TilePosition): Boolean =
         tile.x in minX..<maxXExclusive && tile.y in minY..<maxYExclusive
 
-    public fun iterateTiles(): Iterator<TilePosition> = object : Iterator<TilePosition> {
-        private var current = leftTop
-        override fun hasNext(): Boolean = current.y < maxYExclusive && current.x < maxXExclusive
-        override fun next(): TilePosition {
-            val result = current
-            current = if (current.x + 1 < maxXExclusive) TilePosition(current.x + 1, current.y)
-            else TilePosition(minX, current.y + 1)
-            return result
+    public fun iterateTiles(): Iterable<TilePosition> = Iterable {
+        object : Iterator<TilePosition> {
+            private var current = leftTop
+            override fun hasNext(): Boolean = current.y < maxYExclusive && current.x < maxXExclusive
+            override fun next(): TilePosition {
+                val result = current
+                current = if (current.x + 1 < maxXExclusive) TilePosition(current.x + 1, current.y)
+                else TilePosition(minX, current.y + 1)
+                return result
+            }
         }
     }
 }

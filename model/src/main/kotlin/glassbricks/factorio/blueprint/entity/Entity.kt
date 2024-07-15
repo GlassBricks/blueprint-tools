@@ -6,16 +6,22 @@ import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.Spatial
 import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.EntityNumber
-import glassbricks.factorio.blueprint.prototypes.CollisionMask
-import glassbricks.factorio.blueprint.prototypes.EntityWithOwnerPrototype
+import glassbricks.factorio.blueprint.prototypes.*
 import kotlinx.serialization.json.JsonObject
+
+public fun computeCollisionBox(
+    prototype: EntityPrototype,
+    position: Position,
+    direction: Direction,
+): BoundingBox = (prototype.collision_box?.rotateCardinal(direction)?.translate(position)
+    ?: BoundingBox(position, position))
 
 public interface Entity : Spatial {
     public val prototype: EntityWithOwnerPrototype
     public val type: String get() = prototype.type
     public val name: String get() = prototype.name
 
-    override val collisionMask: CollisionMask get() = prototype.collision_mask ?: CollisionMask.EMPTY
+    override val collisionMask: CollisionMask get() = prototype.effectiveCollisionMask
     override val collisionBox: BoundingBox
 
     public override var position: Position
@@ -31,21 +37,21 @@ public interface Entity : Spatial {
 public abstract class BaseEntity(json: EntityJson) : Entity {
     override var position: Position = json.position
         set(value) {
-            if (field != value) cachedBoundingBox = null
+            if (field != value) cachedCollisionBox = null
             field = value
         }
     override var direction: Direction = json.direction
         set(value) {
-            if (field != value) cachedBoundingBox = null
+            if (field != value) cachedCollisionBox = null
             field = value
         }
     override var tags: JsonObject? = json.tags
 
-    protected var cachedBoundingBox: BoundingBox? = null
+    private var cachedCollisionBox: BoundingBox? = null
     override val collisionBox: BoundingBox
-        get() = cachedBoundingBox ?: (prototype.collision_box?.rotateCardinal(direction)?.translate(position)
-            ?: BoundingBox(position, position))
-            .also { cachedBoundingBox = it }
+        get() = cachedCollisionBox ?: computeCollisionBox(prototype, position, direction).also {
+            cachedCollisionBox = it
+        }
 
     public override val collisionMask: CollisionMask
         get() = prototype.collision_mask ?: CollisionMask.DEFAULT_MASKS[prototype.type]!!
@@ -65,6 +71,8 @@ public abstract class BaseEntity(json: EntityJson) : Entity {
     protected abstract fun exportToJson(json: EntityJson)
 
     protected fun toDummyJson(): EntityJson = toJsonIsolated(EntityNumber(1))
+
+    override fun toString(): String = "${this::class.simpleName}(name=$name, position=$position, direction=$direction)"
 }
 
 /**

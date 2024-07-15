@@ -1,9 +1,5 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
-import glassbricks.factorio.blueprint.MutableSpatialDataStructure
-import glassbricks.factorio.blueprint.SpatialDataStructure
-
 
 private fun addOldCableConnections(
     old: CableConnectionPoint,
@@ -129,11 +125,4 @@ public fun <T : Entity> copyEntitiesWithConnections(entities: Iterable<T>): Map<
     }
 
     return resultMap
-}
-
-public fun <T : Entity> SpatialDataStructure<T>.copyEntities(): MutableSpatialDataStructure<T> {
-    return DefaultSpatialDataStructure<T>()
-        .also {
-            it.addAll(copyEntitiesWithConnections(this).values)
-        }
 }

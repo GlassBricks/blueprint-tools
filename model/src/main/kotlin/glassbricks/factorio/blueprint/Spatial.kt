@@ -1,6 +1,9 @@
 package glassbricks.factorio.blueprint
 
+import glassbricks.factorio.blueprint.entity.computeCollisionBox
 import glassbricks.factorio.blueprint.prototypes.CollisionMask
+import glassbricks.factorio.blueprint.prototypes.EntityPrototype
+import glassbricks.factorio.blueprint.prototypes.effectiveCollisionMask
 
 
 /**
@@ -34,4 +37,22 @@ public interface Spatial {
         if (!other.isSimpleCollisionBox) return other collidesWith this
         return collisionBox intersects other.collisionBox && collisionMask collidesWith other.collisionMask
     }
+}
+
+/**
+ * Returns all tiles that are overlapped by the collision box of this spatial.
+ */
+public fun Spatial.allOccupiedTiles(): Iterable<TilePosition> = collisionBox.roundOutToTileBbox().iterateTiles()
+
+/**
+ * Only holds the spatial properties of an entity, used for e.g. collision checks.
+ */
+public open class EntitySpatial<out T : EntityPrototype>(
+    public val prototype: T,
+    public override val position: Position,
+    public val direction: Direction = Direction.North
+) : Spatial {
+    override val collisionBox: BoundingBox = computeCollisionBox(prototype, position, direction)
+    override val collisionMask: CollisionMask = prototype.effectiveCollisionMask
+    override val isSimpleCollisionBox: Boolean get() = true
 }
