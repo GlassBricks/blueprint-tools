@@ -2,6 +2,7 @@ package glassbricks.factorio.blueprint.prototypes
 
 import glassbricks.factorio.blueprint.BoundingBox
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.json.DoubleAsIntSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -14,8 +15,10 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 
 
+private val doubleAsIntListSerializer = ListSerializer(DoubleAsIntSerializer)
+
 public object PositionShorthandSerializer : KSerializer<Position> {
-    override val descriptor: SerialDescriptor = ListSerializer(Double.serializer()).descriptor
+    override val descriptor: SerialDescriptor = doubleAsIntListSerializer.descriptor
 
     override fun deserialize(decoder: Decoder): Position {
         decoder as JsonDecoder
@@ -39,7 +42,10 @@ public object PositionShorthandSerializer : KSerializer<Position> {
 
 
     override fun serialize(encoder: Encoder, value: Position) {
-        encoder.encodeSerializableValue(DoubleArraySerializer(), doubleArrayOf(value.x, value.y))
+        encoder.encodeSerializableValue(
+            doubleAsIntListSerializer,
+            listOf(value.x, value.y)
+        )
     }
 }
 

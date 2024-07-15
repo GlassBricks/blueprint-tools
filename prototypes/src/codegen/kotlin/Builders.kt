@@ -1,4 +1,4 @@
-package glassbricks.factorio
+package glassbricks.factorio.prototypecodegen
 
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName

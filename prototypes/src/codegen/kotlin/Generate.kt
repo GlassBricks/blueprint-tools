@@ -1,4 +1,4 @@
-package glassbricks.factorio
+package glassbricks.factorio.prototypecodegen
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -54,6 +54,7 @@ class PrototypeDeclarationsGenerator(private val input: GeneratedPrototypes) {
                 .addMember("PositionShorthandSerializer::class")
                 .addMember("BoundingBoxShorthandSerializer::class")
                 .addMember("LuaListSerializer::class")
+                .addMember("%T::class", ClassName("$PAR_PACKAGE_NAME.json", "DoubleAsIntSerializer"))
                 .build()
         )
         addAnnotation(

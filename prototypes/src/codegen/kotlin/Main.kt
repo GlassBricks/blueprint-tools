@@ -1,4 +1,4 @@
-package glassbricks.factorio
+package glassbricks.factorio.prototypecodegen
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json

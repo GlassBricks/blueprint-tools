@@ -1,5 +1,5 @@
-import glassbricks.factorio.blueprint.entity.StorageTank
-import glassbricks.factorio.blueprint.entity.testSaveLoad
+package glassbricks.factorio.blueprint.entity
+
 import kotlin.test.Test
 
 class StorageTankTest {

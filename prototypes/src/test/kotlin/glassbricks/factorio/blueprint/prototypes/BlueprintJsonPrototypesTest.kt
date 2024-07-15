@@ -1,6 +1,5 @@
 package glassbricks.factorio.blueprint.prototypes
 
-import glassbricks.factorio.blueprintPrototypes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -10,12 +9,12 @@ class BlueprintJsonPrototypesTest {
 
     @Test
     fun `can load blueprint prototypes`() {
-        println(blueprintPrototypes.blueprintableEntities)
+        println(VanillaPrototypes.blueprintableEntities)
     }
 
     @Test
     fun `can load from data raw`() {
-        assertEquals(blueprintPrototypes.blueprintableEntities.keys, blueprintPrototypes.itemsToPlace.keys)
+        assertEquals(VanillaPrototypes.blueprintableEntities.keys, VanillaPrototypes.itemsToPlace.keys)
 
         for (name in arrayOf(
             "wooden-chest",
@@ -28,7 +27,7 @@ class BlueprintJsonPrototypesTest {
             "artillery-wagon",
             "locomotive",
         )) {
-            val entity = blueprintPrototypes.blueprintableEntities[name]
+            val entity = VanillaPrototypes.blueprintableEntities[name]
             assertNotNull(entity, "Entity $name not found in prototypeMap")
             assertEquals(entity.name, name)
         }
@@ -36,7 +35,7 @@ class BlueprintJsonPrototypesTest {
             "spidertron",
             "car"
         )) {
-            assertFalse(name in blueprintPrototypes.blueprintableEntities)
+            assertFalse(name in VanillaPrototypes.blueprintableEntities)
         }
     }
 

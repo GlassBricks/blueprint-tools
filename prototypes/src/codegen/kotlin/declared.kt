@@ -1,4 +1,4 @@
-package glassbricks.factorio
+package glassbricks.factorio.prototypecodegen
 
 import com.squareup.kotlinpoet.*
 import kotlinx.serialization.Serializable
@@ -406,12 +406,4 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
             addModifiers(KModifier.OVERRIDE)
         }
     }
-
-    println(this.prototypes.values
-        .mapNotNull {
-            it.typeName?.let {
-                "\"$it\""
-            }
-        }
-    )
 }

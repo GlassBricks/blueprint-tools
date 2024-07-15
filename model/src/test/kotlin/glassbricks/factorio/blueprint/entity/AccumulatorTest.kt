@@ -6,7 +6,7 @@ import glassbricks.factorio.blueprint.json.ControlBehaviorJson
 import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.SignalIDJson
 import glassbricks.factorio.blueprint.prototypes.AccumulatorPrototype
-import glassbricks.factorio.blueprintPrototypes
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -15,7 +15,7 @@ import kotlin.test.assertNotNull
 class AccumulatorTest {
     @Test
     fun `can load accumulator`() {
-        val prototype = blueprintPrototypes.getPrototype<AccumulatorPrototype>("accumulator")
+        val prototype = VanillaPrototypes.getPrototype<AccumulatorPrototype>("accumulator")
         assertNotNull(prototype.default_output_signal)
         val accumulator = testSaveLoad(Accumulator::class, "accumulator")
         assertEquals(prototype.default_output_signal, accumulator.controlBehavior.defaultOutputSignal)

@@ -4,6 +4,7 @@ import glassbricks.factorio.blueprint.*
 import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 
 public class BlueprintModel
 private constructor(
@@ -19,8 +20,8 @@ private constructor(
 ) : BlueprintItem {
 
     public constructor(
-        prototypes: BlueprintPrototypes,
-        blueprint: BlueprintJson
+        blueprint: BlueprintJson,
+        prototypes: BlueprintPrototypes = VanillaPrototypes
     ) : this(
         label = blueprint.label,
         label_color = blueprint.label_color,

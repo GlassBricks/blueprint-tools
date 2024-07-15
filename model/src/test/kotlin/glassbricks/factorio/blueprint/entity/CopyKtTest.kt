@@ -2,7 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.pos
-import glassbricks.factorio.blueprintPrototypes
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 class CopyKtTest {
     @Test
     fun `can copy basic entity`() {
-        val entity = blueprintPrototypes.createEntity("iron-chest", Position.ZERO) as Container
+        val entity = VanillaPrototypes.createEntity("iron-chest", Position.ZERO) as Container
         entity.bar = 3
         val copy = entity.copyWithOldConnections()
         assertEquals(entity.prototype, copy.prototype)
@@ -20,14 +20,14 @@ class CopyKtTest {
     }
 
     private fun createPole(): ElectricPole {
-        return blueprintPrototypes.createEntity("small-electric-pole", Position.ZERO) as ElectricPole
+        return VanillaPrototypes.createEntity("small-electric-pole", Position.ZERO) as ElectricPole
     }
 
     @Test
     fun `can copy cable connection point`() {
         val pole1 = createPole()
         val pole2 = createPole()
-        val chest1 = blueprintPrototypes.createEntity("iron-chest", Position.ZERO) as Container
+        val chest1 = VanillaPrototypes.createEntity("iron-chest", Position.ZERO) as Container
 
         pole1.cableConnections.add(pole2)
         pole1.circuitConnections.red.add(chest1)
@@ -45,7 +45,7 @@ class CopyKtTest {
 
     @Test
     fun `can copy power switch connections`() {
-        val powerSwitch = blueprintPrototypes.createEntity("power-switch", Position.ZERO) as PowerSwitch
+        val powerSwitch = VanillaPrototypes.createEntity("power-switch", Position.ZERO) as PowerSwitch
         val pole1 = createPole()
         val pole2 = createPole()
 
@@ -65,7 +65,7 @@ class CopyKtTest {
     @Test
     fun `can copy combinator connections`() {
         val combinator =
-            blueprintPrototypes.createEntity("arithmetic-combinator", Position.ZERO) as ArithmeticCombinator
+            VanillaPrototypes.createEntity("arithmetic-combinator", Position.ZERO) as ArithmeticCombinator
         val pole1 = createPole()
         val pole2 = createPole()
 
@@ -82,9 +82,9 @@ class CopyKtTest {
 
     @Test
     fun `can copy multiple basic entities`() {
-        val entity1 = blueprintPrototypes.createEntity("iron-chest", Position.ZERO) as Container
-        val entity2 = blueprintPrototypes.createEntity("iron-chest", pos(1.0, 1.0)) as Container
-        val entity3 = blueprintPrototypes.createEntity("iron-chest", pos(2.0, 2.0)) as Container
+        val entity1 = VanillaPrototypes.createEntity("iron-chest", Position.ZERO) as Container
+        val entity2 = VanillaPrototypes.createEntity("iron-chest", pos(1.0, 1.0)) as Container
+        val entity3 = VanillaPrototypes.createEntity("iron-chest", pos(2.0, 2.0)) as Container
         val entities = listOf(entity1, entity2, entity3)
         val copies = copyEntitiesWithConnections(listOf(entity1, entity2, entity3))
         assertEquals(entities.size, copies.size)
@@ -100,8 +100,8 @@ class CopyKtTest {
     fun `can copy multiple entities with connections`() {
         val pole1 = createPole()
         val pole2 = createPole()
-        val chest1 = blueprintPrototypes.createEntity("iron-chest", Position.ZERO) as Container
-        val chest2 = blueprintPrototypes.createEntity("iron-chest", Position.ZERO) as Container
+        val chest1 = VanillaPrototypes.createEntity("iron-chest", Position.ZERO) as Container
+        val chest2 = VanillaPrototypes.createEntity("iron-chest", Position.ZERO) as Container
         val entities = listOf(pole1, pole2, chest1, chest2)
         pole1.cableConnections.add(pole2)
         pole1.circuitConnections.red.add(chest1)
@@ -121,7 +121,7 @@ class CopyKtTest {
 
     @Test
     fun `can copy multiple entities with power switch connections`() {
-        val powerSwitch = blueprintPrototypes.createEntity("power-switch", Position.ZERO) as PowerSwitch
+        val powerSwitch = VanillaPrototypes.createEntity("power-switch", Position.ZERO) as PowerSwitch
         val pole1 = createPole()
         val pole2 = createPole()
         val entities = listOf(powerSwitch, pole1, pole2)
@@ -142,7 +142,7 @@ class CopyKtTest {
     @Test
     fun `can copy multiple entities with combinator connections`() {
         val combinator =
-            blueprintPrototypes.createEntity("arithmetic-combinator", Position.ZERO) as ArithmeticCombinator
+            VanillaPrototypes.createEntity("arithmetic-combinator", Position.ZERO) as ArithmeticCombinator
         val pole1 = createPole()
         val pole2 = createPole()
         val entities = listOf(combinator, pole1, pole2)

@@ -74,7 +74,7 @@ internal object BlueprintIndexSerializer : KSerializer<BlueprintIndex> {
     }
 }
 
-internal object DoubleAsIntSerializer : KSerializer<Double> {
+public object DoubleAsIntSerializer : KSerializer<Double> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DoubleAsInt", PrimitiveKind.DOUBLE)
 
     override fun deserialize(decoder: Decoder): Double = decoder.decodeDouble()

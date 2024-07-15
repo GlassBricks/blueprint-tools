@@ -1,16 +1,16 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Position
-import glassbricks.factorio.blueprintPrototypes
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlin.test.Test
 import kotlin.test.fail
 
 class AllPrototypesLoadedTest {
     @Test
     fun `all prototypes are matched`() {
-        val unknownKeys = blueprintPrototypes.blueprintableEntities.entries
+        val unknownKeys = VanillaPrototypes.blueprintableEntities.entries
             .filter {
-                blueprintPrototypes.createEntity(
+                VanillaPrototypes.createEntity(
                     name = it.key,
                     position = Position.ZERO
                 ) is UnknownEntity

@@ -6,12 +6,12 @@ import glassbricks.factorio.blueprint.entity.ElectricPole
 import glassbricks.factorio.blueprint.entity.Inserter
 import glassbricks.factorio.blueprint.entity.createTileSnappedEntity
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
-import glassbricks.factorio.blueprintPrototypes
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 
-val smallPole get() = blueprintPrototypes.getPrototype<ElectricPolePrototype>("small-electric-pole")
-fun powerable(position: TilePosition) = blueprintPrototypes.createTileSnappedEntity("inserter", position) as Inserter
+val smallPole get() = VanillaPrototypes.getPrototype<ElectricPolePrototype>("small-electric-pole")
+fun powerable(position: TilePosition) = VanillaPrototypes.createTileSnappedEntity("inserter", position) as Inserter
 fun nonPowerable(position: TilePosition) =
-    blueprintPrototypes.createTileSnappedEntity("iron-chest", position) as Container
+    VanillaPrototypes.createTileSnappedEntity("iron-chest", position) as Container
 
 fun pole(position: TilePosition) =
-    blueprintPrototypes.createTileSnappedEntity("small-electric-pole", position) as ElectricPole
+    VanillaPrototypes.createTileSnappedEntity("small-electric-pole", position) as ElectricPole

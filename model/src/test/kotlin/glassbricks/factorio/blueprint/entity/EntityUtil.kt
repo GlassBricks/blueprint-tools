@@ -4,9 +4,7 @@ import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.EntityNumber
-import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
-import glassbricks.factorio.blueprintPrototypes
-import java.io.File
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -25,7 +23,7 @@ internal inline fun <reified T> loadEntity(
     name: String,
     blueprint: BlueprintJson? = null,
     build: EntityJson.() -> Unit = {},
-): T = blueprintPrototypes.entityFromJson(buildEntityJson(name, build), blueprint) as T
+): T = VanillaPrototypes.entityFromJson(buildEntityJson(name, build), blueprint) as T
 
 internal fun <T : Entity> testSaveLoad(
     klass: KClass<T>,
@@ -34,7 +32,7 @@ internal fun <T : Entity> testSaveLoad(
     blueprint: BlueprintJson?,
 ): T {
     json.entity_number = EntityNumber(1)
-    val entity = blueprintPrototypes.entityFromJson(json, blueprint)
+    val entity = VanillaPrototypes.entityFromJson(json, blueprint)
     assertTrue(klass.isInstance(entity), "Expected $klass but got ${entity.javaClass}")
 
     assertEquals(

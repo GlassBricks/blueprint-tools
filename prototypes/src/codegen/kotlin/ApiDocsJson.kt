@@ -1,6 +1,6 @@
 @file:OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 
-package glassbricks.factorio
+package glassbricks.factorio.prototypecodegen
 
 import com.squareup.kotlinpoet.CodeBlock
 import kotlinx.serialization.ExperimentalSerializationApi

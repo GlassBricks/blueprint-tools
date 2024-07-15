@@ -3,7 +3,7 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.*
-import glassbricks.factorio.blueprintPrototypes
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import org.junit.jupiter.api.Assertions
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -22,10 +22,10 @@ class ImportExportKtTest {
             position = Position(1.5, 2.5),
             bar = 1,
         )
-        val entity = blueprintPrototypes.entityFromJson(entityJson)
+        val entity = VanillaPrototypes.entityFromJson(entityJson)
         assertEquals(entity.name, "iron-chest")
         assertEquals(entity.type, "container")
-        assertEquals(entity.prototype, blueprintPrototypes.blueprintableEntities["iron-chest"])
+        assertEquals(entity.prototype, VanillaPrototypes.blueprintableEntities["iron-chest"])
 
         val backToJson = entity.toJsonIsolated(EntityNumber(2))
         assertEquals(backToJson.entity_number, EntityNumber(2))
@@ -41,7 +41,7 @@ class ImportExportKtTest {
             name = "foo",
             position = Position(1.0, 2.0),
         )
-        val entity = blueprintPrototypes.entityFromJson(entityJson)
+        val entity = VanillaPrototypes.entityFromJson(entityJson)
         assertTrue(entity is UnknownEntity)
         assertEquals(entity.name, "foo")
         assertEquals(entity.type, "unknown")
@@ -100,7 +100,7 @@ class ImportExportKtTest {
                 neighbours = listOf(EntityNumber(1))
             }
         )
-        val entities = blueprintPrototypes.entitiesFromJson(blueprint)
+        val entities = VanillaPrototypes.entitiesFromJson(blueprint)
         assertNotNull(entities)
         val pole1 = entities[0] as ElectricPole
         val pole2 = entities[1] as ElectricPole
@@ -164,7 +164,7 @@ class ImportExportKtTest {
                 neighbours = listOf(EntityNumber(1))
             }
         )
-        val entities = blueprintPrototypes.entitiesFromJson(blueprint)
+        val entities = VanillaPrototypes.entitiesFromJson(blueprint)
         assertNotNull(entities)
         val switch1 = entities[0] as PowerSwitch
         val pole2 = entities[1] as ElectricPole
@@ -273,7 +273,7 @@ class ImportExportKtTest {
             )
         )
 
-        val entities = blueprintPrototypes.entitiesFromJson(blueprint)
+        val entities = VanillaPrototypes.entitiesFromJson(blueprint)
         assertNotNull(entities)
         val (entity1, entity2, entity3) = entities
         assertTrue(entity1 is CombinatorConnections)

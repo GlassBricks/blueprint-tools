@@ -1,14 +1,14 @@
 package glassbricks.factorio.blueprint
 
 import glassbricks.factorio.blueprint.prototypes.FurnacePrototype
-import glassbricks.factorio.blueprintPrototypes
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class SpatialTest {
     @Test
     fun `entity spatial`() {
-        val prototype = blueprintPrototypes.getPrototype<FurnacePrototype>("stone-furnace")
+        val prototype = VanillaPrototypes.getPrototype<FurnacePrototype>("stone-furnace")
         val spatial = EntitySpatial(prototype, pos(1.0, 2.0))
         assertEquals(prototype, spatial.prototype)
         assertEquals(pos(1.0, 2.0), spatial.position)

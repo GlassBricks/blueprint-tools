@@ -15,7 +15,6 @@ dependencies {
     api(project(":prototypes"))
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test"))
-    testImplementation(project(":test-util"))
 }
 
 tasks.test {

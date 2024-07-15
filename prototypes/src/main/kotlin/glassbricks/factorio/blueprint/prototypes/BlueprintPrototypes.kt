@@ -27,7 +27,7 @@ public class BlueprintPrototypes(public val dataRaw: DataRaw) {
     init {
         val itemsToPlace = mutableMapOf<EntityID, List<ItemToPlace>>()
         for ((_, itemPrototype) in items) {
-            val entityId = itemPrototype.place_result ?: continue
+            val entityId = itemPrototype.place_result
             if (entityId !in itemsToPlace
                 || itemPrototype.flags?.contains(ItemPrototypeFlag.`primary-place-result`) == true
             ) {
