@@ -3,6 +3,7 @@ package glassbricks.factorio.blueprint.entity
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.json.*
+import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import org.junit.jupiter.api.Assertions
 import kotlin.test.Test
@@ -25,7 +26,7 @@ class ImportExportKtTest {
         val entity = VanillaPrototypes.entityFromJson(entityJson)
         assertEquals(entity.name, "iron-chest")
         assertEquals(entity.type, "container")
-        assertEquals(entity.prototype, VanillaPrototypes.blueprintableEntities["iron-chest"])
+        assertEquals(entity.prototype, VanillaPrototypes.blueprintableEntities["iron-chest"] as EntityPrototype)
 
         val backToJson = entity.toJsonIsolated(EntityNumber(2))
         assertEquals(backToJson.entity_number, EntityNumber(2))

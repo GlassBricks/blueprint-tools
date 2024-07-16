@@ -12,6 +12,7 @@ repositories {
 dependencies {
     api(project(":model"))
     api("com.google.ortools:ortools-java:9.10.4067")
+    api("org.jgrapht:jgrapht-core:1.5.2")
 
     testImplementation(kotlin("test"))
 }

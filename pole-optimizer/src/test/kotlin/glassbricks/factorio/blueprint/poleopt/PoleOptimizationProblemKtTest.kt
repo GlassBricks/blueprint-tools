@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.poleopt
 
-import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
+import glassbricks.factorio.blueprint.entity.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.entity.Entity
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
 import glassbricks.factorio.blueprint.tilePos
@@ -28,7 +28,7 @@ class PoleOptimizationProblemTest {
             entities, listOf(smallPole),
             bounds = entities.enclosingBox()
         )
-        assertEquals(3, candidatePoles.poles.size)
+        assertEquals(3, candidatePoles.candidatePoles.size)
         val problem = createDefaultPoleILP(candidatePoles)
         val solver = problem.solver
         solver.setTimeLimit(1000)

@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.poleopt
 
-import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
+import glassbricks.factorio.blueprint.entity.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.entity.Entity
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 import glassbricks.factorio.blueprint.tilePos
@@ -29,16 +29,16 @@ class CandidatePoleKtTest {
         }
         val candidatePoles = CandidatePoleSet(entities, DefaultSpatialDataStructure(locations))
 
-        assertEquals(3, candidatePoles.poles.size)
+        assertEquals(3, candidatePoles.candidatePoles.size)
 
-        val pole2 = candidatePoles.poles.getInTile(tilePos(2, 1)).single()
+        val pole2 = candidatePoles.candidatePoles.getInTile(tilePos(2, 1)).single()
         assertEquals(setOf(entityList[0], entityList[1], entityList[2]),
             candidatePoles.getPoweredEntities(pole2).toSet())
 
-        val pole5 = candidatePoles.poles.getInTile(tilePos(6, 0)).single()
+        val pole5 = candidatePoles.candidatePoles.getInTile(tilePos(6, 0)).single()
         assertEquals(setOf(entityList[4]), candidatePoles.getPoweredEntities(pole5).toSet())
 
-        val pole20 = candidatePoles.poles.getInTile(tilePos(20, 1)).single()
+        val pole20 = candidatePoles.candidatePoles.getInTile(tilePos(20, 1)).single()
         assertEquals(emptySet(), candidatePoles.getPoweredEntities(pole20).toSet())
 
 //        assertEquals(setOf(pole2), candidatePoles.poweredBy[entityList[0]])

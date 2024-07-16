@@ -79,6 +79,20 @@ public data class BoundingBox(
     }
 }
 
+public fun getEnclosingBox(boxes: Iterable<BoundingBox>): BoundingBox {
+    var minX = Double.POSITIVE_INFINITY
+    var minY = Double.POSITIVE_INFINITY
+    var maxX = Double.NEGATIVE_INFINITY
+    var maxY = Double.NEGATIVE_INFINITY
+    for (box in boxes) {
+        minX = minOf(minX, box.minX)
+        minY = minOf(minY, box.minY)
+        maxX = maxOf(maxX, box.maxX)
+        maxY = maxOf(maxY, box.maxY)
+    }
+    return bbox(minX, minY, maxX, maxY)
+}
+
 public fun bbox(
     minX: Double,
     minY: Double,

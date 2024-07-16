@@ -23,20 +23,27 @@ public class PoleOptimizationProblem(
 
     public fun addAllPoweredConstraint() {
         for ((_, poles) in poweredByMap) {
-            if(poles.isEmpty()) continue
+            if (poles.isEmpty()) continue
             val constraint = solver.makeConstraint(1.0, Double.POSITIVE_INFINITY)
+            for (pole in poles) {
+                constraint.setCoefficient(poleVariables[pole]!!, 1.0)
+            }
+        }
+    }
+
+    public fun addNonOverlappingConstraint() {
+        for (tile in poleSet.candidatePoles.occupiedTiles()) {
+            val poles = poleSet.candidatePoles.getInTile(tile).toList()
+            if (poles.size <= 1) continue
+            val constraint = solver.makeConstraint(0.0, 1.0)
             for (pole in poles)
                 constraint.setCoefficient(poleVariables[pole]!!, 1.0)
         }
     }
 
-    public fun addNonOverlappingConstraint() {
-        for (tile in poleSet.poles.occupiedTiles()) {
-            val poles = poleSet.poles.getInTile(tile).toList()
-            if (poles.size <= 1) continue
-            val constraint = solver.makeConstraint(0.0, 1.0)
-            for (pole in poles)
-                constraint.setCoefficient(poleVariables[pole]!!, 1.0)
+    public fun forceIncludePoles() {
+        for ((pole, variable) in poleVariables) {
+            if (pole.forceInclude) variable.setLb(1.0)
         }
     }
 
@@ -53,10 +60,11 @@ public class PoleOptimizationProblem(
 
     public fun getSelectedPoles(): List<CandidatePole> =
         poleVariables.keys.filter { poleIsSelected(it) }
+
 }
 
 public fun createEmptyPoleILP(poles: CandidatePoleSet, solver: MPSolver): PoleOptimizationProblem {
-    val poleVariables = poles.poles.associateWith { pole ->
+    val poleVariables = poles.candidatePoles.associateWith { pole ->
         solver.makeBoolVar("${pole.prototype.name}_${pole.position.x}_${pole.position.y}")
     }
     return PoleOptimizationProblem(solver, poles, poleVariables)
@@ -64,12 +72,17 @@ public fun createEmptyPoleILP(poles: CandidatePoleSet, solver: MPSolver): PoleOp
 
 public fun createDefaultPoleILP(
     poles: CandidatePoleSet,
-    solver: MPSolver = MPSolver.createSolver("SAT")
-): PoleOptimizationProblem = createEmptyPoleILP(poles, solver).apply {
+    solver: String = "SAT"
+): PoleOptimizationProblem = createEmptyPoleILP(
+    poles,
+    solver = MPSolver.createSolver(solver)
+).apply {
     setObjective()
+    forceIncludePoles()
     addAllPoweredConstraint()
     addNonOverlappingConstraint()
 }
+
 
 @Suppress("unused")
 private val init = Loader.loadNativeLibraries()

@@ -1,10 +1,8 @@
 package glassbricks.factorio.blueprint.model
 
-import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.SignalType
 import glassbricks.factorio.blueprint.TilePosition
-import glassbricks.factorio.blueprint.entity.Entity
-import glassbricks.factorio.blueprint.entity.entitiesFromJson
+import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.entity.setEntitiesFrom
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes

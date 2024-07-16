@@ -165,3 +165,10 @@ public inline fun <T : Entity> MutableCollection<T>.removeWithConnectionsIf(cros
             }
         }
     }
+
+public fun <T : Entity> SpatialDataStructure<T>.copyEntities(): MutableSpatialDataStructure<T> {
+    return DefaultSpatialDataStructure<T>()
+        .also {
+            it.addAll(copyEntitiesWithConnections(this).values)
+        }
+}
