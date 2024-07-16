@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.SignalID
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.ProgrammableSpeakerPrototype
 
@@ -13,9 +14,10 @@ public class ProgrammableSpeaker(
     public var playbackGlobally: Boolean = json.parameters?.playback_globally ?: false
     public var playbackVolume: Double = json.parameters?.playback_volume ?: 1.0
 
-    public var alertMessage: String = json.alert_parameters?.alert_message ?: ""
     public var showAlert: Boolean = json.alert_parameters?.show_alert ?: false
     public var showOnMap: Boolean = json.alert_parameters?.show_on_map ?: true
+    public var alertMessage: String = json.alert_parameters?.alert_message ?: ""
+    public var icon_signal_id: SignalID? = json.alert_parameters?.icon_signal_id?.toSignalIDBasic()
 
     public override val controlBehavior: ProgrammableSpeakerControlBehavior =
         ProgrammableSpeakerControlBehavior(json.control_behavior)
@@ -27,12 +29,12 @@ public class ProgrammableSpeaker(
             playback_volume = playbackVolume
         )
         json.alert_parameters = AlertParameters(
-            alert_message = alertMessage,
             show_alert = showAlert,
-            show_on_map = showOnMap
+            show_on_map = showOnMap,
+            icon_signal_id = icon_signal_id?.toJsonBasic(),
+            alert_message = alertMessage,
         )
-        if (this.hasCircuitConnections())
-            json.control_behavior = controlBehavior.exportToJson()
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     override fun copyIsolated(): ProgrammableSpeaker = ProgrammableSpeaker(prototype, toDummyJson())
@@ -47,7 +49,7 @@ public class ProgrammableSpeakerControlBehavior(json: ControlBehaviorJson?) :
 
     override fun exportToJson(): ControlBehaviorJson =
         ControlBehaviorJson(
-            circuit_condition = circuitCondition,
+            circuit_condition = circuitCondition.takeUnless { it == CircuitCondition.DEFAULT },
             circuit_parameters = ProgrammableSpeakerCircuitParameters(
                 signal_value_is_pitch = signalValueIsPitch,
                 instrument_id = instrumentId,

@@ -21,7 +21,7 @@ public class TrainStop(
         json.station = station
         json.color = color
         json.manual_trains_limit = manualTrainsLimit
-        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     override fun copyIsolated(): TrainStop = TrainStop(prototype, toDummyJson())
@@ -39,14 +39,14 @@ public class TrainStopControlBehavior(
     public val defaultTrainsCountSignal: SignalID? get() = prototype.default_trains_count_signal
 
     public var trainStoppedSignal: SignalID? = json?.train_stopped_signal
-        .toSignalIdWithDefault(defaultTrainStoppedSignal)
-        ?.takeIf { json?.read_stopped_train == true }
+        ?.toSignalIDBasic()
+        ?.takeIf { json.read_stopped_train }
     public var trainsLimitSignal: SignalID? = json?.trains_limit_signal
-        .toSignalIdWithDefault(defaultTrainsLimitSignal)
-        ?.takeIf { json?.set_trains_limit == true }
+        ?.toSignalIDBasic()
+        ?.takeIf { json.set_trains_limit }
     public var trainsCountSignal: SignalID? = json?.trains_count_signal
-        .toSignalIdWithDefault(defaultTrainsCountSignal)
-        ?.takeIf { json?.read_trains_count == true }
+        ?.toSignalIDBasic()
+        ?.takeIf { json.read_trains_count }
 
     override fun exportToJson(): ControlBehaviorJson =
         super.baseExportToJson().apply {
@@ -54,10 +54,12 @@ public class TrainStopControlBehavior(
             send_to_train = sendToTrain
             read_from_train = readFromTrain
             read_stopped_train = trainStoppedSignal != null
-            train_stopped_signal = trainStoppedSignal?.toJsonWithDefault(defaultTrainStoppedSignal)
+            // these don't actually use default...
+            // instead, in game, it gets set to the default when a new control behavior is created
+            train_stopped_signal = trainStoppedSignal?.toJsonBasic()
             set_trains_limit = trainsLimitSignal != null
-            trains_limit_signal = trainsLimitSignal?.toJsonWithDefault(defaultTrainsLimitSignal)
+            trains_limit_signal = trainsLimitSignal?.toJsonBasic()
             read_trains_count = trainsCountSignal != null
-            trains_count_signal = trainsCountSignal?.toJsonWithDefault(defaultTrainsCountSignal)
+            trains_count_signal = trainsCountSignal?.toJsonBasic()
         }
 }

@@ -3,12 +3,12 @@ package glassbricks.factorio.blueprint.json
 import kotlinx.serialization.Serializable
 
 
-@Serializable(with = TransportBeltContentReadMode.Serializer::class)
-public enum class TransportBeltContentReadMode {
+@Serializable(with = BeltReadMode.Serializer::class)
+public enum class BeltReadMode {
     Pulse, Hold;
 
     internal object Serializer :
-        EnumOrdinalSerializer<TransportBeltContentReadMode>(TransportBeltContentReadMode::class)
+        EnumOrdinalSerializer<BeltReadMode>(BeltReadMode::class)
 }
 
 @Serializable

@@ -77,8 +77,7 @@ private constructor(
         description = description,
         snap_to_grid = snapToGridSettings?.snapToGrid,
         absolute_snapping = snapToGridSettings?.positionRelativeToGrid != null,
-        position_relative_to_grid = snapToGridSettings?.positionRelativeToGrid
-            ?.takeUnless { it.isZero() }
+        position_relative_to_grid = snapToGridSettings?.positionRelativeToGrid ?: TilePosition.ZERO
     ).also { bp ->
         bp.setEntitiesFrom(entities.sortedBy { it.position })
     }

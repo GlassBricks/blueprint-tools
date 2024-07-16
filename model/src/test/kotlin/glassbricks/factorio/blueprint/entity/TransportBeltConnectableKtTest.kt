@@ -11,7 +11,21 @@ class TransportBeltConnectableKtTest {
         testSaveLoad(TransportBelt::class, "transport-belt")
         testSaveLoad(TransportBelt::class, "transport-belt", connectToNetwork = true) {
             control_behavior = ControlBehaviorJson(
-                circuit_enable_disable = false
+                circuit_enable_disable = false,
+                circuit_read_hand_contents = true,
+                circuit_contents_read_mode = BeltReadMode.Pulse,
+            )
+        }
+        testSaveLoad(TransportBelt::class, "transport-belt", connectToNetwork = true) {
+            control_behavior = ControlBehaviorJson(
+                circuit_enable_disable = true,
+                circuit_condition = CircuitCondition(
+                    first_signal = signalId("signal-A"),
+                    comparator = CompareOperation.Equal,
+                    constant = 1
+                ),
+                circuit_read_hand_contents = false,
+                circuit_contents_read_mode = BeltReadMode.Pulse,
             )
         }
         val belt = testSaveLoad(TransportBelt::class, "transport-belt",
@@ -25,12 +39,12 @@ class TransportBeltConnectableKtTest {
                         constant = 1
                     ),
                     circuit_read_hand_contents = true,
-                    circuit_contents_read_mode = TransportBeltContentReadMode.Hold,
+                    circuit_contents_read_mode = BeltReadMode.Hold,
                 )
             })
         assertEquals(Direction.East, belt.direction)
         assertEquals(true, belt.controlBehavior.enableDisable)
-        assertEquals(TransportBeltContentReadMode.Hold, belt.controlBehavior.readContentsMode)
+        assertEquals(BeltReadMode.Hold, belt.controlBehavior.readContentsMode)
     }
 
     @Test

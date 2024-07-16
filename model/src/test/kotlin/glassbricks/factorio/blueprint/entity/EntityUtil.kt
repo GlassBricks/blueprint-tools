@@ -1,9 +1,11 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.SignalType
 import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.EntityNumber
+import glassbricks.factorio.blueprint.json.SignalIDJson
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
@@ -62,3 +64,9 @@ internal fun <T : Entity> testSaveLoad(
     val json = buildEntityJson(name, build)
     return testSaveLoad(klass, json, connectToNetwork, blueprint)
 }
+
+fun signalId(name: String) = SignalIDJson(
+    name = name, type = SignalType.virtual
+)
+
+val nullSignalId = SignalIDJson(name = null, type = SignalType.item)

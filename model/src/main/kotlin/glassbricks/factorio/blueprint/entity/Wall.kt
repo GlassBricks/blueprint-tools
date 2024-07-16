@@ -12,7 +12,7 @@ public class Wall(
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
     override val controlBehavior: WallControlBehavior = WallControlBehavior(json.control_behavior)
     override fun exportToJson(json: EntityJson) {
-        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
     override fun copyIsolated(): Wall = Wall(prototype, toDummyJson())
 }

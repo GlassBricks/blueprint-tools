@@ -108,7 +108,8 @@ public data class BlueprintJson(
     public var absolute_snapping: Boolean = false,
     /** Offset relative to the global absolute snapping grid. */
     @SerialName("position-relative-to-grid")
-    public var position_relative_to_grid: TilePosition? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public var position_relative_to_grid: TilePosition = TilePosition.ZERO,
     /** The map version of the map the blueprint was created in. */
     public override var version: FactorioVersion = FactorioVersion.DEFAULT,
 ) : Importable {
@@ -140,15 +141,17 @@ public data class SignalIDJson(
     public val name: String?,
     /** Type of the signal. Either "item", "fluid" or "virtual". */
     public val type: SignalType,
-)
+) {
+    public companion object {
+        public val NO_SIGNAL: SignalIDJson = SignalIDJson(null, SignalType.item)
+    }
+}
 
 /**
  * If this value is null, uses a "no signal" signal (where the name is set to null).
  */
-public fun SignalID?.toJsonBasic(): SignalIDJson = SignalIDJson(
-    name = this?.name,
-    type = this?.type ?: SignalType.item,
-)
+public fun SignalID?.toJsonBasic(): SignalIDJson =
+    if (this == null) SignalIDJson.NO_SIGNAL else SignalIDJson(name, type)
 
 public fun SignalIDJson.toSignalIDBasic(): SignalID? =
     if (name == null) null else SignalID(name, type)
@@ -171,13 +174,15 @@ public fun SignalIDJson?.toSignalIdWithDefault(default: SignalID?): SignalID? = 
 }
 
 
-@Suppress("CanBeParameter", "MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate")
 @Serializable
 @JvmInline
-public value class EntityNumber(public val id: Int) {
+public value class EntityNumber(public val id: Int) : Comparable<EntityNumber> {
     init {
         require(id >= 1) { "EntityId must be a 1-based index" }
     }
+
+    override fun compareTo(other: EntityNumber): Int = id.compareTo(other.id)
 }
 
 /**
@@ -592,13 +597,13 @@ public data class SpeakerParameters(
 @Serializable
 public data class AlertParameters(
     /** Whether an alert is shown. */
-    public val show_alert: Boolean = false,
+    public val show_alert: Boolean,
     /** Whether an alert icon is shown on the map. */
-    public val show_on_map: Boolean = false,
+    public val show_on_map: Boolean,
     /** The icon that is displayed with the alert. */
-    public val icon_signal_id: SignalIDJson? = null,
+    public val icon_signal_id: SignalIDJson?,
     /** Message of the alert. */
-    public val alert_message: String = "",
+    public val alert_message: String,
 )
 
 @Serializable
@@ -699,7 +704,7 @@ public data class ControlBehaviorJson(
     /** Whether to read this belts content or inserters hand. */
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public var circuit_read_hand_contents: Boolean = false,
-    public var circuit_contents_read_mode: TransportBeltContentReadMode? = null,
+    public var circuit_contents_read_mode: BeltReadMode? = null,
     public var circuit_mode_of_operation: CircuitModeOfOperation? = null,
     public var circuit_hand_read_mode: InserterHandReadMode? = null,
     /** Whether to set inserters stack size from a circuit signal. */

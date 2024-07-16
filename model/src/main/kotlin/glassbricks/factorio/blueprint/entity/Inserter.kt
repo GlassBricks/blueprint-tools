@@ -15,7 +15,7 @@ public class Inserter(override val prototype: InserterPrototype, json: EntityJso
 
     public override val circuitConnections: CircuitConnections = CircuitConnections(this)
     public override val controlBehavior: InserterControlBehavior =
-        InserterControlBehavior(prototype, json.control_behavior)
+        InserterControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
         json.filters = filtersAsIndexList()
@@ -23,44 +23,57 @@ public class Inserter(override val prototype: InserterPrototype, json: EntityJso
         json.override_stack_size = overrideStackSize?.toUByte()
         json.drop_position = dropPosition
         json.pickup_position = pickupPosition
-        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     override fun copyIsolated(): Inserter = Inserter(prototype, toDummyJson())
 }
 
-public class InserterControlBehavior(
-    private val prototype: InserterPrototype,
-    json: ControlBehaviorJson?,
-) : GenericOnOffControlBehavior(json), ControlBehavior {
+public class InserterControlBehavior(json: ControlBehaviorJson?) : GenericOnOffControlBehavior(json), ControlBehavior {
     public var modeOfOperation: InserterModeOfOperation =
-        json?.circuit_mode_of_operation?.asInserter() ?: InserterModeOfOperation.None
-    public var readContentsMode: InserterHandReadMode? = json?.circuit_hand_read_mode
-        ?.takeIf { json.circuit_read_hand_contents }
+        json?.circuit_mode_of_operation?.asInserter() ?: InserterModeOfOperation.EnableDisable
+    public var readContentsMode: InserterHandReadMode? =
+        if (json?.circuit_read_hand_contents == true)
+            json.circuit_hand_read_mode ?: InserterHandReadMode.Pulse else null
 
-    public val defaultStackSizeSignal: SignalID? get() = prototype.default_stack_control_input_signal
+    override fun shouldHaveCircuitCondition(source: ControlBehaviorJson): Boolean =
+        source.circuit_mode_of_operation.let {
+            it == null || it.rawValue == InserterModeOfOperation.EnableDisable.ordinal
+        }
+
     public var setStackSizeSignal: SignalID? =
-        json?.stack_control_input_signal.toSignalIdWithDefault(defaultStackSizeSignal)
-            .takeIf { json?.circuit_set_stack_size == true }
+        json?.stack_control_input_signal?.toSignalIDBasic()
+            ?.takeIf { json.circuit_set_stack_size }
 
-    override fun exportToJson(): ControlBehaviorJson =
-        ControlBehaviorJson(
-            circuit_mode_of_operation = modeOfOperation.asMode(),
-            circuit_condition = circuitCondition
-                .takeIf { modeOfOperation == InserterModeOfOperation.EnableDisable }
-                .takeUnless { it == CircuitCondition.DEFAULT },
+    override fun exportToJson(): ControlBehaviorJson? {
+        val modeOfOperation = modeOfOperation.asMode().takeUnless { it.rawValue == 0 }
+        val circuitCondition = circuitCondition
+            .takeIf { this.modeOfOperation == InserterModeOfOperation.EnableDisable }
+            ?.takeUnless { it == CircuitCondition.DEFAULT }
+        val connectToNetwork = logisticCondition != null
+        val readContents = readContentsMode != null
+        val setStackSize = setStackSizeSignal != null
+        if (modeOfOperation == null
+            && circuitCondition == null
+            && !connectToNetwork
+            && !readContents
+            && !setStackSize
+        ) return null
 
-            connect_to_logistic_network = logisticCondition != null,
+        return ControlBehaviorJson(
+            circuit_mode_of_operation = modeOfOperation,
+            circuit_condition = circuitCondition,
+
+            connect_to_logistic_network = connectToNetwork,
             logistic_condition = logisticCondition,
 
-            circuit_read_hand_contents = readContentsMode != null,
-            circuit_hand_read_mode = readContentsMode,
+            circuit_read_hand_contents = readContents,
+            circuit_hand_read_mode = readContentsMode.takeIf { it == InserterHandReadMode.Hold },
 
-            circuit_set_stack_size = setStackSizeSignal != null,
-            // Note the important ?. below. this output null (in the json) if the signal (in this class) is null, instead of
-            // the signal for "no signal" instead of default.
-            // This does mean it's impossible to have circuit_set_stack_size to be true, but the signal to be null,
-            // however that's likely never actually useful.
-            stack_control_input_signal = setStackSizeSignal?.toJsonWithDefault(defaultStackSizeSignal),
+            circuit_set_stack_size = setStackSize,
+            stack_control_input_signal = setStackSizeSignal
+                .takeIf { setStackSize }
+                ?.toJsonBasic()
         )
+    }
 }

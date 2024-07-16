@@ -1,10 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.SignalID
-import glassbricks.factorio.blueprint.json.ControlBehaviorJson
-import glassbricks.factorio.blueprint.json.EntityJson
-import glassbricks.factorio.blueprint.json.toJsonBasic
-import glassbricks.factorio.blueprint.json.toSignalIdWithDefault
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.RoboportPrototype
 
 public class Roboport(
@@ -16,7 +13,7 @@ public class Roboport(
         RoboportControlBehavior(prototype, json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
-        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     override fun copyIsolated(): Roboport = Roboport(prototype, toDummyJson())
@@ -35,20 +32,25 @@ public class RoboportControlBehavior(
     public val defaultTotalConstructionSignal: SignalID? get() = prototype.default_total_construction_output_signal
 
     public var availableLogisticOutputSignal: SignalID? =
-        json?.available_logistic_output_signal?.toSignalIdWithDefault(defaultAvailableLogisticSignal)
+        (json?.available_logistic_output_signal).toSignalIdWithDefault(defaultAvailableLogisticSignal)
     public var totalLogisticOutputSignal: SignalID? =
-        json?.total_logistic_output_signal?.toSignalIdWithDefault(defaultTotalLogisticSignal)
+        (json?.total_logistic_output_signal).toSignalIdWithDefault(defaultTotalLogisticSignal)
     public var availableConstructionOutputSignal: SignalID? =
-        json?.available_construction_output_signal?.toSignalIdWithDefault(defaultAvailableConstructionSignal)
+        (json?.available_construction_output_signal).toSignalIdWithDefault(defaultAvailableConstructionSignal)
     public var totalConstructionOutputSignal: SignalID? =
-        json?.total_construction_output_signal?.toSignalIdWithDefault(defaultTotalConstructionSignal)
+        (json?.total_construction_output_signal).toSignalIdWithDefault(defaultTotalConstructionSignal)
 
     override fun exportToJson(): ControlBehaviorJson? {
+        val availableLogi =
+            availableLogisticOutputSignal.toJsonWithDefault(defaultAvailableLogisticSignal)
+        val totalLogi = totalLogisticOutputSignal.toJsonWithDefault(defaultTotalLogisticSignal)
+        val availableConstr = availableConstructionOutputSignal.toJsonWithDefault(defaultAvailableConstructionSignal)
+        val totalConstr = totalConstructionOutputSignal.toJsonWithDefault(defaultTotalConstructionSignal)
         if (readLogistics && !readRobotStats &&
-            availableLogisticOutputSignal == null &&
-            totalLogisticOutputSignal == null &&
-            availableConstructionOutputSignal == null &&
-            totalConstructionOutputSignal == null
+            availableLogi == null &&
+            totalLogi == null &&
+            availableConstr == null &&
+            totalConstr == null
         ) {
             return null
         }
@@ -56,10 +58,10 @@ public class RoboportControlBehavior(
         return ControlBehaviorJson(
             read_logistics = readLogistics,
             read_robot_stats = readRobotStats,
-            available_logistic_output_signal = availableLogisticOutputSignal.toJsonBasic(),
-            total_logistic_output_signal = totalLogisticOutputSignal.toJsonBasic(),
-            available_construction_output_signal = availableConstructionOutputSignal.toJsonBasic(),
-            total_construction_output_signal = totalConstructionOutputSignal.toJsonBasic()
+            available_logistic_output_signal = availableLogi,
+            total_logistic_output_signal = totalLogi,
+            available_construction_output_signal = availableConstr,
+            total_construction_output_signal = totalConstr,
         )
     }
 }

@@ -19,8 +19,7 @@ public class Accumulator(
     )
 
     override fun exportToJson(json: EntityJson) {
-        if (this.hasCircuitConnections())
-            json.control_behavior = controlBehavior.exportToJson()
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     override fun copyIsolated(): Accumulator = Accumulator(prototype, toDummyJson())

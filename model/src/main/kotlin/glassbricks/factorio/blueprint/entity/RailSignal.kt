@@ -23,7 +23,7 @@ public class RailSignal(
         RailSignalControlBehavior(prototype, json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
-        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     override fun copyIsolated(): RailSignal = RailSignal(prototype, toDummyJson())
@@ -66,7 +66,7 @@ public class RailChainSignal(
         RailChainSignalControlBehavior(prototype, json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
-        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     override fun copyIsolated(): RailChainSignal = RailChainSignal(prototype, toDummyJson())

@@ -24,8 +24,6 @@ public interface CircuitConnectionPoint : CircuitConnectable {
     public val entity: Entity get() = this as Entity
 }
 
-public fun CircuitConnectionPoint.hasCircuitConnections(): Boolean = !circuitConnections.isEmpty()
-
 /**
  * An entity with two connection points.
  *
@@ -78,10 +76,11 @@ public class CircuitConnections(public val parent: CircuitConnectionPoint) {
         }
 
         internal fun export(parentMap: Map<Entity, EntityJson>): List<ConnectionData>? =
-            if (isEmpty()) null else mapNotNull {
-                val other = parentMap[it.entity] ?: return@mapNotNull null
+            if (isEmpty()) null else mapNotNullTo(ArrayList(size)) {
+                val other = parentMap[it.entity] ?: return@mapNotNullTo null
                 ConnectionData(other.entity_number, it.circuitID)
             }.takeIf { it.isNotEmpty() }
+                ?.apply { sortWith(compareBy({ it.entity_id }, { it.circuit_id })) }
     }
 
     internal fun export(parentMap: Map<Entity, EntityJson>): ConnectionPointJson? {
@@ -94,3 +93,8 @@ public class CircuitConnections(public val parent: CircuitConnectionPoint) {
 public interface WithControlBehavior {
     public val controlBehavior: ControlBehavior
 }
+
+
+internal fun WithControlBehavior.shouldExportControlBehavior(): Boolean =
+    controlBehavior.let { it is GenericOnOffControlBehavior && it.connectToLogisticNetwork }
+            || this is CircuitConnectionPoint && !circuitConnections.isEmpty()

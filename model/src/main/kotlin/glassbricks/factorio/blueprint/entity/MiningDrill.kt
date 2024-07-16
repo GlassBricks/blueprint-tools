@@ -2,6 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import glassbricks.factorio.blueprint.json.ControlBehaviorJson
 import glassbricks.factorio.blueprint.json.EntityJson
+import glassbricks.factorio.blueprint.json.ItemPrototypeName
 import glassbricks.factorio.blueprint.json.MiningDrillResourceReadMode
 import glassbricks.factorio.blueprint.prototypes.MiningDrillPrototype
 
@@ -9,12 +10,14 @@ import glassbricks.factorio.blueprint.prototypes.MiningDrillPrototype
 public class MiningDrill(
     public override val prototype: MiningDrillPrototype,
     json: EntityJson,
-) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior {
+) : BaseEntity(json), CircuitConnectionPoint, WithControlBehavior, WithItemRequests {
     public override val circuitConnections: CircuitConnections = CircuitConnections(this)
     public override val controlBehavior: MiningDrillControlBehavior = MiningDrillControlBehavior(json.control_behavior)
+    override var itemRequests: Map<ItemPrototypeName, Int> = json.items.orEmpty()
 
     override fun exportToJson(json: EntityJson) {
-        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (itemRequests.isNotEmpty()) json.items = itemRequests
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     override fun copyIsolated(): MiningDrill = MiningDrill(prototype, toDummyJson())

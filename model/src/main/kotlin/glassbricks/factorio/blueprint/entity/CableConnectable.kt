@@ -60,12 +60,14 @@ internal open class CableConnectionSetImpl(override val parent: CableConnectionP
 
 internal fun CableConnectionPoint.exportNeighbors(
     entityMap: Map<Entity, EntityJson>,
-): List<EntityNumber>? = cableConnections.mapNotNull { pt ->
+): List<EntityNumber>? = cableConnections.mapNotNullTo(ArrayList(cableConnections.size)) { pt ->
     entityMap[pt.entity]?.entity_number
 }.takeIf { it.isNotEmpty() }
+    ?.apply { sort() }
 
 internal fun CableConnectionPoint.exportPowerSwitch(
     entityMap: Map<Entity, EntityJson>,
-): List<CableConnectionData>? = cableConnections.mapNotNull { pt ->
-    CableConnectionData(entityMap[pt.entity]?.entity_number ?: return@mapNotNull null)
+): List<CableConnectionData>? = cableConnections.mapNotNullTo(ArrayList(cableConnections.size)) { pt ->
+    CableConnectionData(entityMap[pt.entity]?.entity_number ?: return@mapNotNullTo null)
 }.takeIf { it.isNotEmpty() }
+    ?.apply { sortBy { it.entity_id } }

@@ -109,7 +109,6 @@ public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entit
 }
 
 internal fun BlueprintJson.setEntitiesFrom(entities: Iterable<Entity>) {
-    val schedules = mutableMapOf<List<ScheduleRecord>, MutableList<EntityNumber>>()
 
     var nextId = 1
     val entityMap = entities.associateWith { entity ->
@@ -121,6 +120,7 @@ internal fun BlueprintJson.setEntitiesFrom(entities: Iterable<Entity>) {
         json
     }
 
+    val schedules = mutableMapOf<List<ScheduleRecord>, MutableList<EntityNumber>>()
     for ((entity, json) in entityMap) {
         if (entity is Locomotive) {
             val schedule = entity.schedule

@@ -1,11 +1,12 @@
 package glassbricks.factorio.blueprint.model
 
-import glassbricks.factorio.blueprint.json.BlueprintJson
-import glassbricks.factorio.blueprint.json.importBlueprint
+import glassbricks.factorio.blueprint.entity.entityFromJson
+import glassbricks.factorio.blueprint.entity.setEntitiesFrom
+import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
-import org.junit.jupiter.api.Assertions.assertEquals
 import java.io.File
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class BlueprintJsonModelTest {
 
@@ -27,15 +28,97 @@ class BlueprintJsonModelTest {
 
         assertEquals(bp.tiles, model.tiles.toTileList())
         assertEquals(bp.tiles.toTileMap(), model.tiles)
+
+        val entities = BlueprintJson(icons = emptyList()).apply {
+            setEntitiesFrom(model.entities)
+        }.entities
+        for ((entity1, entity2) in
+        bp.entities!!.sortedBy { it.position }
+            .zip(entities!!.sortedBy { it.position })) {
+            assertEntitiesSame(entity1, entity2)
+        }
+    }
+
+    private fun assertEntitiesSame(
+        entity1: EntityJson,
+        entity2: EntityJson
+    ) {
+        removeEntityNumber(entity1)
+        removeEntityNumber(entity2)
+        if (entity1 != entity2) {
+            val toModelEntity = VanillaPrototypes.entityFromJson(entity1)
+            println(toModelEntity)
+        }
+        assertEquals(entity1, entity2)
+    }
+
+    private fun removeEntityNumber(it: EntityJson) {
+        it.entity_number = EntityNumber(1)
+        it.neighbours = null
+        it.connections = null
+    }
+
+    fun testBlueprint(name: String) {
+        val bp = importBlueprint(File("../test-blueprints/$name.txt").inputStream()) as BlueprintJson
+
+        bp.entities?.forEach {
+            if (it.connections == null && it.control_behavior != null && !it.control_behavior!!.connect_to_logistic_network) {
+                it.control_behavior = null
+            }
+            it.control_behavior?.let { cb ->
+                if (!cb.connect_to_logistic_network) {
+                    cb.logistic_condition = null
+                }
+            }
+            if (it.name in VanillaPrototypes.dataRaw.inserter) it.control_behavior?.let { cb ->
+                if (cb.circuit_condition != null && cb.circuit_mode_of_operation.let { mode ->
+                        !(mode == null || mode == InserterModeOfOperation.EnableDisable.asMode())
+                    }) {
+                    cb.circuit_condition = null
+                }
+                if (!cb.circuit_read_hand_contents) {
+                    cb.circuit_hand_read_mode = null
+                }
+            }
+            if (it.name in VanillaPrototypes.dataRaw.`transport-belt`) it.control_behavior?.let { cb ->
+                if (cb.circuit_condition != null && cb.circuit_enable_disable != true) {
+                    cb.circuit_condition = null
+                }
+                if (!cb.circuit_read_hand_contents) {
+                    cb.circuit_contents_read_mode = BeltReadMode.Pulse
+                }
+            }
+            if (it.name in VanillaPrototypes.dataRaw.`train-stop`) it.control_behavior?.let { cb ->
+                if (!cb.read_stopped_train) {
+                    cb.train_stopped_signal = null
+                }
+            }
+            VanillaPrototypes.dataRaw.accumulator[it.name]?.let { proto ->
+                if (it.control_behavior?.output_signal == proto.default_output_signal.toJsonBasic()) {
+                    it.control_behavior = null
+                }
+            }
+        }
+
+        val model = BlueprintModel(bp)
+        assertBpMatches(bp, model)
+
+        val back = model.toBlueprint()
+        val backAgain = BlueprintModel(back).toBlueprint()
+//        assertEquals(back.entities, backAgain.entities)
+        for ((e1, e2) in back.entities!!.zip(backAgain.entities!!)) {
+            assertEquals(e1, e2)
+        }
     }
 
     @Test
-    fun canImport() {
-        val bp = importBlueprint(File("../test-blueprints/bp1.txt").inputStream())
-        bp as BlueprintJson
+    fun `test bp1`() {
+        testBlueprint("bp1")
+    }
 
-        val model = BlueprintModel(bp, VanillaPrototypes)
-        assertBpMatches(bp, model)
+    @Test
+    fun `test base8`() {
+        testBlueprint("base8")
     }
 
 }

@@ -18,7 +18,7 @@ public class PowerSwitch(
 
     override fun exportToJson(json: EntityJson) {
         json.switch_state = switchState
-        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     private inner class ConnectionPoint(override val side: PowerSwitchConnectionSide) : PowerSwitchConnectionPoint {

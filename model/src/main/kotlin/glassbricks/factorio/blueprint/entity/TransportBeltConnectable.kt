@@ -19,7 +19,7 @@ public class TransportBelt(
         TransportBeltControlBehavior(json.control_behavior)
 
     override fun exportToJson(json: EntityJson) {
-        if (this.hasCircuitConnections()) json.control_behavior = controlBehavior.exportToJson()
+        if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
     override fun copyIsolated(): TransportBelt = TransportBelt(prototype, toDummyJson())
@@ -31,7 +31,7 @@ public class TransportBeltControlBehavior(
     public val enableDisable: Boolean get() = circuitCondition != null
 
     /** If null, sets circuit_contents_read_mode to false. */
-    public var readContentsMode: TransportBeltContentReadMode? =
+    public var readContentsMode: BeltReadMode? =
         source?.circuit_contents_read_mode
             ?.takeIf { source.circuit_read_hand_contents }
 
@@ -40,7 +40,8 @@ public class TransportBeltControlBehavior(
     override fun exportToJson(): ControlBehaviorJson = baseExportToJson().apply {
         circuit_enable_disable = enableDisable
         circuit_read_hand_contents = readContentsMode != null
-        circuit_contents_read_mode = readContentsMode
+        // this is a bit weird, but follows factorio's behavior
+        circuit_contents_read_mode = readContentsMode ?: BeltReadMode.Pulse
     }
 }
 

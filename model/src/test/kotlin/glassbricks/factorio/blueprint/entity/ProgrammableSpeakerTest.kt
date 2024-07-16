@@ -25,7 +25,8 @@ class ProgrammableSpeakerTest {
                 alert_parameters = AlertParameters(
                     alert_message = "Hello, world!",
                     show_alert = true,
-                    show_on_map = false
+                    show_on_map = false,
+                    icon_signal_id = signalId("signal-A")
                 )
             })
     }
