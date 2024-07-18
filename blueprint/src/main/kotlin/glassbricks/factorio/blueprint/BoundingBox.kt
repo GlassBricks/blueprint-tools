@@ -29,6 +29,8 @@ public data class BoundingBox(
     public val width: Double get() = maxX - minX
     public val height: Double get() = maxY - minY
 
+    public val size: Position get() = Position(width, height)
+
     /** Returns true if the given point is inside the bounding box; all bounds are exclusive. */
     public operator fun contains(point: Position): Boolean =
         point.x in minX..<maxX && point.y in minY..<maxY

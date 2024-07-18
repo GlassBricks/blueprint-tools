@@ -10,7 +10,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 
-class PoleOptimizationProblemTest {
+class PoleCoverILPLikeSolverTest {
     @Test
     fun `test simple poleILP`() {
         val entities = DefaultSpatialDataStructure<Entity>()
@@ -24,12 +24,12 @@ class PoleOptimizationProblemTest {
                 nonPowerable(tilePos(8, 0))
             )
         )
-        val candidatePoles = getCompleteCandidatePoleSet(
+        val candidatePoles = createPoleCoverProblem(
             entities, listOf(smallPole),
             bounds = entities.enclosingBox()
         )
         assertEquals(3, candidatePoles.candidatePoles.size)
-        val problem = createDefaultPoleILP(candidatePoles)
+        val problem = defaultPoleCoverILPSolver(candidatePoles)
         val solver = problem.solver
         solver.setTimeLimit(1000)
         solver.solve()
@@ -43,7 +43,7 @@ class PoleOptimizationProblemTest {
             if (entity.prototype.usesElectricity) {
                 assertNotNull(pole)
                 assertTrue(pole in usedPoles)
-                assertTrue(entity in problem.poleSet.getPoweredEntities(pole))
+                assertTrue(entity in problem.poles.coveredEntities[pole]!!)
             } else {
                 assertEquals(null, pole)
             }

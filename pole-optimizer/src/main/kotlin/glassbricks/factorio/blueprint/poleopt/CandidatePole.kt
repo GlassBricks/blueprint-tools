@@ -7,7 +7,7 @@ import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
 import glassbricks.factorio.blueprint.roundOutToTileBbox
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.streams.asSequence
 
 public class CandidatePole(
     prototype: ElectricPolePrototype,
@@ -29,51 +29,69 @@ private fun CandidatePole.canConnectTo(other: CandidatePole): Boolean {
     return this.position.squaredDistanceTo(other.position) <= distance * distance
 }
 
-public class CandidatePoleSet(
+public class PoleCoverProblem(
     public val entities: EntityMap,
-    public val candidatePoles: SpatialDataStructure<CandidatePole>,
+    public val candidatePoles: MutableSpatialDataStructure<CandidatePole>,
 ) {
-    public fun getPoweredEntities(pole: CandidatePole): Sequence<Entity> {
+    public val coveredEntities: Map<CandidatePole, List<Entity>> = run {
+        candidatePoles.parallelStream().map { pole ->
+            pole to computePoweredEntities(pole).toList()
+        }.asSequence().toMap()
+    }
+
+    public val poweredByMap: Map<Entity, List<CandidatePole>> = run {
+        val result = mutableMapOf<Entity, MutableList<CandidatePole>>()
+        for ((pole, entities) in coveredEntities) {
+            for (entity in entities) result.getOrPut(entity, ::mutableListOf).add(pole)
+        }
+        result
+    }
+
+    public fun computePoweredEntities(pole: CandidatePole): Sequence<Entity> {
         val prototype = pole.prototype
         val radius = prototype.supply_area_distance
         val range = BoundingBox.around(pole.position, radius).roundOutToTileBbox()
         return entities.getInArea(range).filter { it.prototype.usesElectricity }
     }
 
-    public fun getNeighbors(pole: CandidatePole): Sequence<CandidatePole> =
+    public fun computeNeighbors(pole: CandidatePole): Sequence<CandidatePole> =
         candidatePoles.getPosInCircle(pole.position, pole.prototype.maximum_wire_distance)
             .filter { it != pole && it.canConnectTo(pole) }
 
-    public fun getPoweredByMap(): Map<Entity, Set<CandidatePole>> {
-        val result = mutableMapOf<Entity, MutableSet<CandidatePole>>()
-        for (entity in entities) {
-            if (entity.prototype.usesElectricity) {
-                result[entity] = ConcurrentHashMap.newKeySet()
-            }
-        }
-        candidatePoles.parallelStream().forEach { pole ->
-            getPoweredEntities(pole).forEach { entity ->
-                result[entity]?.add(pole)
-            }
+    private var neighborsMap: MutableMap<CandidatePole, MutableSet<CandidatePole>>? = null
+
+    private fun computeNeighborsMap(): MutableMap<CandidatePole, MutableSet<CandidatePole>> {
+        val result = mutableMapOf<CandidatePole, MutableSet<CandidatePole>>()
+        for (pole in candidatePoles) {
+            result[pole] = computeNeighbors(pole).toMutableSet()
         }
         return result
     }
 
+    public fun getNeighborsMap(): Map<CandidatePole, Set<CandidatePole>> =
+        neighborsMap ?: computeNeighborsMap().also { neighborsMap = it }
+
+    public fun updatePolesRemoved() {
+        val neighborsMap = neighborsMap ?: return
+        neighborsMap.keys.retainAll(candidatePoles)
+        neighborsMap.values.forEach { it.retainAll(candidatePoles) }
+    }
 }
 
 /**
- * Creates a [CandidatePoleSet], with all possible poles that can be placed in the given bounding box.
+ * Creates a [PoleCoverProblem], with all possible poles that can be placed in the given bounding box.
  *
  * Note that existing poles in the entities map are considered overlapping with new candidate poles.
  */
-public fun getCompleteCandidatePoleSet(
+public fun createPoleCoverProblem(
     entities: EntityMap,
-    polesToConsider: Collection<ElectricPolePrototype>,
+    polesToAdd: Collection<ElectricPolePrototype>,
     bounds: BoundingBox,
-    forceIncludeExistingPoles: Boolean
-): CandidatePoleSet {
+    forceIncludeExistingPoles: Boolean = true,
+    processPoles: MutableSpatialDataStructure<CandidatePole>.() -> Unit = {}
+): PoleCoverProblem {
     val candPoles =
-        polesToConsider.parallelStream().flatMap { prototype ->
+        polesToAdd.parallelStream().flatMap { prototype ->
             bounds.roundOutToTileBbox().iterateTiles()
                 .toList().parallelStream()
                 .map { tile -> CandidatePole(prototype, prototype.tileSnappedPosition(tile)) }
@@ -87,5 +105,24 @@ public fun getCompleteCandidatePoleSet(
             )
         }
     }
-    return CandidatePoleSet(entities, poleSet)
+    poleSet.processPoles()
+    return PoleCoverProblem(entities, poleSet)
+}
+
+
+public fun PoleCoverProblem.removeEmptyPoles() {
+    candidatePoles.removeIf { pole -> coveredEntities[pole]!!.isEmpty() }
+    updatePolesRemoved()
+}
+
+/**
+ * Removes if distance >1 to a pole that powers something.
+ */
+public fun PoleCoverProblem.removeEmptyPolesDegree2() {
+    val powersSomething = candidatePoles.filter { pole -> coveredEntities[pole]!!.isNotEmpty() }.toSet()
+    val neighborsMap = getNeighborsMap()
+    candidatePoles.removeIf { pole ->
+        pole !in powersSomething && neighborsMap[pole]!!.none { it in powersSomething }
+    }
+    updatePolesRemoved()
 }

@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlin.math.acos
 import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -16,7 +17,6 @@ import kotlin.math.sqrt
  *
  * [x] and [y] hold the values as doubles, you can normally use those.
  */
-@Suppress("DataClassPrivateConstructor")
 @Serializable(with = Position.Serializer::class)
 public class Position private constructor(
     public val xAsInt: Int,
@@ -139,3 +139,42 @@ public data class TilePosition(val x: Int, val y: Int) : Comparable<TilePosition
 public operator fun Int.times(position: TilePosition): TilePosition = position * this
 
 public fun tilePos(x: Int, y: Int): TilePosition = TilePosition(x, y)
+
+/** A vector that truly uses doubles, unlike [Position]. */
+public data class Vec2d(val x: Double, val y: Double) {
+    public operator fun plus(other: Vec2d): Vec2d = Vec2d(x + other.x, y + other.y)
+    public operator fun minus(other: Vec2d): Vec2d = Vec2d(x - other.x, y - other.y)
+
+    public operator fun times(scale: Double): Vec2d = Vec2d(x * scale, y * scale)
+    public operator fun div(scale: Double): Vec2d = Vec2d(x / scale, y / scale)
+
+    public operator fun unaryMinus(): Vec2d = Vec2d(-x, -y)
+    public operator fun unaryPlus(): Vec2d = this
+
+    public fun squaredLength(): Double = x * x + y * y
+    public fun length(): Double = sqrt(squaredLength())
+
+    public fun normalized(): Vec2d {
+        val len = length()
+        return Vec2d(x / len, y / len)
+    }
+
+    public fun dot(other: Vec2d): Double = x * other.x + y * other.y
+
+    public fun angleTo(other: Vec2d): Double {
+        val dot = dot(other)
+        val len = length() * other.length()
+        return acos(dot / len)
+    }
+
+
+    public fun distanceTo(other: Vec2d): Double = (this - other).length()
+
+    public fun toPosition(): Position = Position(x, y)
+
+    public companion object {
+        public val ZERO: Vec2d = Vec2d(0.0, 0.0)
+    }
+}
+
+public fun Position.toVec2d(): Vec2d = Vec2d(x, y)

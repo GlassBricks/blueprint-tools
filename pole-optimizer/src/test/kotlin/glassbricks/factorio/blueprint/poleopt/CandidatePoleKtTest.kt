@@ -27,19 +27,19 @@ class CandidatePoleKtTest {
         ).map {
             CandidatePole(smallPole, smallPole.tileSnappedPosition(it))
         }
-        val candidatePoles = CandidatePoleSet(entities, DefaultSpatialDataStructure(locations))
+        val candidatePoles = PoleCoverProblem(entities, DefaultSpatialDataStructure(locations))
 
         assertEquals(3, candidatePoles.candidatePoles.size)
 
         val pole2 = candidatePoles.candidatePoles.getInTile(tilePos(2, 1)).single()
         assertEquals(setOf(entityList[0], entityList[1], entityList[2]),
-            candidatePoles.getPoweredEntities(pole2).toSet())
+            candidatePoles.coveredEntities[pole2]!!.toSet())
 
         val pole5 = candidatePoles.candidatePoles.getInTile(tilePos(6, 0)).single()
-        assertEquals(setOf(entityList[4]), candidatePoles.getPoweredEntities(pole5).toSet())
+        assertEquals(setOf(entityList[4]), candidatePoles.coveredEntities[pole5]!!.toSet())
 
         val pole20 = candidatePoles.candidatePoles.getInTile(tilePos(20, 1)).single()
-        assertEquals(emptySet(), candidatePoles.getPoweredEntities(pole20).toSet())
+        assertEquals(emptySet(), candidatePoles.coveredEntities[pole20]!!.toSet())
 
 //        assertEquals(setOf(pole2), candidatePoles.poweredBy[entityList[0]])
 //        assertEquals(setOf(pole2), candidatePoles.poweredBy[entityList[1]])
@@ -50,9 +50,9 @@ class CandidatePoleKtTest {
 
         // connections
 
-        assertEquals(setOf(pole5), candidatePoles.getNeighbors(pole2).toSet())
-        assertEquals(setOf(pole2), candidatePoles.getNeighbors(pole5).toSet())
+        assertEquals(setOf(pole5), candidatePoles.computeNeighbors(pole2).toSet())
+        assertEquals(setOf(pole2), candidatePoles.computeNeighbors(pole5).toSet())
 
-        assertEquals(emptySet(), candidatePoles.getNeighbors(pole20).toSet())
+        assertEquals(emptySet(), candidatePoles.computeNeighbors(pole20).toSet())
     }
 }
