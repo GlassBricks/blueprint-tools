@@ -5,7 +5,7 @@ import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.prototypes.*
 
 public fun createEntity(
-    prototype: EntityWithOwnerPrototype,
+    prototype: EntityPrototype,
     source: EntityJson,
     blueprint: BlueprintJson? = null,
 ): Entity {
@@ -13,10 +13,10 @@ public fun createEntity(
     return getConstructorForPrototype(prototype)(prototype, source, blueprint)
 }
 
-private typealias Constructor = (EntityWithOwnerPrototype, EntityJson, BlueprintJson?) -> Entity
+private typealias Constructor = (EntityPrototype, EntityJson, BlueprintJson?) -> Entity
 
-private inline fun <reified T : EntityWithOwnerPrototype>
-        MutableMap<Class<out EntityWithOwnerPrototype>, Constructor>.add(
+private inline fun <reified T : EntityPrototype>
+        MutableMap<Class<out EntityPrototype>, Constructor>.add(
     crossinline constructor: (T, EntityJson, BlueprintJson?) -> Entity,
 ) {
     put(T::class.java) { prototype, source, blueprint ->
@@ -24,8 +24,8 @@ private inline fun <reified T : EntityWithOwnerPrototype>
     }
 }
 
-private inline fun <reified T : EntityWithOwnerPrototype>
-        MutableMap<Class<out EntityWithOwnerPrototype>, Constructor>.add(
+private inline fun <reified T : EntityPrototype>
+        MutableMap<Class<out EntityPrototype>, Constructor>.add(
     crossinline constructor: (T, EntityJson) -> Entity,
 ) {
     put(T::class.java) { prototype, source, _ ->
@@ -37,12 +37,12 @@ private val basicConstructor: Constructor = { prototype, source, _ ->
     BasicEntity(prototype, source)
 }
 
-private inline fun <reified T : EntityWithOwnerPrototype>
-        MutableMap<Class<out EntityWithOwnerPrototype>, Constructor>.basic() {
+private inline fun <reified T : EntityPrototype>
+        MutableMap<Class<out EntityPrototype>, Constructor>.basic() {
     put(T::class.java, basicConstructor)
 }
 
-private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Constructor>().apply {
+private val matcherMap = hashMapOf<Class<out EntityPrototype>, Constructor>().apply {
     add(::CargoWagon)
     add(::Locomotive)
     add(::OtherRollingStock)
@@ -102,13 +102,13 @@ private val matcherMap = hashMapOf<Class<out EntityWithOwnerPrototype>, Construc
     add(::UnknownEntity)
 }
 
-private fun getConstructorForPrototype(prototype: EntityWithOwnerPrototype): Constructor =
+private fun getConstructorForPrototype(prototype: EntityPrototype): Constructor =
     getConstructorForClass(prototype.javaClass)
 
-private fun getConstructorForClass(clazz: Class<out EntityWithOwnerPrototype>): Constructor =
+private fun getConstructorForClass(clazz: Class<out EntityPrototype>): Constructor =
     matcherMap.getOrPut(clazz) {
         @Suppress("UNCHECKED_CAST")
-        val superclass = clazz.superclass as? Class<out EntityWithOwnerPrototype>
+        val superclass = clazz.superclass as? Class<out EntityPrototype>
             ?: throw AssertionError("All prototypes should be caught by UnknownEntity")
 
         getConstructorForClass(superclass)

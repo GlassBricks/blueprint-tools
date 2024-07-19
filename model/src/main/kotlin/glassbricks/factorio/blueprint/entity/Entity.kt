@@ -101,7 +101,7 @@ public abstract class BaseEntity(json: EntityJson) : Entity {
  *
  * @param P The prototype type of this entity.
  */
-public class BasicEntity<out P : EntityWithOwnerPrototype>(
+public class BasicEntity<out P : EntityPrototype>(
     override val prototype: P,
     json: EntityJson,
 ) : BaseEntity(json) {
