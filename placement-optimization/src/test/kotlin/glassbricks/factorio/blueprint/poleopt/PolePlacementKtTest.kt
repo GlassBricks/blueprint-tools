@@ -2,12 +2,14 @@ package glassbricks.factorio.blueprint.poleopt
 
 import glassbricks.factorio.blueprint.entity.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.entity.Entity
+import glassbricks.factorio.blueprint.placement.poles.PolePlacement
+import glassbricks.factorio.blueprint.placement.poles.PoleCoverProblem
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 import glassbricks.factorio.blueprint.tilePos
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class CandidatePoleKtTest {
+class PolePlacementKtTest {
     @Test
     fun `creating candidate poles`() {
         val entities = DefaultSpatialDataStructure<Entity>()
@@ -25,7 +27,7 @@ class CandidatePoleKtTest {
             tilePos(6, 0),
             tilePos(20, 1),
         ).map {
-            CandidatePole(smallPole, smallPole.tileSnappedPosition(it))
+            PolePlacement(smallPole, smallPole.tileSnappedPosition(it))
         }
         val candidatePoles = PoleCoverProblem(entities, DefaultSpatialDataStructure(locations))
 

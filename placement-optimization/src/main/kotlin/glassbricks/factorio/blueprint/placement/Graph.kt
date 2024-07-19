@@ -1,4 +1,4 @@
-package glassbricks.factorio.blueprint.poleopt
+package glassbricks.factorio.blueprint.placement
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.*

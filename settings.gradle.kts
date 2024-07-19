@@ -6,5 +6,5 @@ rootProject.name = "factorio-tools"
 include("blueprint")
 include("prototypes")
 include("model")
-include("pole-optimizer")
+include("placement-optimization")
 include("scripts")

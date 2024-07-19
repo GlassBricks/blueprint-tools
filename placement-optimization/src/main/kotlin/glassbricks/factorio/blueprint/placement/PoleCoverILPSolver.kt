@@ -1,8 +1,10 @@
-package glassbricks.factorio.blueprint.poleopt
+package glassbricks.factorio.blueprint.placement
 
 import com.google.ortools.Loader
 import com.google.ortools.linearsolver.MPSolver
 import glassbricks.factorio.blueprint.entity.Entity
+import glassbricks.factorio.blueprint.placement.poles.PoleCoverProblem
+import glassbricks.factorio.blueprint.placement.poles.PolePlacement
 import kotlin.math.floor
 
 
@@ -10,7 +12,7 @@ public class PoleCoverILPSolver(
     public val poles: PoleCoverProblem,
     public val solver: ILPLikeSolver,
 ) {
-    public val poleVariables: Map<CandidatePole, ILPLikeSolver.BoolVar> = poles.candidatePoles.associateWith { pole ->
+    public val poleVariables: Map<PolePlacement, ILPLikeSolver.BoolVar> = poles.candidatePoles.associateWith { pole ->
         solver.addVariable("${pole.prototype.name}(${pole.position.x.floorToInt()},${pole.position.y.floorToInt()})")
     }
 
@@ -40,16 +42,16 @@ public class PoleCoverILPSolver(
 
     public fun solve(): Any = solver.solve()
 
-    public fun poleIsSelected(pole: CandidatePole): Boolean =
+    public fun poleIsSelected(pole: PolePlacement): Boolean =
         poleVariables[pole].let { it != null && it.solutionValue() }
 
     /**
      * Gets any one of the poles that power the given entity, if any.
      */
-    public fun getPoweringPole(entity: Entity): CandidatePole? =
+    public fun getPoweringPole(entity: Entity): PolePlacement? =
         poles.poweredByMap[entity]?.firstOrNull { poleIsSelected(it) }
 
-    public fun getSelectedPoles(): List<CandidatePole> =
+    public fun getSelectedPoles(): List<PolePlacement> =
         poleVariables.keys.filter { poleIsSelected(it) }
 }
 

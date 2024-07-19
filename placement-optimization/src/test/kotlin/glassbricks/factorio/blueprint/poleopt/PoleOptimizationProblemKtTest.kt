@@ -2,6 +2,8 @@ package glassbricks.factorio.blueprint.poleopt
 
 import glassbricks.factorio.blueprint.entity.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.entity.Entity
+import glassbricks.factorio.blueprint.placement.poles.createPoleCoverProblem
+import glassbricks.factorio.blueprint.placement.defaultPoleCoverILPSolver
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
 import glassbricks.factorio.blueprint.tilePos
 import kotlin.test.Test

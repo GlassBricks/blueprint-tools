@@ -9,11 +9,15 @@ import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.exportTo
 import glassbricks.factorio.blueprint.json.importBlueprint
 import glassbricks.factorio.blueprint.model.BlueprintModel
-import glassbricks.factorio.blueprint.poleopt.*
+import glassbricks.factorio.blueprint.placement.poles.createPoleCoverProblem
+import glassbricks.factorio.blueprint.placement.CPSolver
+import glassbricks.factorio.blueprint.placement.poles.DistanceBasedConnectivity
+import glassbricks.factorio.blueprint.placement.defaultPoleCoverILPSolver
+import glassbricks.factorio.blueprint.placement.poles.removeEmptyPolesReach1
+import glassbricks.factorio.blueprint.placement.poles.toEntity
 import glassbricks.factorio.scripts.drawEntities
 import glassbricks.factorio.scripts.smallPole
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.oshai.kotlinlogging.slf4j.internal.Slf4jLogger
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.File

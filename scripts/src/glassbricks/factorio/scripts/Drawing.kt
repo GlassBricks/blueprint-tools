@@ -7,7 +7,7 @@ import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.entity.Entity
 import glassbricks.factorio.blueprint.entity.Spatial
 import glassbricks.factorio.blueprint.entity.SpatialDataStructure
-import glassbricks.factorio.blueprint.poleopt.CandidatePole
+import glassbricks.factorio.blueprint.placement.poles.PolePlacement
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
 import glassbricks.factorio.blueprint.roundOutToTileBbox
@@ -52,7 +52,7 @@ object Pallete {
 
 private fun getEntityColor(entity: Spatial): Color {
     val color = when {
-        entity is CandidatePole -> Pallete.candidatePole
+        entity is PolePlacement -> Pallete.candidatePole
         entity is Entity && entity.prototype is ElectricPolePrototype -> Pallete.pole
         entity is Entity && entity.prototype.usesElectricity -> Pallete.powerable
         else -> Pallete.nonPowerable

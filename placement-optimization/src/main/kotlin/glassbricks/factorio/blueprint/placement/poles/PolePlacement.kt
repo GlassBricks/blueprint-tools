@@ -1,8 +1,9 @@
-package glassbricks.factorio.blueprint.poleopt
+package glassbricks.factorio.blueprint.placement.poles
 
 import glassbricks.factorio.blueprint.BoundingBox
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.entity.*
+import glassbricks.factorio.blueprint.placement.EntityPlacement
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
@@ -13,58 +14,58 @@ import kotlin.time.measureTimedValue
 
 private val logger = KotlinLogging.logger {}
 
-public class CandidatePole(
+public class PolePlacement(
     prototype: ElectricPolePrototype,
     position: Position,
     public var forceInclude: Boolean = false,
-    public var cost: Double = 1.0
-) : BasicEntityInfo<ElectricPolePrototype>(prototype, position) {
+    public override var cost: Double = 1.0
+) : BasicEntityInfo<ElectricPolePrototype>(prototype, position), EntityPlacement {
 
     override fun toString(): String =
         "CandidatePole(name=${prototype.name}, position=$position, cost=$cost)"
 }
 
-public fun CandidatePole.toEntity(): ElectricPole = ElectricPole(prototype, basicEntityJson(prototype.name, position))
+public fun PolePlacement.toEntity(): ElectricPole = ElectricPole(prototype, basicEntityJson(prototype.name, position))
 
-public fun ElectricPole.toCandidatePole(): CandidatePole = CandidatePole(prototype, position)
+public fun ElectricPole.toCandidatePole(): PolePlacement = PolePlacement(prototype, position)
 
-private fun CandidatePole.canConnectTo(other: CandidatePole): Boolean {
+private fun PolePlacement.canConnectTo(other: PolePlacement): Boolean {
     val distance = minOf(this.prototype.maximum_wire_distance, other.prototype.maximum_wire_distance)
     return this.position.squaredDistanceTo(other.position) <= distance * distance
 }
 
 public class PoleCoverProblem(
     public val entities: EntityMap,
-    public val candidatePoles: MutableSpatialDataStructure<CandidatePole>,
+    public val candidatePoles: MutableSpatialDataStructure<PolePlacement>,
 ) {
-    public val coveredEntities: Map<CandidatePole, List<Entity>> = run {
+    public val coveredEntities: Map<PolePlacement, List<Entity>> = run {
         candidatePoles.parallelStream().map { pole ->
             pole to computePoweredEntities(pole).toList()
         }.asSequence().toMap()
     }
 
-    public val poweredByMap: Map<Entity, List<CandidatePole>> = run {
-        val result = mutableMapOf<Entity, MutableList<CandidatePole>>()
+    public val poweredByMap: Map<Entity, List<PolePlacement>> = run {
+        val result = mutableMapOf<Entity, MutableList<PolePlacement>>()
         for ((pole, entities) in coveredEntities) {
             for (entity in entities) result.getOrPut(entity, ::mutableListOf).add(pole)
         }
         result
     }
 
-    public fun computePoweredEntities(pole: CandidatePole): Sequence<Entity> {
+    public fun computePoweredEntities(pole: PolePlacement): Sequence<Entity> {
         val prototype = pole.prototype
         val radius = prototype.supply_area_distance
         val range = BoundingBox.around(pole.position, radius).roundOutToTileBbox()
         return entities.getInArea(range).filter { it.prototype.usesElectricity }
     }
 
-    public fun computeNeighbors(pole: CandidatePole): Sequence<CandidatePole> =
+    public fun computeNeighbors(pole: PolePlacement): Sequence<PolePlacement> =
         candidatePoles.getPosInCircle(pole.position, pole.prototype.maximum_wire_distance)
             .filter { it != pole && it.canConnectTo(pole) }
 
-    private var neighborsMap: MutableMap<CandidatePole, HashSet<CandidatePole>>? = null
+    private var neighborsMap: MutableMap<PolePlacement, HashSet<PolePlacement>>? = null
 
-    private fun computeNeighborsMap(): HashMap<CandidatePole, HashSet<CandidatePole>> {
+    private fun computeNeighborsMap(): HashMap<PolePlacement, HashSet<PolePlacement>> {
         logger.info { "Computing neighbors map" }
         val (map, time) = measureTimedValue {
             candidatePoles.parallelStream().map { pole ->
@@ -75,7 +76,7 @@ public class PoleCoverProblem(
         return map
     }
 
-    public fun getNeighborsMap(): Map<CandidatePole, Set<CandidatePole>> =
+    public fun getNeighborsMap(): Map<PolePlacement, Set<PolePlacement>> =
         neighborsMap ?: computeNeighborsMap().also { neighborsMap = it }
 
     public fun updatePolesRemoved() {
@@ -95,13 +96,13 @@ public fun createPoleCoverProblem(
     polesToAdd: Collection<ElectricPolePrototype>,
     bounds: BoundingBox,
     forceIncludeExistingPoles: Boolean = true,
-    processPoles: MutableSpatialDataStructure<CandidatePole>.() -> Unit = {}
+    processPoles: MutableSpatialDataStructure<PolePlacement>.() -> Unit = {}
 ): PoleCoverProblem {
     val candPoles =
         polesToAdd.parallelStream().flatMap { prototype ->
             bounds.roundOutToTileBbox().iterateTiles()
                 .toList().parallelStream()
-                .map { tile -> CandidatePole(prototype, prototype.tileSnappedPosition(tile)) }
+                .map { tile -> PolePlacement(prototype, prototype.tileSnappedPosition(tile)) }
                 .filter { result -> result.collisionBox in bounds && !entities.getColliding(result).any() }
         }.toList()
     val poleSet = DefaultSpatialDataStructure(candPoles)

@@ -1,11 +1,10 @@
-package glassbricks.factorio.blueprint.poleopt
+package glassbricks.factorio.blueprint.placement
 
 import com.google.ortools.linearsolver.MPSolver
 import com.google.ortools.linearsolver.MPSolverParameters
 import com.google.ortools.linearsolver.MPVariable
 import com.google.ortools.sat.*
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.util.function.Consumer
 
 private val logger = KotlinLogging.logger {}
 
