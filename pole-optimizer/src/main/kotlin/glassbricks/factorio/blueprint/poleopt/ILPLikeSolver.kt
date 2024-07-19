@@ -3,36 +3,42 @@ package glassbricks.factorio.blueprint.poleopt
 import com.google.ortools.linearsolver.MPSolver
 import com.google.ortools.linearsolver.MPSolverParameters
 import com.google.ortools.linearsolver.MPVariable
+import com.google.ortools.sat.*
+import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.function.Consumer
+
+private val logger = KotlinLogging.logger {}
 
 public interface ILPLikeSolver {
-    public fun addVariable(name: String): Variable
+    public fun addVariable(name: String): BoolVar
 
     // constraints
-    public fun addDisjunction(literals: Collection<Literal>)
+    public fun addDisjunction(literals: Iterable<Literal>)
     public fun addDisjunction(vararg literals: Literal): Unit = addDisjunction(literals.toList())
 
     public fun addImplies(
-        condition: Collection<Literal>,
-        consequence: Collection<Literal>
+        condition: Iterable<Literal>,
+        consequence: Iterable<Literal>
     ) {
-        addDisjunction(condition.map { it.negate() } + consequence)
+        addDisjunction(condition.map { it.not() } + consequence)
     }
 
-    public fun addAtMostOne(literals: Collection<Literal>)
+    public fun addAtMostOne(literals: Iterable<Literal>)
 
     public fun addMustBeTrue(literal: Literal): Unit
 
     // objective
-    public fun setObjectiveMinimze(costs: Map<Variable, Double>)
+    public fun setObjectiveMinimze(costs: Map<Literal, Double>)
 
-    public class Literal(public val variable: Variable, public val isTrue: Boolean) {
-        public fun negate(): Literal = Literal(variable, !isTrue)
+    public interface Literal {
+        public val variable: BoolVar
+        public val isTrue: Boolean
+        public operator fun not(): Literal
     }
 
-    public interface Variable {
-        public fun asTrue(): Literal = get(true)
-        public fun asFalse(): Literal = get(false)
-        public operator fun get(value: Boolean): Literal = Literal(this, value)
+    public interface BoolVar : Literal {
+        override val variable: BoolVar get() = this
+        override val isTrue: Boolean get() = true
 
         public fun solutionValue(): Boolean
     }
@@ -45,16 +51,22 @@ public interface ILPLikeSolver {
 public class ILPSolver(
     public val mpSolver: MPSolver
 ) : ILPLikeSolver {
-    override fun addVariable(name: String): ILPLikeSolver.Variable = Variable(mpSolver.makeBoolVar(name))
+    override fun addVariable(name: String): ILPLikeSolver.BoolVar = Variable(mpSolver.makeBoolVar(name))
 
     private class Variable(val mpVariable: MPVariable) :
-        ILPLikeSolver.Variable {
+        ILPLikeSolver.BoolVar {
         override fun solutionValue(): Boolean = mpVariable.solutionValue() > 0.5
+        override fun not(): ILPLikeSolver.Literal = NegatedLiteral(this)
+    }
+
+    private class NegatedLiteral(override val variable: Variable) : ILPLikeSolver.Literal {
+        override val isTrue: Boolean get() = false
+        override fun not(): ILPLikeSolver.Literal = variable
     }
 
     private fun ILPLikeSolver.Literal.coefValue(): Double = if (isTrue) 1.0 else -1.0
 
-    override fun addDisjunction(literals: Collection<ILPLikeSolver.Literal>) {
+    override fun addDisjunction(literals: Iterable<ILPLikeSolver.Literal>) {
         // sum of true + sum of (1 - false) >= 1
         // sum of true + num of false - sum of false >= 1
         // sum of true - sum of false >= 1 - num of false
@@ -66,11 +78,7 @@ public class ILPSolver(
         }
     }
 
-    override fun addAtMostOne(literals: Collection<ILPLikeSolver.Literal>) {
-        if (literals.size <= 1) return
-        // sum of true + sum of (1 - false) <= 1
-        // sum of true + num of false - sum of false <= 1
-        // sum of true - sum of false <= 1 - num of false
+    override fun addAtMostOne(literals: Iterable<ILPLikeSolver.Literal>) {
         val numFalse = literals.count { !it.isTrue }
         val constraint = mpSolver.makeConstraint(Double.NEGATIVE_INFINITY, 1.0 - numFalse)
         for (literal in literals) {
@@ -79,7 +87,7 @@ public class ILPSolver(
         }
     }
 
-    override fun setObjectiveMinimze(costs: Map<ILPLikeSolver.Variable, Double>) {
+    override fun setObjectiveMinimze(costs: Map<ILPLikeSolver.Literal, Double>) {
         val objective = mpSolver.objective()
         objective.setMinimization()
         for ((variable, cost) in costs) {
@@ -104,5 +112,75 @@ public class ILPSolver(
         val params = MPSolverParameters()
         params.setIntegerParam(MPSolverParameters.IntegerParam.INCREMENTALITY, 1)
         return mpSolver.solve(params)
+    }
+}
+
+public class CPSolver(public val model: CpModel = CpModel()) : ILPLikeSolver {
+    private val solver = CpSolver()
+    override fun addVariable(name: String): ILPLikeSolver.BoolVar = Variable(model.newBoolVar(name))
+
+    private interface Literal : ILPLikeSolver.Literal {
+        val cpLiteral: com.google.ortools.sat.Literal
+    }
+
+    private inner class Variable(val cpVariable: BoolVar) : ILPLikeSolver.BoolVar, Literal {
+        override fun not(): ILPLikeSolver.Literal = NegatedLiteral(this)
+        override val cpLiteral get() = cpVariable
+        override fun solutionValue(): Boolean = solver.booleanValue(cpVariable)
+    }
+
+    private class NegatedLiteral(override val variable: Variable) : Literal {
+        override val isTrue: Boolean get() = false
+        override fun not(): ILPLikeSolver.Literal = variable
+        override val cpLiteral: com.google.ortools.sat.Literal get() = variable.cpVariable.not()
+    }
+
+
+    override fun addDisjunction(literals: Iterable<ILPLikeSolver.Literal>) {
+        model.addBoolOr(literals.map { (it as Literal).cpLiteral })
+    }
+
+    override fun addAtMostOne(literals: Iterable<ILPLikeSolver.Literal>) {
+        model.addAtMostOne(literals.map { (it as Literal).cpLiteral })
+    }
+
+    override fun addMustBeTrue(literal: ILPLikeSolver.Literal) {
+        model.addBoolOr(listOf((literal as Literal).cpLiteral))
+    }
+
+    override fun setObjectiveMinimze(costs: Map<ILPLikeSolver.Literal, Double>) {
+        val literals: Array<com.google.ortools.sat.Literal> =
+            costs.keys.map { (it as Literal).cpLiteral }.toTypedArray()
+        val coeffs = costs.values.toDoubleArray()
+        val sum = DoubleLinearExpr(literals, coeffs, 0.0)
+        model.minimize(sum)
+    }
+
+
+    override fun setTimeLimit(millis: Long) {
+        solver.parameters.maxTimeInSeconds = millis / 1000.0
+    }
+
+    override fun solve(): Any {
+        val toDisplay = listOf(
+            "Wall time",
+            "Obj. value",
+            "Best bound",
+        )
+        println(toDisplay.joinToString("\t| ") { it.padEnd(11) })
+        val callback = object : CpSolverSolutionCallback() {
+            override fun onSolutionCallback() {
+                if (logger.isInfoEnabled()) {
+                    println(
+                        arrayOf<Any>(
+                            "%.2f".format(wallTime()),
+                            objectiveValue(),
+                            bestObjectiveBound(),
+                        ).joinToString("\t| ") { it.toString().padEnd(11) }
+                    )
+                }
+            }
+        }
+        return solver.solve(model, callback)
     }
 }

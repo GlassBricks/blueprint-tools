@@ -10,7 +10,7 @@ public class PoleCoverILPSolver(
     public val poles: PoleCoverProblem,
     public val solver: ILPLikeSolver,
 ) {
-    public val poleVariables: Map<CandidatePole, ILPLikeSolver.Variable> = poles.candidatePoles.associateWith { pole ->
+    public val poleVariables: Map<CandidatePole, ILPLikeSolver.BoolVar> = poles.candidatePoles.associateWith { pole ->
         solver.addVariable("${pole.prototype.name}(${pole.position.x.floorToInt()},${pole.position.y.floorToInt()})")
     }
 
@@ -21,20 +21,20 @@ public class PoleCoverILPSolver(
     public fun addEntitiesPoweredConstraint() {
         for ((_, poles) in poles.poweredByMap) {
             if (poles.isEmpty()) continue
-            solver.addDisjunction(poles.map { poleVariables[it]!!.asTrue() })
+            solver.addDisjunction(poles.map { poleVariables[it]!! })
         }
     }
 
     public fun addNonOverlappingConstraint() {
         for (tile in poles.candidatePoles.occupiedTiles()) {
             val poles = poles.candidatePoles.getInTile(tile).asIterable()
-            solver.addAtMostOne(poles.map { poleVariables[it]!!.asTrue() })
+            solver.addAtMostOne(poles.map { poleVariables[it]!! })
         }
     }
 
     public fun addForceIncludePolesConstraint() {
         for ((pole, variable) in poleVariables) {
-            if (pole.forceInclude) solver.addMustBeTrue(variable.asTrue())
+            if (pole.forceInclude) solver.addMustBeTrue(variable)
         }
     }
 

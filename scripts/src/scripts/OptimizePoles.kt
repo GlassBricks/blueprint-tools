@@ -11,13 +11,18 @@ import glassbricks.factorio.blueprint.json.importBlueprint
 import glassbricks.factorio.blueprint.model.BlueprintModel
 import glassbricks.factorio.blueprint.poleopt.*
 import glassbricks.factorio.scripts.drawEntities
-import glassbricks.factorio.scripts.drawHeatmap
 import glassbricks.factorio.scripts.smallPole
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.slf4j.internal.Slf4jLogger
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 
-suspend fun main() = coroutineScope {
+private const val TIME_LIMIT = 60_000L * 5
+
+val logger = KotlinLogging.logger {}
+
+suspend fun main(): Unit = coroutineScope {
     val projectRoot = File(".")
 
     val inputBp = projectRoot.resolve("test-blueprints/base8.txt")
@@ -40,29 +45,27 @@ suspend fun main() = coroutineScope {
         entities.enclosingBox(),
         forceIncludeExistingPoles = true
     ).apply {
-        removeEmptyPolesDegree2()
+        removeEmptyPolesReach1()
     }
-    launch {
-        drawEntities(problem.candidatePoles)
-            .drawEntities(problem.entities)
-            .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-candidate").absolutePath)
-    }
+//        drawEntities(problem.candidatePoles)
+//            .drawEntities(problem.entities)
+//            .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-candidate").absolutePath)
 
-    val ilp = defaultPoleCoverILPSolver(problem).apply {
+    val ilp = defaultPoleCoverILPSolver(problem, CPSolver()).apply {
         DistanceBasedConnectivity.fromAroundPt(this, Vec2d(0.5, 0.5)).apply {
             addConstraints()
 
-            drawEntities(problem.entities).apply {
-                drawHeatmap(distances)
-            }.saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-distances").absolutePath)
+//            drawEntities(problem.entities).apply {
+//                drawHeatmap(distances)
+//            }.saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-distances").absolutePath)
         }
     }
 
 
     println("Solving ilp")
-    ilp.solver.setTimeLimit(30_000)
+    ilp.solver.setTimeLimit(TIME_LIMIT)
     val result = ilp.solve()
-    println(result)
+    println("Solved: $result")
 
     val poleCounts = ilp.poleVariables.filter { it.value.solutionValue() }
         .keys.groupingBy { it.prototype }.eachCount()
@@ -70,17 +73,20 @@ suspend fun main() = coroutineScope {
         println("${pole.name}: $count")
     }
 
+    println("Saving result")
+
     entities.removeWithConnectionsIf { it is ElectricPole }
     for (pole in ilp.getSelectedPoles()) {
         entities.add(pole.toEntity())
     }
 
-    drawEntities(entities)
-        .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-result").absolutePath)
-
-    val outFile = projectRoot.resolve("output/${inputBp.name}")
-    outFile.parentFile.mkdirs()
-    bp.toBlueprint().exportTo(outFile)
-
-
+    launch {
+        val outFile = projectRoot.resolve("output/${inputBp.name}")
+        outFile.parentFile.mkdirs()
+        bp.toBlueprint().exportTo(outFile)
+    }
+    launch {
+        drawEntities(entities)
+            .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-result").absolutePath)
+    }
 }

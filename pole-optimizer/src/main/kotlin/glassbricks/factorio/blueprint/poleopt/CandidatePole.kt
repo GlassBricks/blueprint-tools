@@ -7,7 +7,11 @@ import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
 import glassbricks.factorio.blueprint.roundOutToTileBbox
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.streams.asSequence
+import kotlin.time.measureTimedValue
+
+private val logger = KotlinLogging.logger {}
 
 public class CandidatePole(
     prototype: ElectricPolePrototype,
@@ -58,14 +62,17 @@ public class PoleCoverProblem(
         candidatePoles.getPosInCircle(pole.position, pole.prototype.maximum_wire_distance)
             .filter { it != pole && it.canConnectTo(pole) }
 
-    private var neighborsMap: MutableMap<CandidatePole, MutableSet<CandidatePole>>? = null
+    private var neighborsMap: MutableMap<CandidatePole, HashSet<CandidatePole>>? = null
 
-    private fun computeNeighborsMap(): MutableMap<CandidatePole, MutableSet<CandidatePole>> {
-        val result = mutableMapOf<CandidatePole, MutableSet<CandidatePole>>()
-        for (pole in candidatePoles) {
-            result[pole] = computeNeighbors(pole).toMutableSet()
+    private fun computeNeighborsMap(): HashMap<CandidatePole, HashSet<CandidatePole>> {
+        logger.info { "Computing neighbors map" }
+        val (map, time) = measureTimedValue {
+            candidatePoles.parallelStream().map { pole ->
+                pole to computeNeighbors(pole).toHashSet()
+            }.toList().toMap(HashMap())
         }
-        return result
+        logger.info { "Neighbors map computed in $time" }
+        return map
     }
 
     public fun getNeighborsMap(): Map<CandidatePole, Set<CandidatePole>> =
@@ -118,11 +125,13 @@ public fun PoleCoverProblem.removeEmptyPoles() {
 /**
  * Removes if distance >1 to a pole that powers something.
  */
-public fun PoleCoverProblem.removeEmptyPolesDegree2() {
-    val powersSomething = candidatePoles.filter { pole -> coveredEntities[pole]!!.isNotEmpty() }.toSet()
+public fun PoleCoverProblem.removeEmptyPolesReach1() {
     val neighborsMap = getNeighborsMap()
+    logger.info { "Removing empty poles" }
+    val powersSomething = candidatePoles.filter { pole -> coveredEntities[pole]!!.isNotEmpty() }.toHashSet()
     candidatePoles.removeIf { pole ->
         pole !in powersSomething && neighborsMap[pole]!!.none { it in powersSomething }
     }
     updatePolesRemoved()
+    logger.info { "Empty poles removed" }
 }

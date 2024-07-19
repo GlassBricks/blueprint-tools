@@ -2,20 +2,28 @@ package glassbricks.factorio.blueprint.poleopt
 
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.Vec2d
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.time.measureTimedValue
 
 
-public typealias CandidatePoleGraph = WeightedGraph<CandidatePole>
+public typealias CandidatePoleGraph = WeightedUnGraph<CandidatePole>
 public typealias DistanceMetric = (CandidatePole, CandidatePole) -> Double
+
+private val logger = KotlinLogging.logger {}
 
 public fun PoleCoverProblem.createMaximallyConnectedPoleGraph(distanceMetric: (CandidatePole, CandidatePole) -> Double): CandidatePoleGraph {
     val neighborsMap = getNeighborsMap()
-    val graph = CandidatePoleGraph()
-    for (pole in candidatePoles) graph.addNode(pole)
-    for (pole in candidatePoles) {
-        for (neighbor in neighborsMap[pole]!!) {
-            graph.addEdge(pole, neighbor, distanceMetric(pole, neighbor))
+    val (graph, time) = measureTimedValue {
+        logger.info { "Creating maximally connected pole graph" }
+        val graph = CandidatePoleGraph(candidatePoles.toList())
+        for (pole in candidatePoles) {
+            for (neighbor in neighborsMap[pole]!!) {
+                graph.addEdge(pole, neighbor, distanceMetric(pole, neighbor))
+            }
         }
+        graph
     }
+    logger.info { "Created maximally connected pole graph in $time" }
     return graph
 }
 
@@ -29,23 +37,31 @@ public class DistanceBasedConnectivity(
     public val rootPoles: List<CandidatePole>
 ) {
 
-    public val distances: Map<CandidatePole, Double> = dijkstras(poleGraph, rootPoles).distances
+    public val distances: DijkstrasResult<CandidatePole> = dijkstras(poleGraph, rootPoles)
     public fun addConstraints() {
-        if (!distances.keys.containsAll(problem.poles.candidatePoles)) {
-            println("Warning: not all poles are connected")
+        if (distances.distancesArr.any { it.isInfinite() }) {
+            logger.warn { "Not all poles are reachable from the root poles" }
         }
 
+        logger.info { "Adding connectivity constraints" }
+
         for (pole in problem.poles.candidatePoles) {
-            val distance = distances[pole] ?: continue
+            val distance = distances.distancesMap[pole] ?: continue
             if (distance == 0.0) continue
             val closerNeighbors = poleGraph.neighborsOf(pole).filter { neighbor ->
-                distances[neighbor] ?: Double.POSITIVE_INFINITY < distance
+                distances.distancesArr[neighbor.nodeIndex] < distance
             }
             if (closerNeighbors.isEmpty()) continue
             // pole chosen -> one of neighbors chosen
-            val neighborVars = closerNeighbors.map { problem.poleVariables[it]!! }
             val poleVar = problem.poleVariables[pole]!!
-            problem.solver.addDisjunction(neighborVars.map { it.asTrue() } + poleVar.asFalse())
+            val vars = ArrayList<ILPLikeSolver.Literal>(closerNeighbors.size + 1).apply {
+                closerNeighbors.mapTo(this) {
+                    val neighborPole = poleGraph.nodes[it.nodeIndex]
+                    problem.poleVariables[neighborPole]!!
+                }
+                add(poleVar)
+            }
+            problem.solver.addDisjunction(vars)
         }
     }
 
@@ -58,7 +74,8 @@ public class DistanceBasedConnectivity(
             val boundingBox = poles.entities.enclosingBox()
             val centerPoint = boundingBox.leftTop + boundingBox.size.emul(relativePos)
             return poles.candidatePoles.getPosInCircle(centerPoint, 8.0)
-                .sortedBy { it.position.squaredDistanceTo(centerPoint) }
+                .toMutableList()
+                .apply { sortBy { it.position.squaredDistanceTo(centerPoint) } }
                 .let { getMaximalClique(graph, it) }
         }
 
@@ -76,7 +93,7 @@ public class DistanceBasedConnectivity(
 
 private fun getMaximalClique(
     graph: CandidatePoleGraph,
-    poles: Sequence<CandidatePole>,
+    poles: Iterable<CandidatePole>,
 ) = buildList {
     for (pole in poles) {
         if (this.all { graph.hasEdge(it, pole) })

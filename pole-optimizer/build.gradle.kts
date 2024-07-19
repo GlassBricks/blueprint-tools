@@ -12,7 +12,8 @@ repositories {
 dependencies {
     api(project(":model"))
     api("com.google.ortools:ortools-java:9.10.4067")
-//    api("org.jgrapht:jgrapht-core:1.5.2")
+    api("io.github.oshai:kotlin-logging-jvm:7.0.0")
+    implementation("org.slf4j:slf4j-simple:2.0.3")
 
     testImplementation(kotlin("test"))
 }
