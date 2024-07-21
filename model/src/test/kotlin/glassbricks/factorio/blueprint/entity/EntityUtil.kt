@@ -27,7 +27,7 @@ internal inline fun <reified T> loadEntity(
     build: EntityJson.() -> Unit = {},
 ): T = VanillaPrototypes.entityFromJson(buildEntityJson(name, build), blueprint) as T
 
-internal fun <T : Entity> testSaveLoad(
+internal fun <T : BlueprintEntity> testSaveLoad(
     klass: KClass<T>,
     json: EntityJson,
     connectToNetwork: Boolean,
@@ -54,7 +54,7 @@ internal fun <T : Entity> testSaveLoad(
     return entity as T
 }
 
-internal fun <T : Entity> testSaveLoad(
+internal fun <T : BlueprintEntity> testSaveLoad(
     klass: KClass<T>,
     name: String,
     blueprint: BlueprintJson? = null,

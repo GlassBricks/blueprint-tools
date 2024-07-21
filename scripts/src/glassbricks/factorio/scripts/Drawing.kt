@@ -2,16 +2,12 @@ package glassbricks.factorio.scripts
 
 import com.github.nwillc.ksvg.RenderMode
 import com.github.nwillc.ksvg.elements.SVG
-import glassbricks.factorio.blueprint.BoundingBox
-import glassbricks.factorio.blueprint.Position
-import glassbricks.factorio.blueprint.entity.Entity
+import glassbricks.factorio.blueprint.*
 import glassbricks.factorio.blueprint.entity.Spatial
 import glassbricks.factorio.blueprint.entity.SpatialDataStructure
-import glassbricks.factorio.blueprint.placement.poles.PolePlacement
+import glassbricks.factorio.blueprint.placement.EntityPlacement
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
-import glassbricks.factorio.blueprint.roundOutToTileBbox
-import glassbricks.factorio.blueprint.toBoundingBox
 import org.jetbrains.kotlinx.jupyter.api.HTML
 import org.jetbrains.kotlinx.jupyter.api.MimeTypedResult
 import java.awt.BasicStroke
@@ -44,18 +40,23 @@ abstract class DrawingInBounds(
 }
 
 object Pallete {
-    val nonPowerable = Color(0x00, 0x60, 0x60)
+    val other = Color(0x00, 0x60, 0x60)
     val powerable = Color(26, 255, 26)
-    val pole = Color(255, 55, 55)
-    val candidatePole = Color(255, 255, 0)
+    val smallPole = Color(255, 55, 55)
+    val otherPole = Color(255, 100, 55)
+    val candidatePole = Color(255, 255, 55)
+    val otherCandidate = Color(55, 200, 200)
 }
 
 private fun getEntityColor(entity: Spatial): Color {
     val color = when {
-        entity is PolePlacement -> Pallete.candidatePole
-        entity is Entity && entity.prototype is ElectricPolePrototype -> Pallete.pole
-        entity is Entity && entity.prototype.usesElectricity -> Pallete.powerable
-        else -> Pallete.nonPowerable
+        entity is EntityPlacement<*> && !entity.isFixed -> when {
+            entity.prototype is ElectricPolePrototype -> Pallete.candidatePole
+            else -> Pallete.otherCandidate
+        }
+        entity is Entity<*> && entity.prototype is ElectricPolePrototype -> if(entity.prototype == smallPole) Pallete.smallPole else Pallete.otherPole
+        entity is Entity<*> && entity.prototype.usesElectricity -> Pallete.powerable
+        else -> Pallete.other
     }
     return color
 }
@@ -168,7 +169,7 @@ fun drawingFor(
 }
 
 
-fun Drawing.drawEntities(entities: SpatialDataStructure<Spatial>): Drawing = apply {
+fun Drawing.drawEntities(entities: Iterable<Spatial>): Drawing = apply {
     for (it in entities.sortedBy { it.position }) {
         drawEntity(it)
     }

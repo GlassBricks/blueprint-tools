@@ -24,7 +24,7 @@ public sealed class Combinator(
     abstract override fun copyIsolated(): Combinator
 
     private inner class ConnectionPoint(override val circuitID: CircuitID) : CircuitConnectionPoint {
-        override val entity: Entity get() = this@Combinator
+        override val entity: BlueprintEntity get() = this@Combinator
         override val circuitConnections: CircuitConnections = CircuitConnections(this)
     }
 }

@@ -1,9 +1,12 @@
 package glassbricks.factorio.blueprint.model
 
+import glassbricks.factorio.blueprint.BlueprintModel
 import glassbricks.factorio.blueprint.entity.entityFromJson
 import glassbricks.factorio.blueprint.entity.setEntitiesFrom
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
+import glassbricks.factorio.blueprint.toTileList
+import glassbricks.factorio.blueprint.toTileMap
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals

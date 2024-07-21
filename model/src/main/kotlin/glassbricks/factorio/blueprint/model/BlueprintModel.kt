@@ -3,7 +3,6 @@ package glassbricks.factorio.blueprint.model
 import glassbricks.factorio.blueprint.SignalType
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.entity.*
-import glassbricks.factorio.blueprint.entity.setEntitiesFrom
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
@@ -15,7 +14,7 @@ private constructor(
     public override var description: String? = null,
     public val iconsArr: Array<SignalIDJson?>,
     public val tiles: TileMap = HashMap(),
-    public val entities: MutableEntityMap = DefaultSpatialDataStructure(),
+    public val entities: MutableSpatialDataStructure<BlueprintEntity> = DefaultSpatialDataStructure(),
     public var snapToGridSettings: SnapToGridSettings? = null,
     public override var item: String = "blueprint",
     public override val version: FactorioVersion = FactorioVersion.DEFAULT
@@ -34,7 +33,7 @@ private constructor(
             }
         },
         tiles = blueprint.tiles.toTileMap(),
-        entities = DefaultSpatialDataStructure<Entity>().apply {
+        entities = DefaultSpatialDataStructure<BlueprintEntity>().apply {
             addAll(prototypes.entitiesFromJson(blueprint))
         },
         snapToGridSettings = blueprint.snap_to_grid?.let {

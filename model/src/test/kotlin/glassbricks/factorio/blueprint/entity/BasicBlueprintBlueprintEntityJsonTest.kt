@@ -13,7 +13,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 // This is also a test for BaseEntity
-class BasicEntityJsonTest {
+class BasicBlueprintBlueprintEntityJsonTest {
 
 
     @Test
@@ -26,7 +26,7 @@ class BasicEntityJsonTest {
                 collision_mask = CollisionMask.DEFAULT_MASKS["accumulator"]!!
             }
         }
-        val entity = BasicEntity(
+        val entity = BasicBpEntity(
             testPrototype,
             EntityJson(EntityNumber(1), "foo", pos(2.0, 3.0), Direction.East)
         )
@@ -49,13 +49,13 @@ class BasicEntityJsonTest {
         assertEquals(expected, json)
 
 
-        val entity2 = BasicEntity(
+        val entity2 = BasicBpEntity(
             testPrototype,
             EntityJson(EntityNumber(1), "foo", pos(2.0, 3.2), Direction.East)
         )
         assertTrue(entity.collidesWith(entity2))
         assertTrue(entity2.collidesWith(entity))
-        val entity3 = BasicEntity(
+        val entity3 = BasicBpEntity(
             testPrototype,
             EntityJson(EntityNumber(1), "foo", pos(2.0, 4.0), Direction.East)
         )

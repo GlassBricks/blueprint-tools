@@ -6,7 +6,7 @@ import glassbricks.factorio.blueprint.json.EntityNumber
 
 public interface CableConnectionPoint {
     public val cableConnections: CableConnections
-    public val entity: Entity
+    public val entity: BlueprintEntity
 }
 
 public enum class PowerSwitchConnectionSide { Left, Right }
@@ -17,7 +17,7 @@ public interface PowerSwitchConnectionPoint : CableConnectionPoint {
     public override val entity: PowerSwitchConnections
 }
 
-public interface PowerSwitchConnections : Entity {
+public interface PowerSwitchConnections : BlueprintEntity {
     public val left: PowerSwitchConnectionPoint
     public val right: PowerSwitchConnectionPoint
 }
@@ -59,14 +59,14 @@ internal open class CableConnectionSetImpl(override val parent: CableConnectionP
 }
 
 internal fun CableConnectionPoint.exportNeighbors(
-    entityMap: Map<Entity, EntityJson>,
+    entityMap: Map<BlueprintEntity, EntityJson>,
 ): List<EntityNumber>? = cableConnections.mapNotNullTo(ArrayList(cableConnections.size)) { pt ->
     entityMap[pt.entity]?.entity_number
 }.takeIf { it.isNotEmpty() }
     ?.apply { sort() }
 
 internal fun CableConnectionPoint.exportPowerSwitch(
-    entityMap: Map<Entity, EntityJson>,
+    entityMap: Map<BlueprintEntity, EntityJson>,
 ): List<CableConnectionData>? = cableConnections.mapNotNullTo(ArrayList(cableConnections.size)) { pt ->
     CableConnectionData(entityMap[pt.entity]?.entity_number ?: return@mapNotNullTo null)
 }.takeIf { it.isNotEmpty() }

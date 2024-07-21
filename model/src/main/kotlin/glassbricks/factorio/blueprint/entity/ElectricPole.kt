@@ -10,7 +10,7 @@ public class ElectricPole(
     override val cableConnections: CableConnections = CableConnections(this)
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
 
-    override val entity: Entity get() = this
+    override val entity: BlueprintEntity get() = this
 
     override fun exportToJson(json: EntityJson) {
         // all connections handled by ImportExport

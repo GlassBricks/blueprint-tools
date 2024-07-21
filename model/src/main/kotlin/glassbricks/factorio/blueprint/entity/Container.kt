@@ -12,7 +12,7 @@ public open class Container(
 ) : BaseEntity(json), WithInventory, WithItemFilters, CircuitConnectionPoint {
     override val prototype: ContainerPrototype = prototype_
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
-    override val entity: Entity get() = this
+    override val entity: BlueprintEntity get() = this
 
     public override var bar: Int? = json.bar
     override val inventorySize: ItemStackIndex get() = prototype.inventory_size

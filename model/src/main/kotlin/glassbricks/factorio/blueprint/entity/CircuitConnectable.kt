@@ -21,7 +21,7 @@ public sealed interface CircuitConnectable
 public interface CircuitConnectionPoint : CircuitConnectable {
     public val circuitConnections: CircuitConnections
     public val circuitID: CircuitID get() = CircuitID.First
-    public val entity: Entity get() = this as Entity
+    public val entity: BlueprintEntity get() = this as BlueprintEntity
 }
 
 /**
@@ -75,7 +75,7 @@ public class CircuitConnections(public val parent: CircuitConnectionPoint) {
             (element.circuitConnections[color] as ConnectionSetImpl).inner.remove(parent)
         }
 
-        internal fun export(parentMap: Map<Entity, EntityJson>): List<ConnectionData>? =
+        internal fun export(parentMap: Map<BlueprintEntity, EntityJson>): List<ConnectionData>? =
             if (isEmpty()) null else mapNotNullTo(ArrayList(size)) {
                 val other = parentMap[it.entity] ?: return@mapNotNullTo null
                 ConnectionData(other.entity_number, it.circuitID)
@@ -83,7 +83,7 @@ public class CircuitConnections(public val parent: CircuitConnectionPoint) {
                 ?.apply { sortWith(compareBy({ it.entity_id }, { it.circuit_id })) }
     }
 
-    internal fun export(parentMap: Map<Entity, EntityJson>): ConnectionPointJson? {
+    internal fun export(parentMap: Map<BlueprintEntity, EntityJson>): ConnectionPointJson? {
         val red = (red as ConnectionSetImpl).export(parentMap)
         val green = (green as ConnectionSetImpl).export(parentMap)
         return if (red != null || green != null) ConnectionPointJson(red, green) else null

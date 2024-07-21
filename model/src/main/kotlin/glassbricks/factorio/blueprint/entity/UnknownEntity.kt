@@ -14,7 +14,7 @@ import kotlinx.serialization.json.JsonObject
 public class UnknownEntity(
     override val prototype: UnknownPrototype,
     json: EntityJson,
-) : Entity,
+) : BlueprintEntity,
     CableConnectionPoint,
     CircuitConnectionPoint,
     CombinatorConnections,
@@ -36,12 +36,12 @@ public class UnknownEntity(
     override val circuitConnections: CircuitConnections = CircuitConnections(this)
     override val input: CircuitConnectionPoint get() = this
     override val output: CircuitConnectionPoint = object : CircuitConnectionPoint {
-        override val entity: Entity get() = this@UnknownEntity
+        override val entity: BlueprintEntity get() = this@UnknownEntity
         override val circuitID: CircuitID get() = CircuitID.Second
         override val circuitConnections: CircuitConnections = CircuitConnections(this)
     }
 
-    override val entity: Entity get() = this
+    override val entity: BlueprintEntity get() = this
 
     override fun toJsonIsolated(entityNumber: EntityNumber): EntityJson = json.copy(
         entity_number = entityNumber,
@@ -50,7 +50,7 @@ public class UnknownEntity(
         filters = this.filtersAsIndexList(),
     )
 
-    override fun copyIsolated(): Entity = UnknownEntity(prototype, toJsonIsolated(EntityNumber(0)))
+    override fun copyIsolated(): BlueprintEntity = UnknownEntity(prototype, toJsonIsolated(EntityNumber(0)))
 }
 
 public fun UnknownEntity(

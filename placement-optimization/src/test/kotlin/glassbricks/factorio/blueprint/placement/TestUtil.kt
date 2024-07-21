@@ -1,4 +1,4 @@
-package glassbricks.factorio.blueprint.poleopt
+package glassbricks.factorio.blueprint.placement
 
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.entity.Container

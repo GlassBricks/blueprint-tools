@@ -8,16 +8,16 @@ public fun createEntity(
     prototype: EntityPrototype,
     source: EntityJson,
     blueprint: BlueprintJson? = null,
-): Entity {
+): BlueprintEntity {
     require(source.name == prototype.name) { "Mismatched entity name: ${source.name} != ${prototype.name}" }
     return getConstructorForPrototype(prototype)(prototype, source, blueprint)
 }
 
-private typealias Constructor = (EntityPrototype, EntityJson, BlueprintJson?) -> Entity
+private typealias Constructor = (EntityPrototype, EntityJson, BlueprintJson?) -> BlueprintEntity
 
 private inline fun <reified T : EntityPrototype>
         MutableMap<Class<out EntityPrototype>, Constructor>.add(
-    crossinline constructor: (T, EntityJson, BlueprintJson?) -> Entity,
+    crossinline constructor: (T, EntityJson, BlueprintJson?) -> BlueprintEntity,
 ) {
     put(T::class.java) { prototype, source, blueprint ->
         constructor(prototype as T, source, blueprint)
@@ -26,7 +26,7 @@ private inline fun <reified T : EntityPrototype>
 
 private inline fun <reified T : EntityPrototype>
         MutableMap<Class<out EntityPrototype>, Constructor>.add(
-    crossinline constructor: (T, EntityJson) -> Entity,
+    crossinline constructor: (T, EntityJson) -> BlueprintEntity,
 ) {
     put(T::class.java) { prototype, source, _ ->
         constructor(prototype as T, source)
@@ -34,7 +34,7 @@ private inline fun <reified T : EntityPrototype>
 }
 
 private val basicConstructor: Constructor = { prototype, source, _ ->
-    BasicEntity(prototype, source)
+    BasicBpEntity(prototype, source)
 }
 
 private inline fun <reified T : EntityPrototype>

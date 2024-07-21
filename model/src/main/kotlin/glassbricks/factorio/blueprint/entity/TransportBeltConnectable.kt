@@ -4,7 +4,7 @@ import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.*
 
 
-public sealed interface TransportBeltConnectable : Entity {
+public sealed interface TransportBeltConnectable : BlueprintEntity {
     override val prototype: TransportBeltConnectablePrototype
 
     override fun copyIsolated(): TransportBeltConnectable

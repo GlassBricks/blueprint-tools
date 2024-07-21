@@ -21,7 +21,7 @@ class CircuitConnectionsTest {
         point2 = object : CircuitConnectionPoint {
             override val circuitConnections: CircuitConnections = CircuitConnections(this)
             override val circuitID: CircuitID get() = CircuitID.Second
-            override val entity: Entity = e1
+            override val entity: BlueprintEntity = e1
         }
         point3 = testConnectable()
     }

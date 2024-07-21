@@ -7,7 +7,7 @@ import glassbricks.factorio.blueprint.prototypes.LocomotivePrototype
 import glassbricks.factorio.blueprint.prototypes.RollingStockPrototype
 
 
-public sealed interface RollingStock : Entity {
+public sealed interface RollingStock : BlueprintEntity {
     override val prototype: RollingStockPrototype
     public var orientation: Double
 

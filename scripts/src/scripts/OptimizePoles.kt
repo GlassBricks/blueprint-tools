@@ -2,27 +2,30 @@ package scripts
 
 import glassbricks.factorio.blueprint.Vec2d
 import glassbricks.factorio.blueprint.entity.ElectricPole
-import glassbricks.factorio.blueprint.entity.copyEntities
 import glassbricks.factorio.blueprint.entity.removeAllWithConnections
-import glassbricks.factorio.blueprint.entity.removeWithConnectionsIf
 import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.exportTo
 import glassbricks.factorio.blueprint.json.importBlueprint
 import glassbricks.factorio.blueprint.model.BlueprintModel
-import glassbricks.factorio.blueprint.placement.poles.createPoleCoverProblem
-import glassbricks.factorio.blueprint.placement.CPSolver
+import glassbricks.factorio.blueprint.placement.EntityPlacementModel
+import glassbricks.factorio.blueprint.placement.EntityPlacementOption
+import glassbricks.factorio.blueprint.placement.addDistanceCostFrom
 import glassbricks.factorio.blueprint.placement.poles.DistanceBasedConnectivity
-import glassbricks.factorio.blueprint.placement.defaultPoleCoverILPSolver
-import glassbricks.factorio.blueprint.placement.poles.removeEmptyPolesReach1
-import glassbricks.factorio.blueprint.placement.poles.toEntity
+import glassbricks.factorio.blueprint.placement.poles.PolePlacementOptions
+import glassbricks.factorio.blueprint.placement.poles.createPolePlacements
+import glassbricks.factorio.blueprint.placement.poles.euclidianDistancePlus
+import glassbricks.factorio.blueprint.placement.toEntity
 import glassbricks.factorio.scripts.drawEntities
+import glassbricks.factorio.scripts.drawHeatmap
+import glassbricks.factorio.scripts.drawingFor
 import glassbricks.factorio.scripts.smallPole
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 
-private const val TIME_LIMIT = 60_000L * 5
+// in seconds
+private const val TIME_LIMIT = 90.0
 
 val logger = KotlinLogging.logger {}
 
@@ -41,46 +44,62 @@ suspend fun main(): Unit = coroutineScope {
     }
 
     println("Setting up problem")
-    entities.removeAllWithConnections(originalPoles.filter { it.prototype == smallPole })
+    val center = entities.enclosingBox().center()
+    entities.removeAllWithConnections(
+        originalPoles.filter { it.prototype == smallPole }
+    )
 
-    val problem = createPoleCoverProblem(
-        entities.copyEntities(),
-        polesToAdd = listOf(smallPole),
-        entities.enclosingBox(),
-        forceIncludeExistingPoles = true
-    ).apply {
-        removeEmptyPolesReach1()
-    }
-//        drawEntities(problem.candidatePoles)
-//            .drawEntities(problem.entities)
-//            .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-candidate").absolutePath)
+    val model = EntityPlacementModel()
+    model.addFixedEntities(entities)
 
-    val ilp = defaultPoleCoverILPSolver(problem, CPSolver()).apply {
-        DistanceBasedConnectivity.fromAroundPt(this, Vec2d(0.5, 0.5)).apply {
-            addConstraints()
-
-//            drawEntities(problem.entities).apply {
-//                drawHeatmap(distances)
-//            }.saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-distances").absolutePath)
+    val polePlacements = model.createPolePlacements(
+        listOf(
+            smallPole,
+//            mediumPole,
+        ),
+        entities.enclodingTileBox(),
+        options = PolePlacementOptions(removeEmptyPolesReach1 = true)
+    )
+    polePlacements.poles.forEach {
+        if (it is EntityPlacementOption<*>) {
+            it.cost = if (it.prototype == smallPole) 1.0 else 4.0
         }
     }
 
+    DistanceBasedConnectivity.fromExistingPolesOrPt(
+        polePlacements,
+        relativePos = Vec2d(0.5, 0.5),
+        distanceMetric = euclidianDistancePlus(0.0),
+    ).apply {
+        addConstraints()
+        launch {
+            drawEntities(model.placements)
+                .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-candidate").absolutePath)
+            drawingFor(model.placements).apply {
+                drawEntities(model.placements.filter { it.isFixed })
+                drawHeatmap(distances.distances)
+                saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-distances").absolutePath)
+            }
+        }
+    }
 
-    println("Solving ilp")
-    ilp.solver.setTimeLimit(TIME_LIMIT)
-    val result = ilp.solve()
-    println("Solved: $result")
+    model.addDistanceCostFrom(center)
 
-    val poleCounts = ilp.poleVariables.filter { it.value.solutionValue() }
-        .keys.groupingBy { it.prototype }.eachCount()
+    println("Solving")
+    model.timeLimitInSeconds = TIME_LIMIT
+    val result = model.solve()
+    println("Solved: ${result.status}")
+
+    val selectedPoles = result.getSelectedOptionalEntities()
+    val poleCounts =
+        selectedPoles.groupingBy { it.prototype }.eachCount()
     for ((pole, count) in poleCounts) {
         println("${pole.name}: $count")
     }
 
     println("Saving result")
 
-    entities.removeWithConnectionsIf { it is ElectricPole }
-    for (pole in ilp.getSelectedPoles()) {
+    for (pole in selectedPoles) {
         entities.add(pole.toEntity())
     }
 

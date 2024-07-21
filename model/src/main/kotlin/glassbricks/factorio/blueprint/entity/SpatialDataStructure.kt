@@ -43,6 +43,7 @@ public interface SpatialDataStructure<out T : Spatial> : Collection<T> {
     public fun enclosingBox(): BoundingBox {
         return getEnclosingBox(map { it.collisionBox })
     }
+    public fun enclodingTileBox(): TileBoundingBox = enclosingBox().roundOutToTileBbox()
 }
 
 public interface MutableSpatialDataStructure<T : Spatial> : SpatialDataStructure<T>, MutableCollection<T> {
@@ -55,7 +56,3 @@ public fun <T : Spatial> DefaultSpatialDataStructure(): MutableSpatialDataStruct
 
 public fun <T : Spatial> DefaultSpatialDataStructure(items: Iterable<T>): MutableSpatialDataStructure<T> =
     TileHashMap<T>().also { it.addAll(items) }
-
-
-public typealias EntityMap = SpatialDataStructure<Entity>
-public typealias MutableEntityMap = MutableSpatialDataStructure<Entity>

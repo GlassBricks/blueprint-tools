@@ -2,95 +2,116 @@ package glassbricks.factorio.blueprint.placement.poles
 
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.Vec2d
-import glassbricks.factorio.blueprint.placement.*
+import glassbricks.factorio.blueprint.placement.CalculatedMapGraph
+import glassbricks.factorio.blueprint.placement.DijkstrasResult
+import glassbricks.factorio.blueprint.placement.dijkstras
+import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.time.measureTimedValue
 
 
-public typealias CandidatePoleGraph = WeightedUnGraph<PolePlacement>
+public typealias CandidatePoleGraph = CalculatedMapGraph<PolePlacement>
 public typealias DistanceMetric = (PolePlacement, PolePlacement) -> Double
 
 private val logger = KotlinLogging.logger {}
 
-public fun PoleCoverProblem.createMaximallyConnectedPoleGraph(distanceMetric: (PolePlacement, PolePlacement) -> Double): CandidatePoleGraph {
-    val neighborsMap = getNeighborsMap()
-    val (graph, time) = measureTimedValue {
-        logger.info { "Creating maximally connected pole graph" }
-        val graph = CandidatePoleGraph(candidatePoles.toList())
-        for (pole in candidatePoles) {
-            for (neighbor in neighborsMap[pole]!!) {
-                graph.addEdge(pole, neighbor, distanceMetric(pole, neighbor))
-            }
-        }
-        graph
-    }
-    logger.info { "Created maximally connected pole graph in $time" }
-    return graph
-}
+public fun PolePlacements.getPoleGraph(distanceMetric: (PolePlacement, PolePlacement) -> Double): CandidatePoleGraph =
+    CalculatedMapGraph(neighborsMap, distanceMetric)
 
 public fun euclidianDistancePlus(amt: Double): DistanceMetric = { a, b ->
     a.position.distanceTo(b.position) + amt
 }
 
 public class DistanceBasedConnectivity(
-    public val problem: PoleCoverILPSolver,
-    public val poleGraph: CandidatePoleGraph,
-    public val rootPoles: List<PolePlacement>
+    private val polePlacements: PolePlacements,
+    private val poleGraph: CandidatePoleGraph,
+    rootPoles: List<PolePlacement>
 ) {
+    init {
+
+        require(rootPoles.isNotEmpty()) {
+            "Adding connectivity constraints without any root poles is the same as not adding any constraints"
+        }
+    }
 
     public val distances: DijkstrasResult<PolePlacement> = dijkstras(poleGraph, rootPoles)
     public fun addConstraints() {
-        if (distances.distancesArr.any { it.isInfinite() }) {
+        if (poleGraph.nodes.any { it !in distances.distances }) {
             logger.warn { "Not all poles are reachable from the root poles" }
         }
 
         logger.info { "Adding connectivity constraints" }
 
-        for (pole in problem.poles.candidatePoles) {
-            val distance = distances.distancesMap[pole] ?: continue
+        for (pole in polePlacements.poles) {
+            val distance = distances.distances[pole] ?: continue
             if (distance == 0.0) continue
             val closerNeighbors = poleGraph.neighborsOf(pole).filter { neighbor ->
-                distances.distancesArr[neighbor.nodeIndex] < distance
+                distances.distances[neighbor].let { it != null && it < distance }
             }
             if (closerNeighbors.isEmpty()) continue
-            // pole chosen -> one of neighbors chosen
-            val poleVar = problem.poleVariables[pole]!!
-            val vars = ArrayList<ILPLikeSolver.Literal>(closerNeighbors.size + 1).apply {
-                closerNeighbors.mapTo(this) {
-                    val neighborPole = poleGraph.nodes[it.nodeIndex]
-                    problem.poleVariables[neighborPole]!!
-                }
-                add(poleVar)
-            }
-            problem.solver.addDisjunction(vars)
+
+            polePlacements.model.cpModel.addBoolOr(closerNeighbors.map { it.selected })
+                .onlyEnforceIf(pole.selected)
         }
     }
 
     public companion object {
         private fun getRootPolesNear(
-            poles: PoleCoverProblem,
+            poles: PolePlacements,
             graph: CandidatePoleGraph,
             relativePos: Vec2d
         ): List<PolePlacement> {
-            val boundingBox = poles.entities.enclosingBox()
+            val boundingBox = poles.model.placements.enclosingBox()
             val centerPoint = boundingBox.leftTop + boundingBox.size.emul(relativePos)
-            return poles.candidatePoles.getPosInCircle(centerPoint, 8.0)
+            return poles.model.placements.getPosInCircle(centerPoint, 8.0)
+                .filter { it.prototype is ElectricPolePrototype }
                 .toMutableList()
+                .let {
+                    @Suppress("UNCHECKED_CAST")
+                    it as MutableList<PolePlacement>
+                }
                 .apply { sortBy { it.position.squaredDistanceTo(centerPoint) } }
                 .let { getMaximalClique(graph, it) }
         }
 
+        public fun fromExistingPoles(
+            poles: PolePlacements,
+            distanceMetric: (PolePlacement, PolePlacement) -> Double
+        ): DistanceBasedConnectivity {
+            @Suppress("UNCHECKED_CAST")
+            val existingPoles =
+                poles.model.placements.filter { it.isFixed && it.prototype is ElectricPolePrototype } as List<PolePlacement>
+            val poleGraph = poles.getPoleGraph(distanceMetric)
+            return DistanceBasedConnectivity(poles, poleGraph, existingPoles)
+        }
+
         public fun fromAroundPt(
-            problem: PoleCoverILPSolver,
+            poles: PolePlacements,
             relativePos: Vec2d,
             distanceMetric: (PolePlacement, PolePlacement) -> Double = euclidianDistancePlus(0.0)
         ): DistanceBasedConnectivity {
-            val poleGraph = problem.poles.createMaximallyConnectedPoleGraph(distanceMetric)
-            val rootPoles = getRootPolesNear(problem.poles, poleGraph, relativePos)
-            return DistanceBasedConnectivity(problem, poleGraph, rootPoles)
+            val poleGraph = poles.getPoleGraph(distanceMetric)
+            val rootPoles = getRootPolesNear(poles, poleGraph, relativePos)
+            return DistanceBasedConnectivity(poles, poleGraph, rootPoles)
+        }
+
+        public fun fromExistingPolesOrPt(
+            poles: PolePlacements,
+            relativePos: Vec2d,
+            distanceMetric: (PolePlacement, PolePlacement) -> Double = euclidianDistancePlus(0.0)
+        ): DistanceBasedConnectivity {
+            @Suppress("UNCHECKED_CAST")
+            val existingPoles =
+                poles.model.placements.filter { it.isFixed && it.prototype is ElectricPolePrototype } as List<PolePlacement>
+            if (existingPoles.isEmpty()) {
+                return fromAroundPt(poles, relativePos, distanceMetric)
+            } else {
+                val poleGraph = poles.getPoleGraph(distanceMetric)
+                return DistanceBasedConnectivity(poles, poleGraph, existingPoles)
+            }
         }
     }
 }
+
 
 private fun getMaximalClique(
     graph: CandidatePoleGraph,

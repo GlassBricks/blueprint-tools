@@ -10,7 +10,7 @@ import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 public fun BlueprintPrototypes.entityFromJson(
     json: EntityJson,
     blueprint: BlueprintJson? = null,
-): Entity {
+): BlueprintEntity {
     val prototype = this.blueprintableEntities[json.name] ?: UnknownPrototype(json.name)
     return createEntity(prototype, json, blueprint)
 }
@@ -19,7 +19,7 @@ public fun BlueprintPrototypes.createEntity(
     name: String,
     position: Position,
     direction: Direction = Direction.North,
-): Entity {
+): BlueprintEntity {
     return entityFromJson(basicEntityJson(name, position, direction))
 }
 
@@ -27,7 +27,7 @@ public fun BlueprintPrototypes.createTileSnappedEntity(
     name: String,
     topLeftTile: TilePosition,
     direction: Direction = Direction.North,
-): Entity {
+): BlueprintEntity {
     val prototype = this.blueprintableEntities[name] ?: UnknownPrototype(name)
     val position = prototype.tileSnappedPosition(topLeftTile, direction)
     return createEntity(prototype, basicEntityJson(name, position, direction))
@@ -39,7 +39,7 @@ public fun basicEntityJson(
     direction: Direction = Direction.North,
 ): EntityJson = EntityJson(EntityNumber(1), name, position, direction)
 
-public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entity> {
+public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<BlueprintEntity> {
     val jsonEntities = json.entities ?: return emptyList()
 
     val indexByEntityNumber = jsonEntities.indices.associateBy { jsonEntities[it].entity_number }
@@ -108,7 +108,7 @@ public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Entit
     return entities
 }
 
-internal fun BlueprintJson.setEntitiesFrom(entities: Iterable<Entity>) {
+internal fun BlueprintJson.setEntitiesFrom(entities: Iterable<BlueprintEntity>) {
 
     var nextId = 1
     val entityMap = entities.associateWith { entity ->
