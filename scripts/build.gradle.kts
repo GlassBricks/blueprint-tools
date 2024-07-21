@@ -12,7 +12,7 @@ repositories {
 dependencies {
     api(project(":prototypes"))
     api(project(":model"))
-    api(project(":placement-optimization"))
+    api(project(":placement"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
     api("org.jetbrains.kotlinx:kotlin-jupyter-api:0.12.0-236")
     api("org.jetbrains.kotlinx:kotlin-jupyter-lib-ext:0.12.0-236")
