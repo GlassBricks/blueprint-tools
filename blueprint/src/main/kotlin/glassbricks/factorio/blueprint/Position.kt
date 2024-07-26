@@ -1,13 +1,18 @@
 package glassbricks.factorio.blueprint
 
-import glassbricks.factorio.blueprint.json.DoubleAsInt
+import glassbricks.factorio.blueprint.json.DoubleAsIntSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlin.math.acos
+import kotlinx.serialization.json.*
+import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -53,6 +58,14 @@ public class Position private constructor(
      */
     public fun occupiedTile(): TilePosition = TilePosition(floor(x).toInt(), floor(y).toInt())
 
+    public fun isZero(): Boolean = xAsInt == 0 && yAsInt == 0
+
+    public fun rotateCardinal(direction: Direction): Position = when (direction) {
+        Direction.North, Direction.Northeast -> this
+        Direction.East, Direction.Southeast -> Position(-yAsInt, xAsInt)
+        Direction.South, Direction.Southwest -> Position(-xAsInt, -yAsInt)
+        Direction.West, Direction.Northwest -> Position(yAsInt, -xAsInt)
+    }
 
     public operator fun component1(): Double = x
     public operator fun component2(): Double = y
@@ -62,8 +75,9 @@ public class Position private constructor(
         if (other !is Position) return false
         return xAsInt == other.xAsInt && yAsInt == other.yAsInt
     }
-    override fun toString(): String = "pos($x, $y)"
+
     override fun hashCode(): Int = 31 * xAsInt + yAsInt
+    override fun toString(): String = "pos($x, $y)"
 
     override fun compareTo(other: Position): Int {
         val xComp = xAsInt.compareTo(other.xAsInt)
@@ -75,20 +89,17 @@ public class Position private constructor(
         public val ZERO: Position = Position(0, 0)
     }
 
-    @Serializable
-    private class DoublePosition(val x: DoubleAsInt, val y: DoubleAsInt)
-
     internal object Serializer : KSerializer<Position> {
         @OptIn(ExperimentalSerializationApi::class)
         override val descriptor: SerialDescriptor =
-            SerialDescriptor(Position::class.qualifiedName!!, DoublePosition.serializer().descriptor)
+            SerialDescriptor(Position::class.qualifiedName!!, Vector.serializer().descriptor)
 
         override fun deserialize(decoder: Decoder): Position =
-            decoder.decodeSerializableValue(DoublePosition.serializer())
+            decoder.decodeSerializableValue(Vector.serializer())
                 .let { Position(it.x, it.y) }
 
         override fun serialize(encoder: Encoder, value: Position) {
-            encoder.encodeSerializableValue(DoublePosition.serializer(), DoublePosition(value.x, value.y))
+            encoder.encodeSerializableValue(Vector.serializer(), Vector(value.x, value.y))
         }
     }
 }
@@ -141,40 +152,101 @@ public operator fun Int.times(position: TilePosition): TilePosition = position *
 public fun tilePos(x: Int, y: Int): TilePosition = TilePosition(x, y)
 
 /** A vector that truly uses doubles, unlike [Position]. */
-public data class Vec2d(val x: Double, val y: Double) {
-    public operator fun plus(other: Vec2d): Vec2d = Vec2d(x + other.x, y + other.y)
-    public operator fun minus(other: Vec2d): Vec2d = Vec2d(x - other.x, y - other.y)
+@Serializable(with = Vector.Serializer::class)
+public data class Vector(
+    @Serializable(with = DoubleAsIntSerializer::class)
+    val x: Double,
+    @Serializable(with = DoubleAsIntSerializer::class)
+    val y: Double
+) {
+    public operator fun plus(other: Vector): Vector = Vector(x + other.x, y + other.y)
+    public operator fun minus(other: Vector): Vector = Vector(x - other.x, y - other.y)
 
-    public operator fun times(scale: Double): Vec2d = Vec2d(x * scale, y * scale)
-    public operator fun div(scale: Double): Vec2d = Vec2d(x / scale, y / scale)
+    public operator fun times(scale: Double): Vector = Vector(x * scale, y * scale)
+    public operator fun div(scale: Double): Vector = Vector(x / scale, y / scale)
 
-    public operator fun unaryMinus(): Vec2d = Vec2d(-x, -y)
-    public operator fun unaryPlus(): Vec2d = this
+    public operator fun unaryMinus(): Vector = Vector(-x, -y)
+    public operator fun unaryPlus(): Vector = this
 
     public fun squaredLength(): Double = x * x + y * y
     public fun length(): Double = sqrt(squaredLength())
 
-    public fun normalized(): Vec2d {
-        val len = length()
-        return Vec2d(x / len, y / len)
+    public fun distanceTo(other: Vector): Double = (this - other).length()
+
+    public fun isZero(): Boolean = x == 0.0 && y == 0.0
+
+    public fun rotateCardinal(direction: Direction): Vector = when (direction) {
+        Direction.North, Direction.Northeast -> this
+        Direction.East, Direction.Southeast -> Vector(-y, x)
+        Direction.South, Direction.Southwest -> Vector(-x, -y)
+        Direction.West, Direction.Northwest -> Vector(y, -x)
     }
 
-    public fun dot(other: Vec2d): Double = x * other.x + y * other.y
-
-    public fun angleTo(other: Vec2d): Double {
-        val dot = dot(other)
-        val len = length() * other.length()
-        return acos(dot / len)
+    public fun rotate(direction: Direction): Vector = when (direction) {
+        Direction.North -> this
+        Direction.Northeast -> Vector(x * sin45 - y * sin45, x * sin45 + y * sin45)
+        Direction.East -> Vector(-y, x)
+        Direction.Southeast -> Vector(-x * sin45 - y * sin45, x * sin45 - y * sin45)
+        Direction.South -> Vector(-x, -y)
+        Direction.Southwest -> Vector(-x * sin45 + y * sin45, -x * sin45 - y * sin45)
+        Direction.West -> Vector(y, -x)
+        Direction.Northwest -> Vector(x * sin45 + y * sin45, -x * sin45 + y * sin45)
     }
 
+    public fun closeTo(other: Vector, epsilon: Double = 1e-6): Boolean =
+        (x - other.x).absoluteValue < epsilon && (y - other.y).absoluteValue < epsilon
 
-    public fun distanceTo(other: Vec2d): Double = (this - other).length()
-
-    public fun toPosition(): Position = Position(x, y)
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Vector) return false
+        val xeq = x == other.x
+        val result = xeq && y == other.y
+        return result
+    }
 
     public companion object {
-        public val ZERO: Vec2d = Vec2d(0.0, 0.0)
+        private const val sin45 = 0.7071067811865476 // = sqrt(2) / 2
+        public val ZERO: Vector = Vector(0.0, 0.0)
+    }
+
+    internal object Serializer : KSerializer<Vector> {
+        private val doubleAsIntListSerializer = ListSerializer(DoubleAsIntSerializer)
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Vec2d") {
+            element<Double>("x")
+            element<Double>("y")
+        }
+
+        override fun deserialize(decoder: Decoder): Vector {
+            decoder as JsonDecoder
+            val element = decoder.decodeJsonElement()
+            val x: Double
+            val y: Double
+            when (element) {
+                is JsonObject -> {
+                    x = element["x"]!!.jsonPrimitive.double
+                    y = element["y"]!!.jsonPrimitive.double
+                }
+
+                is JsonArray -> {
+                    x = element[0].jsonPrimitive.double
+                    y = element[1].jsonPrimitive.double
+                }
+
+                else -> throw SerializationException("Expected JsonObject or JsonArray")
+            }
+            return Vector(x, y)
+        }
+
+        override fun serialize(encoder: Encoder, value: Vector) {
+            encoder.encodeSerializableValue(doubleAsIntListSerializer, listOf(value.x, value.y))
+        }
     }
 }
 
-public fun Position.toVec2d(): Vec2d = Vec2d(x, y)
+public fun Vector.toPosition(): Position = Position(x, y)
+public fun Position.toVector(): Vector = Vector(x, y)
+
+public operator fun Position.plus(vector: Vector): Position = Position(x + vector.x, y + vector.y)
+public operator fun Position.minus(vector: Vector): Position = Position(x - vector.x, y - vector.y)
+
+public operator fun Vector.plus(position: Position): Position = position + this

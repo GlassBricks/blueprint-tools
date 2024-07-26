@@ -1,7 +1,6 @@
 plugins {
-    kotlin("jvm") version "2.0.0"
-    kotlin("plugin.serialization") version "2.0.0"
-    `java-library`
+    kotlin("jvm")
+    kotlin("plugin.serialization")
 }
 
 group = "glassbricks.factorio"

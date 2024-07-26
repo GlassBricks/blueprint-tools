@@ -16,13 +16,11 @@ import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 public interface EntityPlacement<out P : EntityPrototype> : Entity<P> {
     public val selected: Literal
 
-    /**
-     * If this placement is forced to be used.
-     */
+    /** If this placement is forced to be used. */
     public val isFixed: Boolean
 }
 
-public interface EntityPlacementOption<out P : EntityPrototype> : EntityPlacement<P> {
+public interface OptionalEntityPlacement<out P : EntityPrototype> : EntityPlacement<P> {
     /** The cost of using this option. */
     public var cost: Double
     override val isFixed: Boolean get() = false
@@ -51,7 +49,7 @@ internal class EntityOptionImpl<out P : EntityPrototype>(
     override val direction: Direction,
     override var cost: Double,
     private val model: CpModel,
-) : EntityPlacementOption<P> {
+) : OptionalEntityPlacement<P> {
     private var _selected: Literal? = null
     override val selected: Literal
         get() = _selected ?: synchronized(model) {
@@ -62,5 +60,5 @@ internal class EntityOptionImpl<out P : EntityPrototype>(
 
     override val collisionBox: BoundingBox = computeCollisionBox(prototype, position, direction)
 
-    override fun toString(): String = "EntityOptionImpl(prototype=$prototype, position=$position, direction=$direction)gg"
+    override fun toString(): String = "EntityOptionImpl(prototype=$prototype, position=$position, direction=$direction)"
 }

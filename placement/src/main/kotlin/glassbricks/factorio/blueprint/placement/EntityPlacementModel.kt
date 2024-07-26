@@ -16,7 +16,7 @@ public class EntityPlacementModel {
     private val _placements: MutableSpatialDataStructure<EntityPlacement<*>> = DefaultSpatialDataStructure()
     public val placements: SpatialDataStructure<EntityPlacement<*>> get() = _placements
 
-    public fun placementIsPossible(placementInfo: Entity<*>): Boolean =
+    public fun canPlace(placementInfo: Entity<*>): Boolean =
         placements.getColliding(placementInfo).none { it is FixedEntity }
 
     public fun <P : EntityPrototype> addFixedEntity(entity: Entity<P>): EntityPlacement<P> =
@@ -29,7 +29,13 @@ public class EntityPlacementModel {
     ): EntityPlacement<P> = FixedEntity(cpModel, prototype, position, direction)
         .also { _placements.add(it) }
 
-    public fun <P : EntityPrototype> addPlacement(entity: Entity<P>, cost: Double = 1.0): EntityPlacementOption<P> =
+    public fun <P : EntityPrototype> addFixedEntities(entities: Iterable<Entity<P>>) {
+        for (entity in entities) {
+            addFixedEntity(entity)
+        }
+    }
+
+    public fun <P : EntityPrototype> addPlacement(entity: Entity<P>, cost: Double = 1.0): OptionalEntityPlacement<P> =
         addPlacement(
             entity.prototype,
             entity.position,
@@ -40,7 +46,7 @@ public class EntityPlacementModel {
     public fun <P : EntityPrototype> addPlacement(
         prototype: P, position: Position, direction: Direction
         = Direction.North, cost: Double = 1.0
-    ): EntityPlacementOption<P> =
+    ): OptionalEntityPlacement<P> =
         EntityOptionImpl(
             prototype,
             position,
@@ -50,8 +56,25 @@ public class EntityPlacementModel {
         )
             .also { _placements.add(it) }
 
-    public fun <P : EntityPrototype> addFixedEntities(entities: Iterable<Entity<P>>): List<EntityPlacement<P>> =
-        entities.map { addFixedEntity(it) }
+    public fun <P : EntityPrototype> addPlacementIfPossible(
+        entity: Entity<P>,
+        cost: Double = 1.0
+    ): OptionalEntityPlacement<P>? {
+        if (!canPlace(entity)) return null
+        return addPlacement(entity, cost)
+    }
+
+    public fun <P : EntityPrototype> addPlacementIfPossible(
+        prototype: P,
+        position: Position,
+        direction: Direction = Direction.North,
+        cost: Double = 1.0
+    ): OptionalEntityPlacement<P>? {
+        val option = EntityOptionImpl(prototype, position, direction, cost, cpModel)
+        if (!canPlace(option)) return null
+        _placements.add(option)
+        return option
+    }
 
 
     public fun removeAll(toRemove: Iterable<EntityPlacement<*>>) {
@@ -71,7 +94,7 @@ public class EntityPlacementModel {
 
     private fun setObjective() {
         val entities = placements
-            .filterIsInstance<EntityPlacementOption<*>>()
+            .filterIsInstance<OptionalEntityPlacement<*>>()
         val vars = entities
             .map { it.selected }
             .toTypedArray<Literal>()
@@ -131,7 +154,8 @@ public class EntityPlacementModel {
                             objectiveValue(),
                             bestObjectiveBound(),
                         ).joinToString("\t| ") {
-                            "%.4f".format(it).padEnd(11) }
+                            "%.4f".format(it).padEnd(11)
+                        }
                     )
                 }
             }
@@ -162,11 +186,11 @@ public class PlacementSolution(
         solver.booleanValue(placement.selected)
 
     @Suppress("UNCHECKED_CAST")
-    public fun getSelectedOptionalEntities(): List<EntityPlacementOption<*>> =
+    public fun getSelectedOptionalEntities(): List<OptionalEntityPlacement<*>> =
         model.placements.filter {
-            it is EntityPlacementOption<*> &&
+            it is OptionalEntityPlacement<*> &&
                     !it.isFixed && solver.booleanValue(it.selected)
-        } as List<EntityPlacementOption<*>>
+        } as List<OptionalEntityPlacement<*>>
 
     public fun getSelectedEntities(): List<EntityPlacement<*>> =
         model.placements.filter { solver.booleanValue(it.selected) }
@@ -185,7 +209,7 @@ public fun <P : EntityPrototype> EntityPlacementModel.getAllPossibleUnrotatedPla
                 prototype.tileSnappedPosition(tile),
             )
         }.filter {
-            it.collisionBox in boundsDouble && this.placementIsPossible(it)
+            it.collisionBox in boundsDouble && this.canPlace(it)
         }
     }.toList()
 }

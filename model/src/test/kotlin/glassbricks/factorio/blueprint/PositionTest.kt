@@ -1,8 +1,10 @@
 package glassbricks.factorio.blueprint
 
 import kotlinx.serialization.json.Json
+import kotlin.math.sin
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class PositionTest {
     @Test
@@ -98,7 +100,7 @@ class PositionTest {
     fun serialize() {
         val pos = pos(1.0, 2.0)
         val json = Json.encodeToString(Position.serializer(), pos)
-        assertEquals("""{"x":1,"y":2}""", json)
+        assertEquals("""[1,2]""", json)
         val deserialized = Json.decodeFromString(Position.serializer(), json)
         assertEquals(pos, deserialized)
     }
@@ -108,6 +110,46 @@ class PositionTest {
         assertEquals(TilePosition(1, 2), pos(1.0, 2.0).occupiedTile())
         assertEquals(TilePosition(2, 3), pos(2.9, 3.9).occupiedTile())
         assertEquals(TilePosition(-2, -3), pos(-1.9, -2.9).occupiedTile())
+    }
+
+    @Test
+    fun rotateCardinal() {
+        val pos = pos(1.0, 2.0)
+        assertEquals(pos, pos.rotateCardinal(Direction.North))
+        assertEquals(pos, pos.rotateCardinal(Direction.Northeast))
+        assertEquals(pos(-2.0, 1.0), pos.rotateCardinal(Direction.East))
+        assertEquals(pos(-2.0, 1.0), pos.rotateCardinal(Direction.Southeast))
+        assertEquals(pos(-1.0, -2.0), pos.rotateCardinal(Direction.South))
+        assertEquals(pos(-1.0, -2.0), pos.rotateCardinal(Direction.Southwest))
+        assertEquals(pos(2.0, -1.0), pos.rotateCardinal(Direction.West))
+        assertEquals(pos(2.0, -1.0), pos.rotateCardinal(Direction.Northwest))
+
+        val unitX = pos(1.0, 0.0)
+        assertEquals(unitX, unitX.rotateCardinal(Direction.North))
+        assertEquals(pos(0.0, 1.0), unitX.rotateCardinal(Direction.East))
+        assertEquals(pos(-1.0, 0.0), unitX.rotateCardinal(Direction.South))
+        assertEquals(pos(0.0, -1.0), unitX.rotateCardinal(Direction.West))
+        val unitY = pos(0.0, 1.0)
+        assertEquals(unitY, unitY.rotateCardinal(Direction.North))
+        assertEquals(pos(-1.0, 0.0), unitY.rotateCardinal(Direction.East))
+        assertEquals(pos(0.0, -1.0), unitY.rotateCardinal(Direction.South))
+        assertEquals(pos(1.0, 0.0), unitY.rotateCardinal(Direction.West))
+    }
+}
+
+class VectorTest {
+    @Test
+    fun rotate() {
+        val unitX = Vector(1.0, 0.0)
+        assertEquals(unitX, unitX.rotate(Direction.North))
+        assertEquals(Vector(0.0, 1.0), unitX.rotate(Direction.East))
+        assertEquals(Vector(-1.0, 0.0), unitX.rotate(Direction.South))
+        assertEquals(Vector(0.0, -1.0), unitX.rotate(Direction.West))
+        val sqrt2 = sin(Math.PI / 4)
+        assertTrue(Vector(sqrt2, sqrt2).closeTo(unitX.rotate(Direction.Northeast)))
+        assertTrue(Vector(-sqrt2, sqrt2).closeTo(unitX.rotate(Direction.Southeast)))
+        assertTrue(Vector(-sqrt2, -sqrt2).closeTo(unitX.rotate(Direction.Southwest)))
+        assertTrue(Vector(sqrt2, -sqrt2).closeTo(unitX.rotate(Direction.Northwest)))
     }
 }
 

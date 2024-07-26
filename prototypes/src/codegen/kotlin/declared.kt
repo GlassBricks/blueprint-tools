@@ -280,7 +280,7 @@ fun GeneratedPrototypesBuilder.getGeneratedClasses() {
         "ItemCountType" {}
 
         "Vector" {
-            overrideType(ClassName(PAR_PACKAGE_NAME, "Position"))
+            overrideType(ClassName(PAR_PACKAGE_NAME, "Vector"))
         }
         "MapPosition" {
             overrideType(ClassName(PAR_PACKAGE_NAME, "Position"))

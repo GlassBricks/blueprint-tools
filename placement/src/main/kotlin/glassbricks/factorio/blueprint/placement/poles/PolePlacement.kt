@@ -100,8 +100,9 @@ public class PolePlacements(
     public fun addConstraints() {
         if (constraintsAdded) return
         constraintsAdded = true
-        for ((_, poles) in poweringPoles) {
+        for ((entity, poles) in poweringPoles) {
             model.cpModel.addAtLeastOne(poles.map { it.selected })
+                .onlyEnforceIf(entity.selected)
         }
     }
 
@@ -136,7 +137,7 @@ public class PolePlacements(
  *
  * Considers existing poles ([FixedEntity]) as well.
  */
-public fun EntityPlacementModel.createPolePlacements(
+public fun EntityPlacementModel.addPolePlacements(
     polesToAdd: Iterable<ElectricPolePrototype>,
     bounds: TileBoundingBox,
     options: PolePlacementOptions = PolePlacementOptions()

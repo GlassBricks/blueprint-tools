@@ -1,20 +1,21 @@
 package scripts
 
-import glassbricks.factorio.blueprint.Vec2d
+import glassbricks.factorio.blueprint.Vector
 import glassbricks.factorio.blueprint.entity.ElectricPole
 import glassbricks.factorio.blueprint.entity.removeAllWithConnections
+import glassbricks.factorio.blueprint.entity.removeWithConnectionsIf
 import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.exportTo
 import glassbricks.factorio.blueprint.json.importBlueprint
 import glassbricks.factorio.blueprint.model.BlueprintModel
-import glassbricks.factorio.blueprint.placement.EntityPlacementModel
-import glassbricks.factorio.blueprint.placement.EntityPlacementOption
-import glassbricks.factorio.blueprint.placement.addDistanceCostFrom
+import glassbricks.factorio.blueprint.placement.*
 import glassbricks.factorio.blueprint.placement.poles.DistanceBasedConnectivity
 import glassbricks.factorio.blueprint.placement.poles.PolePlacementOptions
-import glassbricks.factorio.blueprint.placement.poles.createPolePlacements
+import glassbricks.factorio.blueprint.placement.poles.addPolePlacements
 import glassbricks.factorio.blueprint.placement.poles.euclidianDistancePlus
-import glassbricks.factorio.blueprint.placement.toEntity
+import glassbricks.factorio.blueprint.pos
+import glassbricks.factorio.blueprint.prototypes.FurnacePrototype
+import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 import glassbricks.factorio.scripts.drawEntities
 import glassbricks.factorio.scripts.drawHeatmap
 import glassbricks.factorio.scripts.drawingFor
@@ -32,49 +33,54 @@ val logger = KotlinLogging.logger {}
 suspend fun main(): Unit = coroutineScope {
     val projectRoot = File(".")
 
-    val inputBp = projectRoot.resolve("test-blueprints/base8.txt")
+    val inputBp = projectRoot.resolve("blueprints/triplegc.txt")
 
     val bp = BlueprintModel(importBlueprint(inputBp) as BlueprintJson)
     val entities = bp.entities
 
     val originalPoles = entities.filterIsInstance<ElectricPole>()
-    val polesCount = originalPoles.groupingBy { it.prototype }.eachCount()
-    for ((pole, count) in polesCount) {
-        println("${pole.name}: $count")
-    }
+    entities.removeAllWithConnections(originalPoles)
+//    val polesCount = originalPoles.groupingBy { it.prototype }.eachCount()
+//    for ((pole, count) in polesCount) {
+//        println("${pole.name}: $count")
+//    }
+//    val center = entities.enclosingBox().center()
 
     println("Setting up problem")
-    val center = entities.enclosingBox().center()
-    entities.removeAllWithConnections(
-        originalPoles.filter { it.prototype == smallPole }
-    )
 
     val model = EntityPlacementModel()
     model.addFixedEntities(entities)
 
-    val polePlacements = model.createPolePlacements(
-        listOf(
-            smallPole,
-//            mediumPole,
-        ),
+    val canNudge = model.placements.filterTo(mutableSetOf()) {
+        it.prototype is InserterPrototype
+    }
+    model.addEntityNudgingWithInserters(canNudge, nudgeCost = 0.0)
+
+    // todo: make this nicer
+    entities.removeWithConnectionsIf {
+        it.prototype is InserterPrototype
+    }
+
+    val polePlacements = model.addPolePlacements(
+        listOf(smallPole),
         entities.enclodingTileBox(),
         options = PolePlacementOptions(removeEmptyPolesReach1 = true)
     )
     polePlacements.poles.forEach {
-        if (it is EntityPlacementOption<*>) {
+        if (it is OptionalEntityPlacement<*>) {
             it.cost = if (it.prototype == smallPole) 1.0 else 4.0
         }
     }
+    drawEntities(model.placements)
+        .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-candidate").absolutePath)
 
     DistanceBasedConnectivity.fromExistingPolesOrPt(
         polePlacements,
-        relativePos = Vec2d(0.5, 0.5),
-        distanceMetric = euclidianDistancePlus(0.0),
+        relativePos = Vector(0.5, 0.5),
+        distanceMetric = euclidianDistancePlus(3.0),
     ).apply {
         addConstraints()
         launch {
-            drawEntities(model.placements)
-                .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-candidate").absolutePath)
             drawingFor(model.placements).apply {
                 drawEntities(model.placements.filter { it.isFixed })
                 drawHeatmap(distances.distances)
@@ -83,24 +89,27 @@ suspend fun main(): Unit = coroutineScope {
         }
     }
 
-    model.addDistanceCostFrom(center)
+    val bottom = entities.enclosingBox().let {
+        pos((it.minX + it.maxX) / 2, it.maxY)
+    }
+    model.addDistanceCostFrom(bottom)
 
     println("Solving")
     model.timeLimitInSeconds = TIME_LIMIT
     val result = model.solve()
     println("Solved: ${result.status}")
 
-    val selectedPoles = result.getSelectedOptionalEntities()
+    val selectedEntities = result.getSelectedOptionalEntities()
     val poleCounts =
-        selectedPoles.groupingBy { it.prototype }.eachCount()
+        selectedEntities.groupingBy { it.prototype }.eachCount()
     for ((pole, count) in poleCounts) {
         println("${pole.name}: $count")
     }
 
     println("Saving result")
 
-    for (pole in selectedPoles) {
-        entities.add(pole.toEntity())
+    for (entity in selectedEntities) {
+        entities.add(entity.toEntity())
     }
 
     launch {

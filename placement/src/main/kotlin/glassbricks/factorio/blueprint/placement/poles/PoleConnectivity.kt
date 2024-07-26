@@ -1,7 +1,7 @@
 package glassbricks.factorio.blueprint.placement.poles
 
 import glassbricks.factorio.blueprint.Position
-import glassbricks.factorio.blueprint.Vec2d
+import glassbricks.factorio.blueprint.Vector
 import glassbricks.factorio.blueprint.placement.CalculatedMapGraph
 import glassbricks.factorio.blueprint.placement.DijkstrasResult
 import glassbricks.factorio.blueprint.placement.dijkstras
@@ -58,7 +58,7 @@ public class DistanceBasedConnectivity(
         private fun getRootPolesNear(
             poles: PolePlacements,
             graph: CandidatePoleGraph,
-            relativePos: Vec2d
+            relativePos: Vector
         ): List<PolePlacement> {
             val boundingBox = poles.model.placements.enclosingBox()
             val centerPoint = boundingBox.leftTop + boundingBox.size.emul(relativePos)
@@ -86,7 +86,7 @@ public class DistanceBasedConnectivity(
 
         public fun fromAroundPt(
             poles: PolePlacements,
-            relativePos: Vec2d,
+            relativePos: Vector,
             distanceMetric: (PolePlacement, PolePlacement) -> Double = euclidianDistancePlus(0.0)
         ): DistanceBasedConnectivity {
             val poleGraph = poles.getPoleGraph(distanceMetric)
@@ -96,7 +96,7 @@ public class DistanceBasedConnectivity(
 
         public fun fromExistingPolesOrPt(
             poles: PolePlacements,
-            relativePos: Vec2d,
+            relativePos: Vector,
             distanceMetric: (PolePlacement, PolePlacement) -> Double = euclidianDistancePlus(0.0)
         ): DistanceBasedConnectivity {
             @Suppress("UNCHECKED_CAST")
@@ -123,4 +123,4 @@ private fun getMaximalClique(
     }
 }
 
-private fun Position.emul(other: Vec2d): Position = Position(x * other.x, y * other.y)
+private fun Position.emul(other: Vector): Position = Position(x * other.x, y * other.y)
