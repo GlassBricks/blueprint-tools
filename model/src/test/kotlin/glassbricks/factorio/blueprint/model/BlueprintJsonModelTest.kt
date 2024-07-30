@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.model
 
+import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.entity.entityFromJson
 import glassbricks.factorio.blueprint.entity.setEntitiesFrom
 import glassbricks.factorio.blueprint.json.*
@@ -46,7 +47,7 @@ class BlueprintJsonModelTest {
         removeEntityNumber(entity1)
         removeEntityNumber(entity2)
         if (entity1 != entity2) {
-            val toModelEntity = VanillaPrototypes.entityFromJson(entity1)
+            val toModelEntity = VanillaPrototypes.entityFromJson<BlueprintEntity>(entity1)
             println(toModelEntity)
         }
         assertEquals(entity1, entity2)

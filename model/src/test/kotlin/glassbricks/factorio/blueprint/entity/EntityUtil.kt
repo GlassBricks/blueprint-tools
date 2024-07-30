@@ -34,7 +34,7 @@ internal fun <T : BlueprintEntity> testSaveLoad(
     blueprint: BlueprintJson?,
 ): T {
     json.entity_number = EntityNumber(1)
-    val entity = VanillaPrototypes.entityFromJson(json, blueprint)
+    val entity = VanillaPrototypes.entityFromJson<BlueprintEntity>(json, blueprint)
     assertTrue(klass.isInstance(entity), "Expected $klass but got ${entity.javaClass}")
 
     assertEquals(

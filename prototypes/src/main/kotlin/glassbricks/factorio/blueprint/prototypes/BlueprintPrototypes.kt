@@ -20,7 +20,7 @@ public class BlueprintPrototypes(public val dataRaw: DataRaw) {
     /** Holds cost to place 1 of an entity. Only contains keys also present in [blueprintableEntities] */
     public val itemsToPlace: Map<EntityID, List<ItemToPlace>>
 
-    public inline fun <reified T : EntityWithOwnerPrototype> getPrototype(name: String): T {
+    public inline fun <reified T : EntityWithOwnerPrototype> get(name: String): T {
         return blueprintableEntities[name] as T
     }
 

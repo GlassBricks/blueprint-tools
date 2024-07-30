@@ -30,7 +30,7 @@ public class TileHashMap<T : Spatial> :
 
     private fun addInTileMap(element: T) {
         val tileBox = element.collisionBox.roundOutToTileBbox()
-        for (tile in tileBox.iterateTiles()) {
+        for (tile in tileBox) {
             byTile.getOrPut(tile, ::hashSetOf).add(element)
         }
     }
@@ -43,7 +43,7 @@ public class TileHashMap<T : Spatial> :
 
     private fun removeInTileMap(element: T) {
         val tileBox = element.collisionBox.roundOutToTileBbox()
-        for (tile in tileBox.iterateTiles()) {
+        for (tile in tileBox) {
             byTile[tile]?.let {
                 it.remove(element)
                 if (it.isEmpty()) byTile.remove(tile)
@@ -67,7 +67,7 @@ public class TileHashMap<T : Spatial> :
         byTile[tile]?.asSequence().orEmpty()
 
     override fun getInArea(area: TileBoundingBox): Sequence<T> =
-        area.iterateTiles().asSequence()
+        area.asSequence()
             .flatMap { getInTile(it) }
             .distinct()
 
@@ -90,8 +90,7 @@ public class TileHashMap<T : Spatial> :
     override fun occupiedTiles(): Iterable<TilePosition> = byTile.keys
 
     override fun getPosInCircle(center: Position, radius: Double): Sequence<T> =
-        BoundingBox.around(center, radius).roundOutToTileBbox()
-            .iterateTiles().asSequence()
+        BoundingBox.around(center, radius).roundOutToTileBbox().asSequence()
             .filter { canReachTile(it, center, radius) }
             .flatMap { tile ->
                 getInTile(tile).filter {

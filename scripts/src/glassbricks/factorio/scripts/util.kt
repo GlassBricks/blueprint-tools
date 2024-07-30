@@ -3,7 +3,7 @@ package glassbricks.factorio.scripts
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 
-val smallPole = VanillaPrototypes.getPrototype<ElectricPolePrototype>("small-electric-pole")
-val mediumPole = VanillaPrototypes.getPrototype<ElectricPolePrototype>("medium-electric-pole")
-val bigPole = VanillaPrototypes.getPrototype<ElectricPolePrototype>("big-electric-pole")
-val substation = VanillaPrototypes.getPrototype<ElectricPolePrototype>("substation")
+val smallPole = VanillaPrototypes.get<ElectricPolePrototype>("small-electric-pole")
+val mediumPole = VanillaPrototypes.get<ElectricPolePrototype>("medium-electric-pole")
+val bigPole = VanillaPrototypes.get<ElectricPolePrototype>("big-electric-pole")
+val substation = VanillaPrototypes.get<ElectricPolePrototype>("substation")

@@ -36,8 +36,3 @@ public interface Spatial {
         return collisionBox intersects other.collisionBox && collisionMask collidesWith other.collisionMask
     }
 }
-
-/**
- * Returns all tiles that are overlapped by the collision box of this spatial.
- */
-public fun Spatial.allOccupiedTiles(): Iterable<TilePosition> = collisionBox.roundOutToTileBbox().iterateTiles()

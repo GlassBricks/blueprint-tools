@@ -7,30 +7,30 @@ import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 
-public fun BlueprintPrototypes.entityFromJson(
+public inline fun <reified T : BlueprintEntity> BlueprintPrototypes.entityFromJson(
     json: EntityJson,
     blueprint: BlueprintJson? = null,
-): BlueprintEntity {
+): T {
     val prototype = this.blueprintableEntities[json.name] ?: UnknownPrototype(json.name)
-    return createEntity(prototype, json, blueprint)
+    return createEntity(prototype, json, blueprint) as T
 }
 
-public fun BlueprintPrototypes.createEntity(
+public inline fun <reified T : BlueprintEntity> BlueprintPrototypes.createEntity(
     name: String,
     position: Position,
     direction: Direction = Direction.North,
-): BlueprintEntity {
-    return entityFromJson(basicEntityJson(name, position, direction))
+): T {
+    return entityFromJson(basicEntityJson(name, position, direction)) as T
 }
 
-public fun BlueprintPrototypes.createTileSnappedEntity(
+public inline fun <reified T> BlueprintPrototypes.createTileSnappedEntity(
     name: String,
     topLeftTile: TilePosition,
     direction: Direction = Direction.North,
-): BlueprintEntity {
+): T {
     val prototype = this.blueprintableEntities[name] ?: UnknownPrototype(name)
     val position = prototype.tileSnappedPosition(topLeftTile, direction)
-    return createEntity(prototype, basicEntityJson(name, position, direction))
+    return createEntity(prototype, basicEntityJson(name, position, direction)) as T
 }
 
 public fun basicEntityJson(
@@ -43,7 +43,7 @@ public fun BlueprintPrototypes.entitiesFromJson(json: BlueprintJson): List<Bluep
     val jsonEntities = json.entities ?: return emptyList()
 
     val indexByEntityNumber = jsonEntities.indices.associateBy { jsonEntities[it].entity_number }
-    val entities = jsonEntities.map { entityFromJson(it, json) }
+    val entities = jsonEntities.map { entityFromJson<BlueprintEntity>(it, json) }
 
     // connect circuit wires and copper wires
     fun connectAtColor(

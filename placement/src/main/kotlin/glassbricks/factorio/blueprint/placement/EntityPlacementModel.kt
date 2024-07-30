@@ -29,10 +29,8 @@ class EntityPlacementModel {
     ): EntityPlacement<P> = FixedEntity(cpModel, prototype, position, direction)
         .also { _placements.add(it) }
 
-    fun <P : EntityPrototype> addFixedEntities(entities: Iterable<Entity<P>>) {
-        for (entity in entities) {
-            addFixedEntity(entity)
-        }
+    fun <P : EntityPrototype> addFixedEntities(entities: Iterable<Entity<P>>) : List<EntityPlacement<P>> {
+        return entities.map { addFixedEntity(it) }
     }
 
     fun <P : EntityPrototype> addPlacement(entity: Entity<P>, cost: Double = 1.0): OptionalEntityPlacement<P> =

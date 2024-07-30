@@ -9,8 +9,8 @@ import glassbricks.factorio.blueprint.json.exportTo
 import glassbricks.factorio.blueprint.json.importBlueprint
 import glassbricks.factorio.blueprint.model.BlueprintModel
 import glassbricks.factorio.blueprint.placement.*
+import glassbricks.factorio.blueprint.placement.ops.addEntityNudgingWithInserters
 import glassbricks.factorio.blueprint.placement.poles.*
-import glassbricks.factorio.blueprint.pos
 import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 import glassbricks.factorio.scripts.drawEntities
 import glassbricks.factorio.scripts.drawHeatmap

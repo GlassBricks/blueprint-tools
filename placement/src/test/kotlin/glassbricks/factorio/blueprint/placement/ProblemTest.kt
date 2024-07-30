@@ -3,6 +3,7 @@ package glassbricks.factorio.blueprint.placement
 import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.importBlueprint
 import glassbricks.factorio.blueprint.model.BlueprintModel
+import glassbricks.factorio.blueprint.placement.ops.addEntityNudgingWithInserters
 import glassbricks.factorio.blueprint.placement.poles.addPolePlacements
 import glassbricks.factorio.blueprint.prototypes.ContainerPrototype
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
@@ -10,7 +11,6 @@ import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 import org.junit.jupiter.api.Test
 import java.io.File
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ProblemTest {
     @Test

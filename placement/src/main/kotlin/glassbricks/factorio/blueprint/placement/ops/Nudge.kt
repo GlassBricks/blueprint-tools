@@ -1,8 +1,12 @@
-package glassbricks.factorio.blueprint.placement
+package glassbricks.factorio.blueprint.placement.ops
 
 import glassbricks.factorio.blueprint.Position
-import glassbricks.factorio.blueprint.defaultInsertPosition
-import glassbricks.factorio.blueprint.defaultPickupPosition
+import glassbricks.factorio.blueprint.globalInsertPosition
+import glassbricks.factorio.blueprint.globalPickupPosition
+import glassbricks.factorio.blueprint.placement.EntityPlacement
+import glassbricks.factorio.blueprint.placement.EntityPlacementModel
+import glassbricks.factorio.blueprint.placement.addBoolAndLenient
+import glassbricks.factorio.blueprint.placement.addExactlyOneLenient
 import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 import glassbricks.factorio.blueprint.tileBbox
 
@@ -30,8 +34,8 @@ fun EntityPlacementModel.addEntityNudgingWithInserters(
 
 
     val inserterLinks = inserters.associateWith { inserter ->
-        val pickup = inserter.defaultPickupPosition()
-        val dropoff = inserter.defaultInsertPosition()
+        val pickup = inserter.globalPickupPosition()
+        val dropoff = inserter.globalInsertPosition()
         val pickupEntity = placements.getAtPoint(pickup).firstOrNull()
         val dropoffEntity = placements.getAtPoint(dropoff).firstOrNull()
         InserterLinks(pickupEntity, dropoffEntity)
@@ -74,8 +78,8 @@ fun EntityPlacementModel.addEntityNudgingWithInserters(
         for (placement in newPlacements[inserter]!!) {
             @Suppress("UNCHECKED_CAST")
             placement as EntityPlacement<InserterPrototype>
-            enforceInserterLink(placement, placement.defaultPickupPosition(), pickupEntities)
-            enforceInserterLink(placement, placement.defaultInsertPosition(), insertEntities)
+            enforceInserterLink(placement, placement.globalPickupPosition(), pickupEntities)
+            enforceInserterLink(placement, placement.globalInsertPosition(), insertEntities)
         }
     }
 }

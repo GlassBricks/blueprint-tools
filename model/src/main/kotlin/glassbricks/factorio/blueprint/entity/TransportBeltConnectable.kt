@@ -10,6 +10,10 @@ public sealed interface TransportBeltConnectable : BlueprintEntity {
     override fun copyIsolated(): TransportBeltConnectable
 }
 
+public interface WithIoType {
+    public var ioType: IOType
+}
+
 public class TransportBelt(
     override val prototype: TransportBeltPrototype,
     json: EntityJson,
@@ -48,10 +52,10 @@ public class TransportBeltControlBehavior(
 public class UndergroundBelt(
     override val prototype: UndergroundBeltPrototype,
     json: EntityJson,
-) : BaseEntity(json), TransportBeltConnectable {
-    public var ioMode: IOType = json.type ?: IOType.Input
+) : BaseEntity(json), TransportBeltConnectable, WithIoType {
+    public override var ioType: IOType = json.type ?: IOType.Input
     override fun exportToJson(json: EntityJson) {
-        json.type = ioMode
+        json.type = ioType
     }
 
     override fun copyIsolated(): UndergroundBelt = UndergroundBelt(prototype, toDummyJson())
@@ -78,9 +82,9 @@ public class Loader(
     override val prototype: LoaderPrototype,
     json: EntityJson,
 ) : BaseEntity(json),
-    TransportBeltConnectable, WithItemFilters {
+    TransportBeltConnectable, WithItemFilters, WithIoType {
     public override val filters: Array<String?> = json.filters.toFilterArray(prototype.filter_count.toInt())
-    public var ioType: IOType = json.type ?: IOType.Input
+    public override var ioType: IOType = json.type ?: IOType.Input
 
     override fun exportToJson(json: EntityJson) {
         json.filters = filtersAsIndexList()
@@ -93,9 +97,9 @@ public class Loader(
 public class LinkedBelt(
     override val prototype: LinkedBeltPrototype,
     json: EntityJson,
-) : BaseEntity(json), TransportBeltConnectable {
+) : BaseEntity(json), TransportBeltConnectable, WithIoType {
     public var linkId: Int? = json.link_id
-    public var ioType: IOType = json.type ?: IOType.Input
+    public override var ioType: IOType = json.type ?: IOType.Input
     override fun exportToJson(json: EntityJson) {
         json.link_id = linkId
         json.type = ioType

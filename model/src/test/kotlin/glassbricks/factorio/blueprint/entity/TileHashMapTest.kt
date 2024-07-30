@@ -38,7 +38,7 @@ class Oracle : MutableSpatialDataStructure<SimpleSpatial>,
         asSequence().filter { it.collisionBox intersects other.collisionBox }
 
     override fun occupiedTiles(): Iterable<TilePosition> =
-        flatMapTo(hashSetOf()) { it.allOccupiedTiles().asSequence() }
+        flatMapTo(hashSetOf()) { it.collisionBox.roundOutToTileBbox().asSequence() }
 }
 
 class TileHashMapTest {
@@ -149,7 +149,7 @@ class TileHashMapTest {
     fun tileIsOccupied() {
         addRandom()
         removeHalf()
-        tileBbox(0, 0, bounds, bounds).iterateTiles().forEach {
+        tileBbox(0, 0, bounds, bounds).forEach {
             assertEquals(oracle.tileIsOccupied(it), testee.tileIsOccupied(it))
         }
     }
