@@ -109,7 +109,7 @@ public fun bbox(leftTop: Position, rightBottom: Position): BoundingBox = Boundin
 public data class TileBoundingBox(
     val leftTop: TilePosition,
     val rightBottomExclusive: TilePosition
-) {
+) : Collection<TilePosition>{
     public constructor(minX: Int, minY: Int, maxX: Int, maxY: Int) :
             this(TilePosition(minX, minY), TilePosition(maxX, maxY))
 
@@ -121,19 +121,24 @@ public data class TileBoundingBox(
     val width: Int get() = maxXExclusive - minX
     val height: Int get() = maxYExclusive - minY
 
-    public operator fun contains(tile: TilePosition): Boolean =
-        tile.x in minX..<maxXExclusive && tile.y in minY..<maxYExclusive
+    override operator fun contains(element: TilePosition): Boolean =
+        element.x in minX..<maxXExclusive && element.y in minY..<maxYExclusive
 
-    public fun iterateTiles(): Iterable<TilePosition> = Iterable {
-        object : Iterator<TilePosition> {
-            private var current = leftTop
-            override fun hasNext(): Boolean = current.y < maxYExclusive && current.x < maxXExclusive
-            override fun next(): TilePosition {
-                val result = current
-                current = if (current.x + 1 < maxXExclusive) TilePosition(current.x + 1, current.y)
-                else TilePosition(minX, current.y + 1)
-                return result
-            }
+    override val size: Int
+        get() = width * height
+
+    override fun containsAll(elements: Collection<TilePosition>): Boolean = elements.all { it in this }
+
+    override fun isEmpty(): Boolean = width == 0 || height == 0
+
+    override fun iterator(): Iterator<TilePosition> = object : Iterator<TilePosition> {
+        private var current = leftTop
+        override fun hasNext(): Boolean = current.y < maxYExclusive && current.x < maxXExclusive
+        override fun next(): TilePosition {
+            val result = current
+            current = if (current.x + 1 < maxXExclusive) TilePosition(current.x + 1, current.y)
+            else TilePosition(minX, current.y + 1)
+            return result
         }
     }
 }

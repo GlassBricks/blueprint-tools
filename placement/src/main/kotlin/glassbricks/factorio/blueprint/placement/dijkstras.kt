@@ -3,15 +3,15 @@ package glassbricks.factorio.blueprint.placement
 import java.util.*
 
 
-public class DijkstrasResult<N>(
-    public val distances: Map<N, Double>,
+class DijkstrasResult<N>(
+    val distances: Map<N, Double>,
 )
 
 private data class QueueEntry<N>(val node: N, val distance: Double) : Comparable<QueueEntry<N>> {
     override fun compareTo(other: QueueEntry<N>): Int = distance.compareTo(other.distance)
 }
 
-public fun <N> dijkstras(
+fun <N> dijkstras(
     graph: GraphLike<N>,
     startNodes: Iterable<N>
 ): DijkstrasResult<N> {

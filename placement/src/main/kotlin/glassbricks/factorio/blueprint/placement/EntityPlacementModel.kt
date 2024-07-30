@@ -10,32 +10,32 @@ import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 
 
-public class EntityPlacementModel {
-    public val cpModel: CpModel = CpModel()
-    public val solver: CpSolver = CpSolver()
+class EntityPlacementModel {
+    val cpModel: CpModel = CpModel()
+    val solver: CpSolver = CpSolver()
     private val _placements: MutableSpatialDataStructure<EntityPlacement<*>> = DefaultSpatialDataStructure()
-    public val placements: SpatialDataStructure<EntityPlacement<*>> get() = _placements
+    val placements: SpatialDataStructure<EntityPlacement<*>> get() = _placements
 
-    public fun canPlace(placementInfo: Entity<*>): Boolean =
+    fun canPlace(placementInfo: Entity<*>): Boolean =
         placements.getColliding(placementInfo).none { it is FixedEntity }
 
-    public fun <P : EntityPrototype> addFixedEntity(entity: Entity<P>): EntityPlacement<P> =
+    fun <P : EntityPrototype> addFixedEntity(entity: Entity<P>): EntityPlacement<P> =
         addFixedEntity(entity.prototype, entity.position, entity.direction)
 
-    public fun <P : EntityPrototype> addFixedEntity(
+    fun <P : EntityPrototype> addFixedEntity(
         prototype: P,
         position: Position,
         direction: Direction = Direction.North
     ): EntityPlacement<P> = FixedEntity(cpModel, prototype, position, direction)
         .also { _placements.add(it) }
 
-    public fun <P : EntityPrototype> addFixedEntities(entities: Iterable<Entity<P>>) {
+    fun <P : EntityPrototype> addFixedEntities(entities: Iterable<Entity<P>>) {
         for (entity in entities) {
             addFixedEntity(entity)
         }
     }
 
-    public fun <P : EntityPrototype> addPlacement(entity: Entity<P>, cost: Double = 1.0): OptionalEntityPlacement<P> =
+    fun <P : EntityPrototype> addPlacement(entity: Entity<P>, cost: Double = 1.0): OptionalEntityPlacement<P> =
         addPlacement(
             entity.prototype,
             entity.position,
@@ -43,7 +43,7 @@ public class EntityPlacementModel {
             cost
         )
 
-    public fun <P : EntityPrototype> addPlacement(
+    fun <P : EntityPrototype> addPlacement(
         prototype: P, position: Position, direction: Direction
         = Direction.North, cost: Double = 1.0
     ): OptionalEntityPlacement<P> =
@@ -56,7 +56,7 @@ public class EntityPlacementModel {
         )
             .also { _placements.add(it) }
 
-    public fun <P : EntityPrototype> addPlacementIfPossible(
+    fun <P : EntityPrototype> addPlacementIfPossible(
         entity: Entity<P>,
         cost: Double = 1.0
     ): OptionalEntityPlacement<P>? {
@@ -64,7 +64,7 @@ public class EntityPlacementModel {
         return addPlacement(entity, cost)
     }
 
-    public fun <P : EntityPrototype> addPlacementIfPossible(
+    fun <P : EntityPrototype> addPlacementIfPossible(
         prototype: P,
         position: Position,
         direction: Direction = Direction.North,
@@ -77,13 +77,13 @@ public class EntityPlacementModel {
     }
 
 
-    public fun removeAll(toRemove: Iterable<EntityPlacement<*>>) {
+    fun removeAll(toRemove: Iterable<EntityPlacement<*>>) {
         for (placement in toRemove) {
             remove(placement)
         }
     }
 
-    public fun remove(placement: EntityPlacement<*>): Boolean {
+    fun remove(placement: EntityPlacement<*>): Boolean {
         val remove = _placements.remove(placement)
         if (!remove) return false
         if (placement is EntityOptionImpl<*> && placement.selectedOrNull != null) {
@@ -95,9 +95,7 @@ public class EntityPlacementModel {
     private fun setObjective() {
         val entities = placements
             .filterIsInstance<OptionalEntityPlacement<*>>()
-        val vars = entities
-            .map { it.selected }
-            .toTypedArray<Literal>()
+        val vars = entities.map { it.selected }.toTypedArray()
         val costs = entities.map { it.cost }.toDoubleArray()
         cpModel.minimize(DoubleLinearExpr(vars, costs, 0.0))
     }
@@ -108,7 +106,7 @@ public class EntityPlacementModel {
      * - placeable-off-grid is ignored
      * - Collision masks are ignored (everything collides with everything)
      */
-    public fun addNonOverlappingConstraints() {
+    fun addNonOverlappingConstraints() {
         for (tile in placements.occupiedTiles()) {
             val entities = placements.getInTile(tile).toList()
             if (entities.any { it.isFixed }) {
@@ -122,14 +120,14 @@ public class EntityPlacementModel {
         }
     }
 
-    public var timeLimitInSeconds: Double
+    var timeLimitInSeconds: Double
         get() = solver.parameters.maxTimeInSeconds
         set(value) {
             solver.parameters.maxTimeInSeconds = value
         }
 
 
-    public fun solve(
+    fun solve(
         display: Boolean = true,
         useDefaults: Boolean = true,
     ): PlacementSolution {
@@ -170,38 +168,38 @@ public class EntityPlacementModel {
     }
 
 
-    public companion object {
+    companion object {
         init {
             Loader.loadNativeLibraries()
         }
     }
 }
 
-public class PlacementSolution(
-    public val model: EntityPlacementModel,
-    public val status: CpSolverStatus,
-    public val solver: CpSolver,
+class PlacementSolution(
+    val model: EntityPlacementModel,
+    val status: CpSolverStatus,
+    val solver: CpSolver,
 ) {
-    public operator fun contains(placement: EntityPlacement<*>): Boolean =
+    operator fun contains(placement: EntityPlacement<*>): Boolean =
         solver.booleanValue(placement.selected)
 
     @Suppress("UNCHECKED_CAST")
-    public fun getSelectedOptionalEntities(): List<OptionalEntityPlacement<*>> =
+    fun getSelectedOptionalEntities(): List<OptionalEntityPlacement<*>> =
         model.placements.filter {
             it is OptionalEntityPlacement<*> &&
                     !it.isFixed && solver.booleanValue(it.selected)
         } as List<OptionalEntityPlacement<*>>
 
-    public fun getSelectedEntities(): List<EntityPlacement<*>> =
+    fun getSelectedEntities(): List<EntityPlacement<*>> =
         model.placements.filter { solver.booleanValue(it.selected) }
 }
 
-public fun <P : EntityPrototype> EntityPlacementModel.getAllPossibleUnrotatedPlacements(
+fun <P : EntityPrototype> EntityPlacementModel.getAllPossibleUnrotatedPlacements(
     prototypes: Iterable<P>,
     bounds: TileBoundingBox,
 ): List<BasicEntity<P>> {
     val boundsDouble = bounds.toBoundingBox()
-    val tileBounds = bounds.iterateTiles().toList()
+    val tileBounds = bounds.toList()
     return prototypes.toSet().parallelStream().flatMap { prototype: P ->
         tileBounds.parallelStream().map { tile ->
             BasicEntity(

@@ -4,6 +4,7 @@ import glassbricks.factorio.blueprint.entity.Spatial
 import glassbricks.factorio.blueprint.prototypes.CollisionMask
 import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.effectiveCollisionMask
+import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 
 /**
  * Only holds the spatial properties of an entity, used for e.g. collision checks.
@@ -38,3 +39,6 @@ public open class BasicEntity<out P : EntityPrototype>(
     override val collisionBox: BoundingBox get() = computeCollisionBox(prototype, position, direction)
     override val isSimpleCollisionBox: Boolean get() = true
 }
+
+public fun <P : EntityPrototype> P.placedAtTile(position: TilePosition, direction: Direction = Direction.North): BasicEntity<P> =
+    BasicEntity(this, this.tileSnappedPosition(position), direction)

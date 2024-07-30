@@ -16,34 +16,34 @@ import kotlin.time.measureTimedValue
 
 private val logger = KotlinLogging.logger {}
 
-public typealias PolePlacement = EntityPlacement<ElectricPolePrototype>
+typealias PolePlacement = EntityPlacement<ElectricPolePrototype>
 
-public fun PolePlacement.toEntity(): ElectricPole = ElectricPole(prototype, basicEntityJson(prototype.name, position))
+fun PolePlacement.toEntity(): ElectricPole = ElectricPole(prototype, basicEntityJson(prototype.name, position))
 
 private fun PolePlacement.canConnectTo(other: PolePlacement): Boolean {
     val distance = minOf(this.prototype.maximum_wire_distance, other.prototype.maximum_wire_distance)
     return this.position.squaredDistanceTo(other.position) <= distance * distance
 }
 
-public class PolePlacementOptions(
+class PolePlacementOptions(
     /**
      * Remove poles that are not connected to anything, and don't connect to another pole that is connected to something.
      */
-    public var removeEmptyPolesReach1: Boolean = false,
+    var removeEmptyPolesReach1: Boolean = false,
     /** Automatically call [PolePlacements.addConstraints]. */
-    public var addToModel: Boolean = true
+    var addToModel: Boolean = true
 )
 
 /**
  * Handles constraints for to correctly placing poles/powering entities.
  */
-public class PolePlacements(
-    public val model: EntityPlacementModel,
+class PolePlacements(
+    val model: EntityPlacementModel,
     options: PolePlacementOptions = PolePlacementOptions()
 ) {
-    public val poles: Set<PolePlacement>
-    public val coveredEntities: Map<PolePlacement, List<EntityPlacement<*>>>
-    public val poweringPoles: Map<EntityPlacement<*>, List<PolePlacement>>
+    val poles: Set<PolePlacement>
+    val coveredEntities: Map<PolePlacement, List<EntityPlacement<*>>>
+    val poweringPoles: Map<EntityPlacement<*>, List<PolePlacement>>
 
     init {
         @Suppress("UNCHECKED_CAST")
@@ -97,7 +97,7 @@ public class PolePlacements(
 
 
     private var constraintsAdded = false
-    public fun addConstraints() {
+    fun addConstraints() {
         if (constraintsAdded) return
         constraintsAdded = true
         for ((entity, poles) in poweringPoles) {
@@ -108,7 +108,7 @@ public class PolePlacements(
 
 
     private var _neighborsMap: MutableMap<PolePlacement, MutableList<PolePlacement>>? = null
-    public val neighborsMap: Map<PolePlacement, List<PolePlacement>>
+    val neighborsMap: Map<PolePlacement, List<PolePlacement>>
         get() = _neighborsMap ?: computeNeighborsMap().also { _neighborsMap = it }
 
     private fun computeNeighborsMap(): HashMap<PolePlacement, MutableList<PolePlacement>> {
@@ -137,7 +137,7 @@ public class PolePlacements(
  *
  * Considers existing poles ([FixedEntity]) as well.
  */
-public fun EntityPlacementModel.addPolePlacements(
+fun EntityPlacementModel.addPolePlacements(
     polesToAdd: Iterable<ElectricPolePrototype>,
     bounds: TileBoundingBox,
     options: PolePlacementOptions = PolePlacementOptions()

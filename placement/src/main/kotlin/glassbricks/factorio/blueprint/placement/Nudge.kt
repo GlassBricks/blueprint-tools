@@ -13,7 +13,7 @@ private class InserterLinks(
 )
 
 // NOTE: does not handle custom blueprint pickup and dropoff positions
-public fun EntityPlacementModel.addEntityNudgingWithInserters(
+fun EntityPlacementModel.addEntityNudgingWithInserters(
     entitiesToNudge: Set<EntityPlacement<*>>,
     nudgeRange: Int = 2,
     nudgeCost: Double = 0.01
@@ -23,7 +23,6 @@ public fun EntityPlacementModel.addEntityNudgingWithInserters(
         require(entity.isFixed) { "Non-fixed entities not handled yet" }
     }
     val nudgeDistances = tileBbox(-nudgeRange, -nudgeRange, nudgeRange + 1, nudgeRange + 1)
-        .iterateTiles()
         .map { it.topLeftCorner() }
 
     @Suppress("UNCHECKED_CAST") val inserters =

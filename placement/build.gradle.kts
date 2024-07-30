@@ -22,5 +22,7 @@ tasks.test {
     useJUnitPlatform()
 }
 kotlin {
-    explicitApi()
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-receivers")
+    }
 }

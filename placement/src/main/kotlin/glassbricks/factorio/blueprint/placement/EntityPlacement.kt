@@ -13,21 +13,21 @@ import glassbricks.factorio.blueprint.prototypes.EntityPrototype
  *
  * @property cost The cost of using this option.
  */
-public interface EntityPlacement<out P : EntityPrototype> : Entity<P> {
-    public val selected: Literal
+interface EntityPlacement<out P : EntityPrototype> : Entity<P> {
+    val selected: Literal
 
     /** If this placement is forced to be used. */
-    public val isFixed: Boolean
+    val isFixed: Boolean
 }
 
-public interface OptionalEntityPlacement<out P : EntityPrototype> : EntityPlacement<P> {
+interface OptionalEntityPlacement<out P : EntityPrototype> : EntityPlacement<P> {
     /** The cost of using this option. */
-    public var cost: Double
+    var cost: Double
     override val isFixed: Boolean get() = false
 }
 
 
-public fun EntityPlacement<*>.toEntity(): BlueprintEntity =
+fun EntityPlacement<*>.toEntity(): BlueprintEntity =
     createEntity(prototype, basicEntityJson(prototype.name, position, direction))
 
 internal class FixedEntity<out P : EntityPrototype>(

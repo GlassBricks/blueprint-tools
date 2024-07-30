@@ -9,12 +9,8 @@ import glassbricks.factorio.blueprint.json.exportTo
 import glassbricks.factorio.blueprint.json.importBlueprint
 import glassbricks.factorio.blueprint.model.BlueprintModel
 import glassbricks.factorio.blueprint.placement.*
-import glassbricks.factorio.blueprint.placement.poles.DistanceBasedConnectivity
-import glassbricks.factorio.blueprint.placement.poles.PolePlacementOptions
-import glassbricks.factorio.blueprint.placement.poles.addPolePlacements
-import glassbricks.factorio.blueprint.placement.poles.euclidianDistancePlus
+import glassbricks.factorio.blueprint.placement.poles.*
 import glassbricks.factorio.blueprint.pos
-import glassbricks.factorio.blueprint.prototypes.FurnacePrototype
 import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 import glassbricks.factorio.scripts.drawEntities
 import glassbricks.factorio.scripts.drawHeatmap
@@ -26,7 +22,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 // in seconds
-private const val TIME_LIMIT = 90.0
+private const val TIME_LIMIT = 60.0
 
 val logger = KotlinLogging.logger {}
 
@@ -40,23 +36,22 @@ suspend fun main(): Unit = coroutineScope {
 
     val originalPoles = entities.filterIsInstance<ElectricPole>()
     entities.removeAllWithConnections(originalPoles)
-//    val polesCount = originalPoles.groupingBy { it.prototype }.eachCount()
-//    for ((pole, count) in polesCount) {
-//        println("${pole.name}: $count")
-//    }
-//    val center = entities.enclosingBox().center()
+    val polesCount = originalPoles.groupingBy { it.prototype }.eachCount()
+    for ((pole, count) in polesCount) {
+        println("${pole.name}: $count")
+    }
 
     println("Setting up problem")
 
     val model = EntityPlacementModel()
     model.addFixedEntities(entities)
 
+    // todo: make this nicer
     val canNudge = model.placements.filterTo(mutableSetOf()) {
         it.prototype is InserterPrototype
     }
     model.addEntityNudgingWithInserters(canNudge, nudgeCost = 0.0)
 
-    // todo: make this nicer
     entities.removeWithConnectionsIf {
         it.prototype is InserterPrototype
     }
@@ -74,10 +69,10 @@ suspend fun main(): Unit = coroutineScope {
     drawEntities(model.placements)
         .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-candidate").absolutePath)
 
-    DistanceBasedConnectivity.fromExistingPolesOrPt(
+    DistanceDAGConnectivity(
         polePlacements,
-        relativePos = Vector(0.5, 0.5),
-        distanceMetric = euclidianDistancePlus(3.0),
+        rootPoles = polePlacements.rootPolesFromExistingOrNear(Vector(0.5, 0.5)),
+        distanceMetric = favorPolesThatPowerMore(polePlacements)
     ).apply {
         addConstraints()
         launch {
@@ -89,10 +84,11 @@ suspend fun main(): Unit = coroutineScope {
         }
     }
 
-    val bottom = entities.enclosingBox().let {
-        pos((it.minX + it.maxX) / 2, it.maxY)
-    }
-    model.addDistanceCostFrom(bottom)
+//    val center = entities.enclosingBox().center()
+//    val bottom = entities.enclosingBox().let {
+//        pos((it.minX + it.maxX) / 2, it.maxY)
+//    }
+    model.addDistanceCostFrom(entities.enclosingBox().center())
 
     println("Solving")
     model.timeLimitInSeconds = TIME_LIMIT
