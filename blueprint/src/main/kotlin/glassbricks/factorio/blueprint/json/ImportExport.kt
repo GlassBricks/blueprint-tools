@@ -29,7 +29,7 @@ internal fun <T> importBlueprint(stream: InputStream, serializer: KSerializer<T>
     val firstChar = skipWhitespaceTillFirstChar(stream)
     if (firstChar != '0') throw SerializationException("Invalid version identifier: $firstChar")
     return stream
-        .let { Base64.getDecoder().wrap(it) }
+        .let { Base64.getMimeDecoder().wrap(it) }
         .let { InflaterInputStream(it) }
         .let {
             @OptIn(ExperimentalSerializationApi::class)

@@ -10,7 +10,7 @@ class AllPrototypesLoadedTest {
     fun `all prototypes are matched`() {
         val unknownKeys = VanillaPrototypes.blueprintableEntities.entries
             .filter {
-                VanillaPrototypes.createEntity<BlueprintEntity>(
+                VanillaPrototypes.createBpEntity<BlueprintEntity>(
                     name = it.key,
                     position = Position.ZERO
                 ) is UnknownEntity

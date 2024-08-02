@@ -3,7 +3,11 @@ package glassbricks.factorio.blueprint.placement.ops
 import glassbricks.factorio.blueprint.*
 import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.json.IOType
-import glassbricks.factorio.blueprint.prototypes.*
+import glassbricks.factorio.blueprint.placement.ops.ItemTransportGraph.Node
+import glassbricks.factorio.blueprint.prototypes.EntityPrototype
+import glassbricks.factorio.blueprint.prototypes.InserterPrototype
+import glassbricks.factorio.blueprint.prototypes.Loader1x1Prototype
+import glassbricks.factorio.blueprint.prototypes.Loader1x2Prototype
 
 // this class may be reused in the future for more complex things?
 
@@ -17,23 +21,6 @@ import glassbricks.factorio.blueprint.prototypes.*
 enum class LogisticsEdgeType {
     Inserter,
     Belt,
-}
-
-class Edge(
-    val from: Node,
-    val to: Node,
-    val type: LogisticsEdgeType
-)
-
-class Node(
-    val entity: BlueprintEntity,
-    val outEdges: MutableList<Edge>,
-    val inEdges: MutableList<Edge>
-) {
-    fun edgeTo(other: Node): Edge? = outEdges.find { it.to == other }
-    fun edgeFrom(other: Node): Edge? = inEdges.find { it.from == other }
-
-    override fun toString(): String = "Node(entity=${entity.name})"
 }
 
 class ItemTransportGraph(
@@ -51,9 +38,35 @@ class ItemTransportGraph(
         edge.from.outEdges.remove(edge)
         edge.to.inEdges.remove(edge)
     }
+
+    class Node(
+        val entity: BlueprintEntity,
+        val outEdges: MutableList<Edge>,
+        val inEdges: MutableList<Edge>
+    ) : Entity<EntityPrototype> by entity {
+        fun edgeTo(other: Node): Edge? = outEdges.find { it.to == other }
+        fun edgeFrom(other: Node): Edge? = inEdges.find { it.from == other }
+
+        fun inEdges(type: LogisticsEdgeType): List<Edge> = inEdges.filter { it.type == type }
+        fun outEdges(type: LogisticsEdgeType): List<Edge> = outEdges.filter { it.type == type }
+
+        fun isSideloaded(): Boolean = when (entity) {
+            is TransportBelt -> inEdges.count { it.type == LogisticsEdgeType.Belt } > 1
+            is UndergroundBelt -> inEdges.any { it.type == LogisticsEdgeType.Belt && it.from.entity.direction != this.entity.direction }
+            else -> false
+        }
+
+        override fun toString(): String = "Node(entity=$entity)"
+    }
+
+    class Edge(
+        val from: Node,
+        val to: Node,
+        val type: LogisticsEdgeType
+    )
 }
 
-fun getInserterBeltGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTransportGraph {
+fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTransportGraph {
     val nodes = mutableSetOf<Node>()
     val entityToNode = mutableMapOf<BlueprintEntity, Node>()
     val belts = mutableMapOf<TilePosition, Node>()
@@ -122,10 +135,7 @@ fun TransportBeltConnectable.canAcceptInputFrom(
     return when (this) {
         is TransportBelt, is UndergroundBelt -> direction != beltDirection.oppositeDirection()
         is LinkedBelt, is Splitter -> direction == beltDirection
-        is Loader -> {
-            if (prototype is Loader1x2Prototype) println("Warning: Loader1x2Prototype not handled properly yet")
-            direction == beltDirection
-        }
+        is Loader -> direction == beltDirection
     }
 }
 
@@ -151,7 +161,7 @@ fun UndergroundBelt.findForwardPair(entities: SpatialDataStructure<BlueprintEnti
     if (ioType != IOType.Input) return null
     val start = position.occupiedTile()
     for (i in 1..this.prototype.max_distance.toInt()) {
-        val tile = start.moveInDirection(direction, i)
+        val tile = start.shifted(direction, i)
         val ug = entities.getInTile(tile)
             .firstOrNull {
                 it is UndergroundBelt &&

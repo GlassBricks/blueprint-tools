@@ -56,7 +56,7 @@ public class Position private constructor(
     /**
      * Returns the tile position of the tile this position is in.
      */
-    public fun occupiedTile(): TilePosition = TilePosition(floor(x).toInt(), floor(y).toInt())
+    public fun occupiedTile(): TilePosition = TilePosition(floor(xAsInt / 256.0).toInt(), floor(y).toInt())
 
     public fun isZero(): Boolean = xAsInt == 0 && yAsInt == 0
 
@@ -125,6 +125,8 @@ public data class TilePosition(val x: Int, val y: Int) : Comparable<TilePosition
     public operator fun unaryMinus(): TilePosition = TilePosition(-x, -y)
     public operator fun unaryPlus(): TilePosition = TilePosition(x, y)
 
+    public fun shift(x: Int, y: Int): TilePosition = TilePosition(this.x + x, this.y + y)
+
     public fun squaredLength(): Int = x * x + y * y
     public fun length(): Double = sqrt(squaredLength().toDouble())
 
@@ -137,10 +139,13 @@ public data class TilePosition(val x: Int, val y: Int) : Comparable<TilePosition
     /** Gets the map position bounding box of this tile. */
     public fun mapBoundingBox(): BoundingBox = BoundingBox(pos(x.toDouble(), y.toDouble()), pos(x + 1.0, y + 1.0))
 
+    public fun manhattanDistanceTo(other: TilePosition): Int = (x - other.x).absoluteValue + (y - other.y).absoluteValue
+
     override fun compareTo(other: TilePosition): Int {
         val xComp = x.compareTo(other.x)
         return if (xComp != 0) xComp else y.compareTo(other.y)
     }
+
 
     public companion object {
         public val ZERO: TilePosition = TilePosition(0, 0)

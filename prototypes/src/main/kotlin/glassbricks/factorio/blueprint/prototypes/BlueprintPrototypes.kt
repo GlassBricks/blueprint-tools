@@ -20,9 +20,8 @@ public class BlueprintPrototypes(public val dataRaw: DataRaw) {
     /** Holds cost to place 1 of an entity. Only contains keys also present in [blueprintableEntities] */
     public val itemsToPlace: Map<EntityID, List<ItemToPlace>>
 
-    public inline fun <reified T : EntityWithOwnerPrototype> get(name: String): T {
-        return blueprintableEntities[name] as T
-    }
+    public inline fun <reified T : EntityWithOwnerPrototype> getAs(name: String): T = blueprintableEntities[name] as T
+    public operator fun get(name: String): EntityWithOwnerPrototype? = blueprintableEntities[name]
 
     init {
         val itemsToPlace = mutableMapOf<EntityID, List<ItemToPlace>>()

@@ -5,7 +5,7 @@ import com.google.ortools.sat.Literal
 import glassbricks.factorio.blueprint.*
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.entity.basicEntityJson
-import glassbricks.factorio.blueprint.entity.createEntity
+import glassbricks.factorio.blueprint.entity.createBpEntity
 import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 
 /**
@@ -28,7 +28,7 @@ interface OptionalEntityPlacement<out P : EntityPrototype> : EntityPlacement<P> 
 
 
 fun EntityPlacement<*>.toEntity(): BlueprintEntity =
-    createEntity(prototype, basicEntityJson(prototype.name, position, direction))
+    createBpEntity(prototype, basicEntityJson(prototype.name, position, direction))
 
 internal class FixedEntity<out P : EntityPrototype>(
     cpModel: CpModel,

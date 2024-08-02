@@ -15,14 +15,14 @@ class ItemTransportGraphTest {
         x: Int,
         y: Int,
         direction: Direction = Direction.North
-    ): TransportBelt = VanillaPrototypes.createEntity("transport-belt", tilePos(x, y).center(), direction)
+    ): TransportBelt = VanillaPrototypes.createBpEntity("transport-belt", tilePos(x, y).center(), direction)
 
     private fun inputUG(
         x: Int,
         y: Int,
         direction: Direction = Direction.North
     ): UndergroundBelt =
-        VanillaPrototypes.createEntity<UndergroundBelt>("underground-belt", tilePos(x, y).center(), direction)
+        VanillaPrototypes.createBpEntity<UndergroundBelt>("underground-belt", tilePos(x, y).center(), direction)
             .also { it.ioType = IOType.Input }
 
     private fun outputUg(
@@ -30,21 +30,22 @@ class ItemTransportGraphTest {
         y: Int,
         direction: Direction = Direction.North
     ): UndergroundBelt =
-        VanillaPrototypes.createEntity<UndergroundBelt>("underground-belt", tilePos(x, y).center(), direction)
+        VanillaPrototypes.createBpEntity<UndergroundBelt>("underground-belt", tilePos(x, y).center(), direction)
             .also { it.ioType = IOType.Output }
 
     private fun upwardsSplitter(x: Int, y: Int): Splitter =
-        VanillaPrototypes.createEntity("splitter", tilePos(x, y).center() + pos(0.5, 0.0), Direction.North)
+        VanillaPrototypes.createBpEntity("splitter", tilePos(x, y).center() + pos(0.5, 0.0), Direction.North)
 
     private fun testEntities(
         vararg entities: BlueprintEntity
-    ): Pair<ItemTransportGraph, List<Node>> {
-        val graph = getInserterBeltGraph(entities.asList().let(::DefaultSpatialDataStructure))
+    ): Pair<ItemTransportGraph, List<ItemTransportGraph.Node>> {
+        val graph = getItemTransportGraph(entities.asList().let(::DefaultSpatialDataStructure))
         return graph to entities.map { graph.entityToNode[it]!! }
     }
 
 
-    private fun testEntitiesSimple(vararg entities: BlueprintEntity): List<Node> = testEntities(*entities).second
+    private fun testEntitiesSimple(vararg entities: BlueprintEntity): List<ItemTransportGraph.Node> =
+        testEntities(*entities).second
 
     @Test
     fun `transport belt connects to another belt`() {
@@ -57,13 +58,25 @@ class ItemTransportGraphTest {
     }
 
     @Test
-    fun `transport connects to sideloaded belt`() {
+    fun `transport connects sideways belt`() {
         val (node1, node2) = testEntitiesSimple(
             belt(0, 0),
             belt(0, -1, Direction.East)
         )
         assertEquals(node1.edgeTo(node2)?.type, LogisticsEdgeType.Belt)
         assertEquals(node2.edgeFrom(node1)?.type, LogisticsEdgeType.Belt)
+    }
+
+    @Test
+    fun `sideloaded belt`() {
+        val (node1, node2) = testEntitiesSimple(
+            belt(0, 0),
+            belt(0, -1, Direction.East),
+            belt(-1, -1, Direction.East),
+        )
+        assertEquals(node1.edgeTo(node2)?.type, LogisticsEdgeType.Belt)
+        assertEquals(node2.edgeFrom(node1)?.type, LogisticsEdgeType.Belt)
+        assertTrue(node2.isSideloaded())
     }
 
     @Test
@@ -156,10 +169,10 @@ class ItemTransportGraphTest {
         x: Int,
         y: Int,
         direction: Direction = Direction.North
-    ): Inserter = VanillaPrototypes.createEntity("inserter", tilePos(x, y).center(), direction)
+    ): Inserter = VanillaPrototypes.createBpEntity("inserter", tilePos(x, y).center(), direction)
 
     @Test
-    fun `inserter grabbing from belt` () {
+    fun `inserter grabbing from belt`() {
         val (sourceBelt, inserter, destBelt) = testEntitiesSimple(
             belt(0, -1),
             inserter(0, 0),
@@ -171,5 +184,6 @@ class ItemTransportGraphTest {
         assertEquals(inserter.edgeFrom(sourceBelt)?.type, LogisticsEdgeType.Inserter)
         assertEquals(destBelt.edgeFrom(inserter)?.type, LogisticsEdgeType.Inserter)
     }
+
 
 }

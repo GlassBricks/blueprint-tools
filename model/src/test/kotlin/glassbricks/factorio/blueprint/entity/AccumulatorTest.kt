@@ -15,7 +15,7 @@ import kotlin.test.assertNotNull
 class AccumulatorTest {
     @Test
     fun `can load accumulator`() {
-        val prototype = VanillaPrototypes.get<AccumulatorPrototype>("accumulator")
+        val prototype = VanillaPrototypes.getAs<AccumulatorPrototype>("accumulator")
         assertNotNull(prototype.default_output_signal)
         val accumulator = testSaveLoad(Accumulator::class, "accumulator")
         assertEquals(prototype.default_output_signal, accumulator.controlBehavior.defaultOutputSignal)

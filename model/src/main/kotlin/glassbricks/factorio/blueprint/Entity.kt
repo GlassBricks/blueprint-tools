@@ -5,8 +5,6 @@ import glassbricks.factorio.blueprint.prototypes.CollisionMask
 import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.effectiveCollisionMask
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 
 /**
  * Only holds the spatial properties of an entity, used for e.g. collision checks.
@@ -25,7 +23,7 @@ public interface Entity<out P : EntityPrototype> : Spatial {
 
 public inline fun <reified P : EntityPrototype> Entity<*>.asEntity(): Entity<P>? {
     @Suppress("UNCHECKED_CAST")
-    if(prototype is P) return this as Entity<P>
+    if (prototype is P) return this as Entity<P>
     return null
 }
 
@@ -55,7 +53,7 @@ public open class BasicEntity<out P : EntityPrototype>(
     override val isSimpleCollisionBox: Boolean get() = true
 }
 
-public fun <P : EntityPrototype> P.placedAtTile(
+public fun <P : EntityPrototype> P.basicPlacedAtTile(
     position: TilePosition,
     direction: Direction = Direction.North
 ): BasicEntity<P> =

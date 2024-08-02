@@ -12,10 +12,10 @@ public inline fun <reified T : BlueprintEntity> BlueprintPrototypes.entityFromJs
     blueprint: BlueprintJson? = null,
 ): T {
     val prototype = this.blueprintableEntities[json.name] ?: UnknownPrototype(json.name)
-    return createEntity(prototype, json, blueprint) as T
+    return createBpEntity(prototype, json, blueprint) as T
 }
 
-public inline fun <reified T : BlueprintEntity> BlueprintPrototypes.createEntity(
+public inline fun <reified T : BlueprintEntity> BlueprintPrototypes.createBpEntity(
     name: String,
     position: Position,
     direction: Direction = Direction.North,
@@ -30,7 +30,7 @@ public inline fun <reified T> BlueprintPrototypes.createTileSnappedEntity(
 ): T {
     val prototype = this.blueprintableEntities[name] ?: UnknownPrototype(name)
     val position = prototype.tileSnappedPosition(topLeftTile, direction)
-    return createEntity(prototype, basicEntityJson(name, position, direction)) as T
+    return createBpEntity(prototype, basicEntityJson(name, position, direction)) as T
 }
 
 public fun basicEntityJson(

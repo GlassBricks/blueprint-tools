@@ -12,22 +12,22 @@ class EntityUtilsKtTest {
 
     @Test
     fun energySource() {
-        val prototype = VanillaPrototypes.get<InserterPrototype>("inserter")
+        val prototype = VanillaPrototypes.getAs<InserterPrototype>("inserter")
         assertTrue(prototype.energySource is ElectricEnergySource)
         assertTrue(prototype.usesElectricity)
 
-        val chest = VanillaPrototypes.get<ContainerPrototype>("wooden-chest")
+        val chest = VanillaPrototypes.getAs<ContainerPrototype>("wooden-chest")
         assertTrue(chest.energySource == null)
         assertFalse(chest.usesElectricity)
 
-        val furnace = VanillaPrototypes.get<FurnacePrototype>("stone-furnace")
+        val furnace = VanillaPrototypes.getAs<FurnacePrototype>("stone-furnace")
         assertTrue(furnace.energySource is BurnerEnergySource)
         assertFalse(furnace.usesElectricity)
     }
 
-    val entity1x1 = VanillaPrototypes.get<InserterPrototype>("inserter")
-    val entity2x2 = VanillaPrototypes.get<EntityWithOwnerPrototype>("stone-furnace")
-    val entity3x2 = VanillaPrototypes.get<BoilerPrototype>("boiler")
+    val entity1x1 = VanillaPrototypes.getAs<InserterPrototype>("inserter")
+    val entity2x2 = VanillaPrototypes.getAs<EntityWithOwnerPrototype>("stone-furnace")
+    val entity3x2 = VanillaPrototypes.getAs<BoilerPrototype>("boiler")
 
     @Test
     fun `effective tile width and height`() {

@@ -1,10 +1,13 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.Direction
+import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.prototypes.*
 
-public fun createEntity(
+public fun createBpEntity(
     prototype: EntityPrototype,
     source: EntityJson,
     blueprint: BlueprintJson? = null,
@@ -12,6 +15,26 @@ public fun createEntity(
     require(source.name == prototype.name) { "Mismatched entity name: ${source.name} != ${prototype.name}" }
     return getConstructorForPrototype(prototype)(prototype, source, blueprint)
 }
+
+public fun createBpEntity(
+    prototype: EntityPrototype,
+    position: Position,
+    direction: Direction = Direction.North,
+): BlueprintEntity = createBpEntity(
+    prototype,
+    basicEntityJson(prototype.name, position, direction),
+)
+
+@JvmName("createBpEntityExt")
+public fun EntityPrototype.createBpEntity(
+    position: Position,
+    direction: Direction = Direction.North,
+): BlueprintEntity = createBpEntity(this, position, direction)
+
+public fun EntityPrototype.placedAtTile(
+    position: TilePosition,
+    direction: Direction = Direction.North
+): BlueprintEntity = createBpEntity(this, this.tileSnappedPosition(position), direction)
 
 private typealias Constructor = (EntityPrototype, EntityJson, BlueprintJson?) -> BlueprintEntity
 

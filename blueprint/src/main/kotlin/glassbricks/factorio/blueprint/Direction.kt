@@ -41,7 +41,7 @@ public enum class Direction {
     public fun toPosVector(): Position = toTilePosVector().topLeftCorner()
 }
 
-public fun TilePosition.moveInDirection(direction: Direction, amt: Int = 1): TilePosition {
+public fun TilePosition.shifted(direction: Direction, amt: Int = 1): TilePosition {
     return when (direction) {
         Direction.North -> this + tilePos(0, -amt)
         Direction.Northeast -> this + tilePos(amt, -amt)
