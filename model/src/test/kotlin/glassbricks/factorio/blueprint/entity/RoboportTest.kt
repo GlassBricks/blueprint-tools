@@ -14,10 +14,22 @@ class RoboportTest {
                 read_robot_stats = true
             )
         }
-        assertEquals(defaultRead.controlBehavior.defaultAvailableLogisticSignal, defaultRead.controlBehavior.availableLogisticOutputSignal)
-        assertEquals(defaultRead.controlBehavior.defaultTotalLogisticSignal, defaultRead.controlBehavior.totalLogisticOutputSignal)
-        assertEquals(defaultRead.controlBehavior.defaultAvailableConstructionSignal, defaultRead.controlBehavior.availableConstructionOutputSignal)
-        assertEquals(defaultRead.controlBehavior.defaultTotalConstructionSignal, defaultRead.controlBehavior.totalConstructionOutputSignal)
+        assertEquals(
+            defaultRead.controlBehavior.defaultAvailableLogisticSignal,
+            defaultRead.controlBehavior.availableLogisticOutputSignal
+        )
+        assertEquals(
+            defaultRead.controlBehavior.defaultTotalLogisticSignal,
+            defaultRead.controlBehavior.totalLogisticOutputSignal
+        )
+        assertEquals(
+            defaultRead.controlBehavior.defaultAvailableConstructionSignal,
+            defaultRead.controlBehavior.availableConstructionOutputSignal
+        )
+        assertEquals(
+            defaultRead.controlBehavior.defaultTotalConstructionSignal,
+            defaultRead.controlBehavior.totalConstructionOutputSignal
+        )
 
         testSaveLoad(Roboport::class, "roboport", connectToNetwork = true) {
             control_behavior = ControlBehaviorJson(

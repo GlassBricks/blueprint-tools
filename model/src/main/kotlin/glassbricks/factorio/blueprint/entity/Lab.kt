@@ -12,7 +12,7 @@ public class Lab(
     override var itemRequests: Map<ItemPrototypeName, Int> = json.items.orEmpty()
 
     override fun exportToJson(json: EntityJson) {
-        if(itemRequests.isNotEmpty()) json.items = itemRequests
+        if (itemRequests.isNotEmpty()) json.items = itemRequests
     }
 
     override fun copyIsolated(): Lab = Lab(prototype, toDummyJson())

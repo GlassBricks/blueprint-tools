@@ -128,15 +128,19 @@ fun none(literals: Iterable<Literal>): Conjunction = all(literals.map { !it })
 
 @JvmName("anyDisjunctions")
 fun any(disjunctions: Iterable<Disjunction>): Disjunction = Disjunction(disjunctions.flatMap { it.literals })
+
 @JvmName("allConjunctions")
 fun all(disjunctions: Iterable<Disjunction>): CNF = CNF(disjunctions)
+
 @JvmName("noneConjunctions")
 fun none(disjunctions: Iterable<Disjunction>): Conjunction = all(disjunctions.map { !it })
 
 @JvmName("anyConjunctions")
 fun any(conjunctions: Iterable<Conjunction>): DNF = DNF(conjunctions)
+
 @JvmName("allConjunctions")
 fun all(conjunctions: Iterable<Conjunction>): Conjunction = Conjunction(conjunctions.flatMap { it.literals })
+
 @JvmName("noneConjunctions")
 fun none(conjunctions: Iterable<Conjunction>): Disjunction = any(conjunctions.map { !it })
 

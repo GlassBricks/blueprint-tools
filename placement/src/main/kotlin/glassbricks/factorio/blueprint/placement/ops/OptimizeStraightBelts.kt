@@ -279,14 +279,14 @@ fun optimizeBeltLines(
                     maxPrio = maxPrio.coerceAtLeast(prio + 1)
                     toRemove.add(line)
                     beltLinesByPrio.getOrPut(prio + 1) { mutableListOf() }.add(line)
-                    if(numConflicts >= maxConflictsPerAttempt) break
+                    if (numConflicts >= maxConflictsPerAttempt) break
                 } else {
                     addedEntities.addAll(thisLineEntities)
                 }
             }
             lines.removeAll(toRemove)
             prio++
-            if(numConflicts >= maxConflictsPerAttempt) break
+            if (numConflicts >= maxConflictsPerAttempt) break
         }
         if (numConflicts > 0) {
             entities.removeAll(addedEntities)

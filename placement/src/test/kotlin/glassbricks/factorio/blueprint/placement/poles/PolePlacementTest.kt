@@ -4,7 +4,6 @@ import glassbricks.factorio.blueprint.Entity
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.entity.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.placement.*
-import glassbricks.factorio.blueprint.placement.smallPole
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
 import glassbricks.factorio.blueprint.tilePos

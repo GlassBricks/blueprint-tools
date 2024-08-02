@@ -43,6 +43,7 @@ public interface SpatialDataStructure<out T : Spatial> : Collection<T> {
     public fun enclosingBox(): BoundingBox {
         return getEnclosingBox(map { it.collisionBox })
     }
+
     public fun enclodingTileBox(): TileBoundingBox = enclosingBox().roundOutToTileBbox()
 }
 

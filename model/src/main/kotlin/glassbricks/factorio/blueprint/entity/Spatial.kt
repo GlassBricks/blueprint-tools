@@ -1,6 +1,7 @@
 package glassbricks.factorio.blueprint.entity
 
-import glassbricks.factorio.blueprint.*
+import glassbricks.factorio.blueprint.BoundingBox
+import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.prototypes.CollisionMask
 
 

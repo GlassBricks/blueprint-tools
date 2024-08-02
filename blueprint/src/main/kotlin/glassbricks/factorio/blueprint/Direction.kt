@@ -38,6 +38,7 @@ public enum class Direction {
         West -> tilePos(-1, 0)
         Northwest -> tilePos(-1, -1)
     }
+
     public fun toPosVector(): Position = toTilePosVector().topLeftCorner()
 }
 

@@ -2,7 +2,7 @@ package glassbricks.factorio.blueprint.entity
 
 import kotlin.test.Test
 
-class LabTest{
+class LabTest {
     @Test
     fun `can load lab`() {
         testSaveLoad(Lab::class, "lab")

@@ -25,7 +25,7 @@ class ProblemTest {
         )
         model.addPolePlacements(listOf(smallPole), model.placements.enclodingTileBox())
 
-        val result  = model.solve()
+        val result = model.solve()
         val entities = result.getSelectedEntities()
         val poles = entities.filter { it.prototype is ElectricPolePrototype }
         val inserters = entities.filter { it.prototype is InserterPrototype }
@@ -34,20 +34,21 @@ class ProblemTest {
     }
 
     @Test
-    fun `test can nudge containers with inserters` () {
+    fun `test can nudge containers with inserters`() {
         val bp = BlueprintModel(importBlueprint(File("../test-blueprints/doublenudge.txt")) as BlueprintJson)
         val model = EntityPlacementModel()
         model.addFixedEntities(bp.entities)
         model.addEntityNudgingWithInserters(
             model.placements
-                .filter { it.prototype is InserterPrototype
-                        || it.prototype is ContainerPrototype
+                .filter {
+                    it.prototype is InserterPrototype
+                            || it.prototype is ContainerPrototype
                 }
                 .toSet()
         )
         model.addPolePlacements(listOf(smallPole), model.placements.enclodingTileBox())
 
-        val result  = model.solve()
+        val result = model.solve()
         val entities = result.getSelectedEntities()
         val poles = entities.filter { it.prototype is ElectricPolePrototype }
         val inserters = entities.filter { it.prototype is InserterPrototype }

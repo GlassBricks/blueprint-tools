@@ -109,7 +109,7 @@ public fun bbox(leftTop: Position, rightBottom: Position): BoundingBox = Boundin
 public data class TileBoundingBox(
     val leftTop: TilePosition,
     val rightBottomExclusive: TilePosition
-) : Collection<TilePosition>{
+) : Collection<TilePosition> {
     public constructor(minX: Int, minY: Int, maxX: Int, maxY: Int) :
             this(TilePosition(minX, minY), TilePosition(maxX, maxY))
 

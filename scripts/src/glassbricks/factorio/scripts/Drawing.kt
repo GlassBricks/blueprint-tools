@@ -54,7 +54,8 @@ private fun getEntityColor(entity: Spatial): Color {
             entity.prototype is ElectricPolePrototype -> Pallete.candidatePole
             else -> Pallete.otherCandidate
         }
-        entity is Entity<*> && entity.prototype is ElectricPolePrototype -> if(entity.prototype == smallPole) Pallete.smallPole else Pallete.otherPole
+
+        entity is Entity<*> && entity.prototype is ElectricPolePrototype -> if (entity.prototype == smallPole) Pallete.smallPole else Pallete.otherPole
         entity is Entity<*> && entity.prototype.usesElectricity -> Pallete.powerable
         else -> Pallete.other
     }

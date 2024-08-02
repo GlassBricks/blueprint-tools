@@ -14,6 +14,7 @@ public class Wall(
     override fun exportToJson(json: EntityJson) {
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
+
     override fun copyIsolated(): Wall = Wall(prototype, toDummyJson())
 }
 
