@@ -42,7 +42,7 @@ class EntityPlacementModelTest {
         val placement2 = model.addPlacement(smallPole, smallPole.tileSnappedPosition(tilePos(1, 0)))
         placement1.cost = 1.0
         placement2.cost = 2.0
-        model.cpModel.addBoolOr(listOf(placement1.selected, placement2.selected))
+        model.cp.addBoolOr(listOf(placement1.selected, placement2.selected))
 
         model.timeLimitInSeconds = 1.0
         val solution = model.solve()

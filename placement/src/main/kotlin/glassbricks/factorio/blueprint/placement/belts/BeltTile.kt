@@ -24,13 +24,13 @@ interface BeltTileVars : WithCp {
     val isInputUnderground: Disjunction
     val isOutputUnderground: Disjunction
 
-    val inputDirection: PerDirectionVars
+    val mainInputDirection: PerDirectionVars
     val outputDirection: PerDirectionVars
 
     /**
      * "virtual" underground belts that connect an input and output underground belt
      */
-    val hasUndergroundConnection: PerDirectionVars
+    val isUndergroundConnection: PerDirectionVars
 }
 
 fun BeltTileVars.isType(type: BeltType): Disjunction = when (type) {

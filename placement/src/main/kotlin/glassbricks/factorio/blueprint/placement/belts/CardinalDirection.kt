@@ -1,6 +1,8 @@
 package glassbricks.factorio.blueprint.placement.belts
 
+import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.placement.Literal
+import glassbricks.factorio.blueprint.placement.belts.CardinalDirection.*
 
 
 enum class CardinalDirection {
@@ -30,28 +32,35 @@ enum class CardinalDirection {
             South -> 1
             West -> 0
         }
+}
 
-    val vec get() = AsVec(this)
-
-    companion object {
-        fun fromOrdinal(ordinal: Int): CardinalDirection = entries[ordinal]
-    }
+fun TilePosition.shifted(direction: CardinalDirection, amt: Int = 1): TilePosition = when (direction) {
+    North -> add(0, -amt)
+    East -> add(amt, 0)
+    South -> add(0, amt)
+    West -> add(-amt, 0)
 }
 
 @JvmInline
-value class AsVec(private val direction: CardinalDirection) {
-    operator fun component1(): Int = direction.dx
-    operator fun component2(): Int = direction.dy
-}
-
-@JvmInline
-value class PerDirection<out T>(val values: Array<out T>) : Iterable<T> {
+value class PerDirection<out T>(val values: Array<out T>) : Collection<T> {
     init {
         require(values.size == 4) { "PerDirection must be initialized with 4 values" }
     }
 
     operator fun get(direction: CardinalDirection): T = values[direction.ordinal]
     override operator fun iterator(): Iterator<T> = values.iterator()
+
+    override val size: Int get() = 4
+    override fun isEmpty(): Boolean = false
+
+    override fun contains(element: @UnsafeVariance T): Boolean = values.contains(element)
+    override fun containsAll(elements: Collection<@UnsafeVariance T>): Boolean = elements.all { values.contains(it) }
+}
+
+inline fun <T> PerDirection(init: (CardinalDirection) -> T): PerDirection<T> {
+    val values = Array<Any?>(4) { init(entries[it]) }
+    @Suppress("UNCHECKED_CAST")
+    return PerDirection(values as Array<T>)
 }
 
 typealias PerDirectionVars = PerDirection<Literal>

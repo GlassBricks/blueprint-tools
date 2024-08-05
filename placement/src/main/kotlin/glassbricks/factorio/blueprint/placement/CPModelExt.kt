@@ -6,10 +6,6 @@ import com.google.ortools.sat.LinearExpr
 import com.google.ortools.sat.Literal as CPLiteral
 
 
-interface WithCp {
-    val cp: CpModel
-}
-
 interface Literal : CPLiteral, Conjunction, Disjunction {
     override operator fun not(): Literal
     override val literals: List<Literal> get() = listOf(this)
@@ -19,7 +15,7 @@ interface Literal : CPLiteral, Conjunction, Disjunction {
 
 class LiteralWrapper(private val literal: CPLiteral) : Literal {
     override fun build(): LinearExpr = literal.build()
-    override fun getIndex(): Int = literal.getIndex()
+    override fun getIndex(): Int = literal.index
     private var not: Literal? = null
     override fun not(): Literal = not ?: NotLiteral().also { this.not = it }
     private inner class NotLiteral : Literal {
@@ -85,41 +81,68 @@ private fun <T> Iterable<T>.asCollection(): Collection<T> = when (this) {
     else -> toList()
 }
 
-context(WithCp)
-fun DNF.implies(conjunction: Conjunction) {
-    for (disjunct in this.conjunctsToOr) {
-        val constraint = cp.addBoolAndLenient(conjunction.literals.asCollection())
-        for (literal in disjunct.literals) {
-            constraint.onlyEnforceIf(literal)
+interface WithCp {
+    val cp: CpModel
+
+    fun DNF.implies(conjunction: Conjunction) {
+        for (disjunct in this.conjunctsToOr) {
+            val constraint = cp.addBoolAndLenient(conjunction.literals.asCollection())
+            for (literal in disjunct.literals) {
+                constraint.onlyEnforceIf(literal)
+            }
         }
     }
-}
 
-// Uses quadratic constraints instead of Tseitin transformation, for better propagation?
-context(WithCp)
-fun DNF.implies(cnf: CNF) {
-    if (cnf is Conjunction) {
-        return implies(cnf)
-    }
-    // (a & b) | (c & d) => (e | f) & (g | h)
-    // ((!a | !b) & (!c | !d)) | (e | f) & (g | h)
-    // (!a | !b | e | f) & (!c | !d | e | f) & ...
-    for (disjunct in this.conjunctsToOr) {
-        val invLiterals = disjunct.literals.map { !it }
-        for (conjunct in cnf.disjunctsToAnd) {
-            cp.addBoolOr(invLiterals + conjunct.literals)
+    fun DNF.implies(cnf: CNF) {
+        if (cnf is Conjunction) {
+            return implies(cnf)
+        }
+        // (a & b) | (c & d) => (e | f) & (g | h)
+        // ((!a | !b) & (!c | !d)) | (e | f) & (g | h)
+        // (!a | !b | e | f) & (!c | !d | e | f) & ...
+        for (disjunct in this.conjunctsToOr) {
+            val invLiterals = disjunct.literals.map { !it }
+            for (conjunct in cnf.disjunctsToAnd) {
+                cp.addBoolOr(invLiterals + conjunct.literals)
+            }
         }
     }
-}
 
-context(WithCp)
-fun DNF.impliesAll(expressions: Iterable<CNF>) {
-    for (cnf in expressions) implies(cnf)
-}
+    fun DNF.impliesAll(expressions: Iterable<CNF>) {
+        for (cnf in expressions) implies(cnf)
+    }
 
-context(WithCp)
-fun DNF.impliesAll(vararg expressions: CNF) {
-    for (expression in expressions) implies(expression)
+    fun DNF.impliesAll(vararg expressions: CNF) {
+        for (expression in expressions) implies(expression)
+    }
+
+    fun Literal.setTrue() {
+        cp.addEquality(this, 1L)
+    }
+
+    fun Literal.setFalse() {
+        cp.addEquality(this, 0L)
+    }
+
+    fun setTrue(conjunction: Conjunction) {
+        cp.addBoolAndLenient(conjunction.literals.asCollection())
+    }
+
+    fun setTrue(disjunction: Disjunction) {
+        cp.addBoolOr(disjunction.literals.asCollection())
+    }
+
+    fun setTrue(cnf: CNF) {
+        for (el in cnf.disjunctsToAnd) when (el) {
+            is Literal -> el.setTrue()
+            is Conjunction -> setTrue(el as Conjunction)
+            else -> setTrue(el)
+        }
+    }
+
+    fun setAllTrue(vararg conditions: CNF) {
+        for (condition in conditions) setTrue(condition)
+    }
 }
 
 fun any(literals: Iterable<Literal>): Disjunction = Disjunction(literals)

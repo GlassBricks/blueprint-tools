@@ -49,7 +49,7 @@ fun EntityPlacementModel.addEntityNudgingWithInserters(
             addPlacementIfPossible(entity.prototype, newPosition, entity.direction, cost)
         }.also { placements ->
             require(placements.isNotEmpty()) { "No valid placements for $entity" }
-            cpModel.addExactlyOneLenient(placements.map { it.selected })
+            cp.addExactlyOneLenient(placements.map { it.selected })
         }
     }
 
@@ -62,11 +62,11 @@ fun EntityPlacementModel.addEntityNudgingWithInserters(
         if (linkEntities.isNullOrEmpty()) {
             val atPosSelected = atPos.mapTo(ArrayList()) { it.selected.not() }
             if (atPosSelected.isNotEmpty())
-                cpModel.addBoolAndLenient(atPosSelected, inserter.selected)
+                cp.addBoolAndLenient(atPosSelected, inserter.selected)
         } else {
             val validSelected = atPos.filter { it in linkEntities }
                 .mapTo(ArrayList()) { it.selected }
-            cpModel.addAtLeastOne(validSelected).onlyEnforceIf(inserter.selected)
+            cp.addAtLeastOne(validSelected).onlyEnforceIf(inserter.selected)
         }
     }
 

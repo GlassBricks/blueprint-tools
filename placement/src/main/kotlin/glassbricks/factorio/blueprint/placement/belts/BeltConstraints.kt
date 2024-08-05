@@ -1,37 +1,71 @@
 package glassbricks.factorio.blueprint.placement.belts
 
 import glassbricks.factorio.blueprint.placement.any
-import glassbricks.factorio.blueprint.placement.implies
-import glassbricks.factorio.blueprint.placement.impliesAll
 import glassbricks.factorio.blueprint.placement.none
 
-fun BeltTileVars.addBasicTileConstraints() {
-    cp.addExactlyOne(BeltType.entries.flatMap { isType(it).literals })
-    constrainInOut()
-    constrainUndergroundVars()
+@Suppress("unused")
+private fun handledType() {
+    val type: BeltType = null!!
+    when (type) {
+        BeltType.Empty -> {}
+        BeltType.Belt -> {}
+        BeltType.InputUnderground -> {}
+        BeltType.OutputUnderground -> {}
+    }
 }
 
-internal fun BeltTileVars.constrainInOut() {
-    isEmpty.implies(none(inputDirection + outputDirection))
-    isBelt.impliesAll(
-        any(inputDirection),
-        any(outputDirection)
+fun addBasicTileConstraints(tile: BeltTileVars, type: BeltTileType) {
+    tile.cp.addExactlyOne(
+        listOf(
+            listOf(tile.isEmpty, tile.isBelt),
+            tile.isInputUndergroundIn,
+            tile.isOutputUndergroundIn,
+        ).flatten()
     )
-    for (direction in CardinalDirection.entries) {
-        isInputUndergroundIn[direction].impliesAll(
-            inputDirection[direction],
-            none(outputDirection)
+    tile.constrainInOut(type)
+    tile.constrainUndergroundVars()
+}
+
+private fun BeltTileVars.constrainInOut(type: BeltTileType) {
+    cp.addAtMostOne(mainInputDirection)
+    cp.addAtMostOne(outputDirection)
+    isEmpty.implies(none(mainInputDirection + outputDirection))
+
+    when (type) {
+        BeltTileType.ConnectingBelt -> {
+            isBelt.impliesAll(
+                any(mainInputDirection),
+                any(outputDirection)
+            )
+            for (direction in CardinalDirection.entries) {
+                isInputUndergroundIn[direction].impliesAll(
+                    mainInputDirection[direction],
+                    none(outputDirection)
+                )
+                isOutputUndergroundIn[direction].impliesAll(
+                    outputDirection[direction],
+                    none(mainInputDirection)
+                )
+            }
+        }
+
+        BeltTileType.FixedInputBelt -> setAllTrue(
+            isBelt,
+            none(mainInputDirection),
+            any(outputDirection)
         )
-        isOutputUndergroundIn[direction].impliesAll(
-            outputDirection[direction],
-            none(inputDirection)
+
+        BeltTileType.FixedOutputSpot -> setAllTrue(
+            isBelt,
+            any(mainInputDirection),
+            none(outputDirection)
         )
     }
 }
 
-internal fun BeltTileVars.constrainUndergroundVars() {
+private fun BeltTileVars.constrainUndergroundVars() {
     // for each axis, only one direction of ug connections can be used
-    hasUndergroundConnection.let {
+    isUndergroundConnection.let {
         cp.addAtMostOne(listOf(it[CardinalDirection.North], it[CardinalDirection.South]))
         cp.addAtMostOne(listOf(it[CardinalDirection.East], it[CardinalDirection.West]))
     }
@@ -42,10 +76,51 @@ internal fun BeltTileVars.constrainUndergroundVars() {
             isOutputUndergroundIn[direction]
         ).implies(
             none(
-                hasUndergroundConnection[direction],
-                hasUndergroundConnection[direction.oppositeDir()]
+                isUndergroundConnection[direction],
+                isUndergroundConnection[direction.oppositeDir()]
             )
         )
     }
-    TODO("Complete this")
+}
+
+internal fun BeltGrid.enforceInOut() {
+    for ((pos, tile) in tiles) for (direction in CardinalDirection.entries) {
+        val forwardTile = getTileShifted(pos, direction) ?: emptyTile
+        // todo: handle sideloading here
+        cp.addEquality(tile.outputDirection[direction], forwardTile.mainInputDirection[direction])
+    }
+}
+
+internal fun BeltGrid.enforceUndergroundConnections() {
+    for ((pos, tile) in tiles) for (direction in CardinalDirection.entries) {
+        val forwardTile = getTileShifted(pos, direction) ?: emptyTile
+        any(
+            tile.isInputUndergroundIn[direction],
+            tile.isUndergroundConnection[direction]
+        ).implies(
+            any(
+                forwardTile.isOutputUndergroundIn[direction],
+                forwardTile.isUndergroundConnection[direction]
+            )
+        )
+        val backwardTile = getTileShifted(pos, direction.oppositeDir()) ?: emptyTile
+        any(
+            tile.isOutputUndergroundIn[direction],
+            tile.isUndergroundConnection[direction]
+        ).implies(
+            any(
+                backwardTile.isInputUndergroundIn[direction],
+                backwardTile.isUndergroundConnection[direction]
+            )
+        )
+    }
+}
+
+internal fun BeltGrid.enforceUndergroundMaxLength() {
+    for ((pos, tile) in tiles) for (direction in CardinalDirection.entries) {
+        val outUndergrounds = (1..undergroundMaxLength).mapNotNull {
+            getTileShifted(pos, direction, it)?.isOutputUndergroundIn?.get(direction)
+        }
+        tile.isInputUndergroundIn[direction].implies(any(outUndergrounds))
+    }
 }

@@ -10,8 +10,8 @@ import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 
 
-class EntityPlacementModel {
-    val cpModel: CpModel = CpModel()
+class EntityPlacementModel : WithCp {
+    override val cp: CpModel = CpModel()
     val solver: CpSolver = CpSolver()
     private val _placements: MutableSpatialDataStructure<EntityPlacement<*>> = DefaultSpatialDataStructure()
     val placements: SpatialDataStructure<EntityPlacement<*>> get() = _placements
@@ -26,7 +26,7 @@ class EntityPlacementModel {
         prototype: P,
         position: Position,
         direction: Direction = Direction.North
-    ): EntityPlacement<P> = FixedEntity(cpModel, prototype, position, direction)
+    ): EntityPlacement<P> = FixedEntity(cp, prototype, position, direction)
         .also { _placements.add(it) }
 
     fun <P : EntityPrototype> addFixedEntities(entities: Iterable<Entity<P>>): List<EntityPlacement<P>> {
@@ -50,7 +50,7 @@ class EntityPlacementModel {
             position,
             direction,
             cost,
-            cpModel
+            cp
         )
             .also { _placements.add(it) }
 
@@ -68,7 +68,7 @@ class EntityPlacementModel {
         direction: Direction = Direction.North,
         cost: Double = 1.0
     ): OptionalEntityPlacement<P>? {
-        val option = EntityOptionImpl(prototype, position, direction, cost, cpModel)
+        val option = EntityOptionImpl(prototype, position, direction, cost, cp)
         if (!canPlace(option)) return null
         _placements.add(option)
         return option
@@ -95,7 +95,7 @@ class EntityPlacementModel {
             .filterIsInstance<OptionalEntityPlacement<*>>()
         val vars = entities.map { it.selected }.toTypedArray()
         val costs = entities.map { it.cost }.toDoubleArray()
-        cpModel.minimize(DoubleLinearExpr(vars, costs, 0.0))
+        cp.minimize(DoubleLinearExpr(vars, costs, 0.0))
     }
 
     /**
@@ -110,10 +110,10 @@ class EntityPlacementModel {
             if (entities.any { it.isFixed }) {
                 for (entity in entities) {
                     if (!entity.isFixed)
-                        cpModel.addEquality(entity.selected, 0)
+                        cp.addEquality(entity.selected, 0)
                 }
             } else {
-                cpModel.addAtMostOne(entities.map { it.selected })
+                cp.addAtMostOne(entities.map { it.selected })
             }
         }
     }
@@ -157,7 +157,7 @@ class EntityPlacementModel {
             }
         }
         System.gc()
-        val status = solver.solve(cpModel, callback)
+        val status = solver.solve(cp, callback)
         return PlacementSolution(
             model = this,
             status = status,

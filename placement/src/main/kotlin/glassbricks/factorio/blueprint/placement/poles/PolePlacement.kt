@@ -101,7 +101,7 @@ class PolePlacements(
         if (constraintsAdded) return
         constraintsAdded = true
         for ((entity, poles) in poweringPoles) {
-            model.cpModel.addAtLeastOne(poles.map { it.selected })
+            model.cp.addAtLeastOne(poles.map { it.selected })
                 .onlyEnforceIf(entity.selected)
         }
     }

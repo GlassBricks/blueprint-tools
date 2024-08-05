@@ -59,7 +59,7 @@ class DistanceDAGConnectivity(
             }
             if (closerNeighbors.isEmpty()) continue
 
-            polePlacements.model.cpModel.addBoolOr(closerNeighbors.map { it.selected })
+            polePlacements.model.cp.addBoolOr(closerNeighbors.map { it.selected })
                 .onlyEnforceIf(pole.selected)
         }
     }
@@ -77,7 +77,7 @@ class DistanceLabelConnectivity(
     // might be rather slow... we'll see
     fun addConstraints() {
         val rootPoles = rootPoles.toSet()
-        val cp = polePlacements.model.cpModel
+        val cp = polePlacements.model.cp
         val poleDistanceVars = polePlacements.poles.associateWith {
             cp.newIntVar(0, maxPoleDistance, it.prototype.name)
         }

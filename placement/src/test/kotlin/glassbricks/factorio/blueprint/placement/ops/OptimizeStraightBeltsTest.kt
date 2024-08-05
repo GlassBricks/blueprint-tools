@@ -10,10 +10,7 @@ import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import glassbricks.factorio.blueprint.shifted
 import glassbricks.factorio.blueprint.tilePos
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class OptimizeStraightBeltsTest {
     private val belt: TransportBeltPrototype = VanillaPrototypes.getAs("transport-belt")
@@ -50,8 +47,7 @@ class OptimizeStraightBeltsTest {
             originalEntities = emptySet(),
             beltPrototype = belt,
             ugPrototype = ugBelt,
-            beltCost = 1.0,
-            ugCost = ugRelCost,
+            costs = BeltCosts(mapOf(belt to 1.0, ugBelt to ugRelCost))
         )
         return entities to line
     }
@@ -65,7 +61,7 @@ class OptimizeStraightBeltsTest {
         isUgOutput: Boolean = false
     ): String {
         val (entities, line) = createBeltLine(inStr, ugRelCost, startPos, direction, isUgInput, isUgOutput)
-        assertTrue(optimizeBeltLineAndAdd(entities, line))
+        assertNotNull(optimizeBeltLineAndAdd(entities, line, null))
         return getBeltsAsStr(entities, startPos, direction, inStr.length)
     }
 
@@ -222,14 +218,11 @@ class OptimizeStraightBeltsTest {
         assertEquals(Direction.East, line.direction)
         assertFalse(line.isUgInput)
         assertFalse(line.isUgOutput)
-        assertEquals(2.5, line.ugCost)
         assertTrue(line.mustNotBeEmpty.isEmpty())
         assertTrue(line.originalEntities.size == 4)
         assertTrue(line.originalEntities.all { it is TransportBeltConnectable })
         assertEquals(belt, line.beltPrototype)
         assertEquals(ugBelt, line.ugPrototype)
-        assertEquals(1.0, line.beltCost)
-        assertEquals(2.5, line.ugCost)
     }
 
     @Test

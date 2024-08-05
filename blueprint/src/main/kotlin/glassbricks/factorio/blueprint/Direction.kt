@@ -42,15 +42,13 @@ public enum class Direction {
     public fun toPosVector(): Position = toTilePosVector().topLeftCorner()
 }
 
-public fun TilePosition.shifted(direction: Direction, amt: Int = 1): TilePosition {
-    return when (direction) {
-        Direction.North -> this + tilePos(0, -amt)
-        Direction.Northeast -> this + tilePos(amt, -amt)
-        Direction.East -> this + tilePos(amt, 0)
-        Direction.Southeast -> this + tilePos(amt, amt)
-        Direction.South -> this + tilePos(0, amt)
-        Direction.Southwest -> this + tilePos(-amt, amt)
-        Direction.West -> this + tilePos(-amt, 0)
-        Direction.Northwest -> this + tilePos(-amt, -amt)
-    }
+public fun TilePosition.shifted(direction: Direction, amt: Int = 1): TilePosition = when (direction) {
+    Direction.North -> add(0, -amt)
+    Direction.Northeast -> add(amt, -amt)
+    Direction.East -> add(amt, 0)
+    Direction.Southeast -> add(amt, amt)
+    Direction.South -> add(0, amt)
+    Direction.Southwest -> add(-amt, amt)
+    Direction.West -> add(-amt, 0)
+    Direction.Northwest -> add(-amt, -amt)
 }

@@ -125,7 +125,7 @@ public data class TilePosition(val x: Int, val y: Int) : Comparable<TilePosition
     public operator fun unaryMinus(): TilePosition = TilePosition(-x, -y)
     public operator fun unaryPlus(): TilePosition = TilePosition(x, y)
 
-    public fun shift(x: Int, y: Int): TilePosition = TilePosition(this.x + x, this.y + y)
+    public fun add(x: Int, y: Int): TilePosition = TilePosition(this.x + x, this.y + y)
 
     public fun squaredLength(): Int = x * x + y * y
     public fun length(): Double = sqrt(squaredLength().toDouble())
