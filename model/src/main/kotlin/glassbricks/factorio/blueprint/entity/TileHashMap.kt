@@ -7,12 +7,10 @@ import kotlin.math.min
 /**
  * An implementation of [SpatialDataStructure] that hashes entities into the tiles they occupy.
  */
-public class TileHashMap<T : Spatial> :
+public open class TileHashMap<T : Spatial> :
     AbstractMutableCollection<T>(), MutableSpatialDataStructure<T> {
-    private val entities = hashSetOf<T>()
-    private val byTile = hashMapOf<TilePosition, HashSet<T>>()
-
-    public fun byTile(): Map<TilePosition, Set<T>> = byTile
+    protected val entities: HashSet<T> = hashSetOf()
+    protected val byTile: HashMap<TilePosition, HashSet<T>> = hashMapOf()
 
     override val size: Int get() = entities.size
     override fun contains(element: T): Boolean = entities.contains(element)
@@ -28,7 +26,7 @@ public class TileHashMap<T : Spatial> :
         return true
     }
 
-    private fun addInTileMap(element: T) {
+    protected open fun addInTileMap(element: T) {
         val tileBox = element.collisionBox.roundOutToTileBbox()
         for (tile in tileBox) {
             byTile.getOrPut(tile, ::hashSetOf).add(element)
@@ -41,7 +39,7 @@ public class TileHashMap<T : Spatial> :
         return true
     }
 
-    private fun removeInTileMap(element: T) {
+    protected open fun removeInTileMap(element: T) {
         val tileBox = element.collisionBox.roundOutToTileBbox()
         for (tile in tileBox) {
             byTile[tile]?.let {
@@ -85,10 +83,6 @@ public class TileHashMap<T : Spatial> :
             .filter { it collidesWith other }
     }
 
-    override fun tileIsOccupied(tile: TilePosition): Boolean = tile in byTile
-
-    override fun occupiedTiles(): Iterable<TilePosition> = byTile.keys
-
     override fun getPosInCircle(center: Position, radius: Double): Sequence<T> =
         BoundingBox.around(center, radius).roundOutToTileBbox().asSequence()
             .filter { canReachTile(it, center, radius) }
@@ -98,14 +92,115 @@ public class TileHashMap<T : Spatial> :
                             && center.squaredDistanceTo(it.position) <= radius * radius
                 }
             }
+
+    override fun tileIsOccupied(tile: TilePosition): Boolean = tile in byTile
+
+    override fun occupiedTiles(): Set<TilePosition> = byTile.keys
+
+    private fun canReachTile(
+        tile: TilePosition,
+        center: Position,
+        radius: Double
+    ): Boolean {
+        val xDist = min(abs(center.x - tile.x), abs(center.x - (tile.x + 1)))
+        val yDist = min(abs(center.y - tile.y), abs(center.y - (tile.y + 1)))
+        return xDist * xDist + yDist * yDist <= radius * radius
+    }
+
 }
 
-private fun canReachTile(
-    tile: TilePosition,
-    center: Position,
-    radius: Double
-): Boolean {
-    val xDist = min(abs(center.x - tile.x), abs(center.x - (tile.x + 1)))
-    val yDist = min(abs(center.y - tile.y), abs(center.y - (tile.y + 1)))
-    return xDist * xDist + yDist * yDist <= radius * radius
+public class WrappingTileHashMap<T : Spatial>(
+    public val wrappingSize: TilePosition,
+) : TileHashMap<T>() {
+    private fun TilePosition.wrap(): TilePosition =
+        TilePosition(x.mod(wrappingSize.x), y.mod(wrappingSize.y))
+
+    private fun TileBoundingBox.wrap(): TileBoundingBox {
+        val coversX = width >= wrappingSize.x
+        val coversY = height >= wrappingSize.y
+        return if (coversX) {
+            if (coversY) TileBoundingBox(TilePosition.ZERO, wrappingSize)
+            else TileBoundingBox(0, minY, wrappingSize.x, maxYExclusive)
+        } else {
+            if (coversY) TileBoundingBox(minX, 0, maxXExclusive, wrappingSize.y)
+            else this
+        }
+    }
+
+    private fun Position.wrap(): Position =
+        Position(x.mod(wrappingSize.x.toDouble()), y.mod(wrappingSize.y.toDouble()))
+
+    override fun addInTileMap(element: T) {
+        val tileBox = element.collisionBox.roundOutToTileBbox().wrap()
+        for (tile in tileBox) byTile.getOrPut(tile.wrap(), ::hashSetOf).add(element)
+    }
+
+    override fun removeInTileMap(element: T) {
+        val tileBox = element.collisionBox.roundOutToTileBbox().wrap()
+        for (tile in tileBox) {
+            byTile[tile.wrap()]?.let {
+                it.remove(element)
+                if (it.isEmpty()) byTile.remove(tile.wrap())
+            }
+        }
+    }
+
+    override fun getInTile(tile: TilePosition): Sequence<T> = byTile[tile.wrap()]?.asSequence().orEmpty()
+
+    override fun getInArea(area: BoundingBox): Sequence<T> {
+        TODO()
+    }
+
+    override fun getInArea(area: TileBoundingBox): Sequence<T> =
+        area.wrap().asSequence().flatMap { getInTile(it) }.distinct()
+
+    override fun getAtPoint(position: Position): Sequence<T> {
+        TODO()
+    }
+
+    override fun getColliding(other: Spatial): Sequence<T> {
+        TODO()
+    }
+
+    override fun getPosInCircle(center: Position, radius: Double): Sequence<T> {
+        val centerW = center.wrap()
+        return BoundingBox.around(centerW, radius)
+            .roundOutToTileBbox().wrap()
+            .asSequence()
+            .filter { canReachTileWrapped(it, centerW, radius) }
+            .flatMap { tile ->
+                getInTile(tile).filter {
+                    tile == it.position.occupiedTile().wrap()
+                            && center.squaredDistanceTo(it.position) <= radius * radius
+                }
+            }
+    }
+
+    private fun distanceWrapped(
+        a: Double,
+        b: Int,
+        wrapLen: Int
+    ): Double {
+        if (b > a) {
+            return min(b - a, a + wrapLen - b)
+        }
+        return min(a - b, b + wrapLen - a)
+    }
+
+
+    private fun canReachTileWrapped(
+        tile: TilePosition,
+        center: Position,
+        radius: Double
+    ): Boolean {
+        val xDist = minOf(
+            distanceWrapped(center.x, tile.x, wrappingSize.x),
+            distanceWrapped(center.x, tile.x + 1, wrappingSize.x)
+        )
+        val yDist = minOf(
+            distanceWrapped(center.y, tile.y, wrappingSize.y),
+            distanceWrapped(center.y, tile.y + 1, wrappingSize.y)
+        )
+        return xDist * xDist + yDist * yDist <= radius * radius
+    }
 }

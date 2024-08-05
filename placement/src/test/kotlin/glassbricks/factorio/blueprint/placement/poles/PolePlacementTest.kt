@@ -81,7 +81,7 @@ class PolePlacementTest {
         val fixedPlacements = model.addFixedEntities(entities)
         val polePlacements = model.addPolePlacements(
             polesToAdd = listOf(smallPole),
-            bounds = entities.enclodingTileBox(),
+            bounds = entities.enclosingTileBox(),
             options = PolePlacementOptions(removeEmptyPolesReach1 = true)
         )
         assertEquals(9, model.placements.size)

@@ -78,7 +78,7 @@ suspend fun main(): Unit = coroutineScope {
 
         val polePlacements = model.addPolePlacements(
             listOf(smallPole),
-            entities.enclodingTileBox(),
+            entities.enclosingTileBox(),
             options = PolePlacementOptions(removeEmptyPolesReach1 = true)
         )
         polePlacements.poles.forEach {
@@ -100,7 +100,7 @@ suspend fun main(): Unit = coroutineScope {
                 launch {
                     drawingFor(model.placements).apply {
                         drawEntities(model.placements.filter { it.isFixed })
-                        drawHeatmap(distances.distances)
+                        drawHeatmap(distances)
                         saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-distances").absolutePath)
                     }
                 }

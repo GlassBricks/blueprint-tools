@@ -3,7 +3,6 @@ package glassbricks.factorio.blueprint.placement.poles
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.Vector
 import glassbricks.factorio.blueprint.placement.CalculatedMapGraph
-import glassbricks.factorio.blueprint.placement.DijkstrasResult
 import glassbricks.factorio.blueprint.placement.dijkstras
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -30,32 +29,34 @@ fun favorPolesThatPowerMore(
     euclidianDistance / (aNeighbors + bNeighbors + 5)
 }
 
-class DistanceDAGConnectivity(
-    private val polePlacements: PolePlacements,
+fun DistanceDAGConnectivity(
+    polePlacements: PolePlacements,
     rootPoles: List<PolePlacement>,
     distanceMetric: DistanceMetric
-) {
-    private val poleGraph = polePlacements.getPoleGraph(distanceMetric)
-
-    init {
-        require(rootPoles.isNotEmpty()) {
-            "Adding connectivity constraints without any root poles is the same as not adding any constraints"
-        }
+): DistanceDAGConnectivity {
+    require(rootPoles.isNotEmpty()) {
+        "Adding connectivity constraints without any root poles is the same as not adding any constraints"
     }
+    val poleGraph = polePlacements.getPoleGraph(distanceMetric)
+    val distances = dijkstras(poleGraph, rootPoles).distances
+    if (poleGraph.nodes.any { it !in distances }) {
+        logger.warn { "Not all poles are reachable from the root poles" }
+    }
+    return DistanceDAGConnectivity(polePlacements, distances)
+}
 
-    val distances: DijkstrasResult<PolePlacement> = dijkstras(poleGraph, rootPoles)
+class DistanceDAGConnectivity(
+    val polePlacements: PolePlacements,
+    val distances: Map<PolePlacement, Double>,
+) {
     fun addConstraints() {
-        if (poleGraph.nodes.any { it !in distances.distances }) {
-            logger.warn { "Not all poles are reachable from the root poles" }
-        }
-
         logger.info { "Adding connectivity constraints" }
 
         for (pole in polePlacements.poles) {
-            val distance = distances.distances[pole] ?: continue
+            val distance = distances[pole] ?: continue
             if (distance == 0.0) continue
-            val closerNeighbors = poleGraph.neighborsOf(pole).filter { neighbor ->
-                distances.distances[neighbor].let { it != null && it < distance }
+            val closerNeighbors = polePlacements.neighborsMap[pole]!!.filter { neighbor ->
+                distances[neighbor].let { it != null && it < distance }
             }
             if (closerNeighbors.isEmpty()) continue
 

@@ -23,7 +23,7 @@ class ProblemTest {
                 .filter { it.prototype is InserterPrototype }
                 .toSet()
         )
-        model.addPolePlacements(listOf(smallPole), model.placements.enclodingTileBox())
+        model.addPolePlacements(listOf(smallPole), model.placements.enclosingTileBox())
 
         val result = model.solve()
         val entities = result.getSelectedEntities()
@@ -46,7 +46,7 @@ class ProblemTest {
                 }
                 .toSet()
         )
-        model.addPolePlacements(listOf(smallPole), model.placements.enclodingTileBox())
+        model.addPolePlacements(listOf(smallPole), model.placements.enclosingTileBox())
 
         val result = model.solve()
         val entities = result.getSelectedEntities()

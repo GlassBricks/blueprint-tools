@@ -40,11 +40,9 @@ public interface SpatialDataStructure<out T : Spatial> : Collection<T> {
     /**
      * Gets the minimal size bounding box to enclose all entities.
      */
-    public fun enclosingBox(): BoundingBox {
-        return getEnclosingBox(map { it.collisionBox })
-    }
+    public fun enclosingBox(): BoundingBox = getEnclosingBox(map { it.collisionBox })
 
-    public fun enclodingTileBox(): TileBoundingBox = enclosingBox().roundOutToTileBbox()
+    public fun enclosingTileBox(): TileBoundingBox = enclosingBox().roundOutToTileBbox()
 }
 
 public interface MutableSpatialDataStructure<T : Spatial> : SpatialDataStructure<T>, MutableCollection<T> {
