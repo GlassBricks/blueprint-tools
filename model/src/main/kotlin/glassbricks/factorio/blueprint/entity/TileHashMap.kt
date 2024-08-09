@@ -154,20 +154,18 @@ public class WrappingTileHashMap<T : Spatial>(
     override fun getInArea(area: TileBoundingBox): Sequence<T> =
         area.wrap().asSequence().flatMap { getInTile(it) }.distinct()
 
-    override fun getAtPoint(position: Position): Sequence<T> {
-        TODO()
-    }
+    // todo
+    // override fun getAtPoint(position: Position): Sequence<T>
 
-    override fun getColliding(other: Spatial): Sequence<T> {
-        TODO()
-    }
+    // todo
+    // override fun getColliding(other: Spatial): Sequence<T> {
 
     override fun getPosInCircle(center: Position, radius: Double): Sequence<T> {
         val centerW = center.wrap()
         return BoundingBox.around(centerW, radius)
             .roundOutToTileBbox().wrap()
             .asSequence()
-            .filter { canReachTileWrapped(it, centerW, radius) }
+            .filter { canReachTileWrapped(it.wrap(), centerW, radius, wrappingSize) }
             .flatMap { tile ->
                 getInTile(tile).filter {
                     tile == it.position.occupiedTile().wrap()
@@ -176,31 +174,4 @@ public class WrappingTileHashMap<T : Spatial>(
             }
     }
 
-    private fun distanceWrapped(
-        a: Double,
-        b: Int,
-        wrapLen: Int
-    ): Double {
-        if (b > a) {
-            return min(b - a, a + wrapLen - b)
-        }
-        return min(a - b, b + wrapLen - a)
-    }
-
-
-    private fun canReachTileWrapped(
-        tile: TilePosition,
-        center: Position,
-        radius: Double
-    ): Boolean {
-        val xDist = minOf(
-            distanceWrapped(center.x, tile.x, wrappingSize.x),
-            distanceWrapped(center.x, tile.x + 1, wrappingSize.x)
-        )
-        val yDist = minOf(
-            distanceWrapped(center.y, tile.y, wrappingSize.y),
-            distanceWrapped(center.y, tile.y + 1, wrappingSize.y)
-        )
-        return xDist * xDist + yDist * yDist <= radius * radius
-    }
 }

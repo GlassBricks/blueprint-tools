@@ -22,11 +22,12 @@ fun euclidianDistancePlus(amt: Double): DistanceMetric = { a, b ->
 
 fun favorPolesThatPowerMore(
     polePlacements: PolePlacements,
+    divFactor: Double = 5.0
 ): DistanceMetric = { a, b ->
     val aNeighbors = polePlacements.coveredEntities[a]?.size ?: 0
     val bNeighbors = polePlacements.coveredEntities[b]?.size ?: 0
     val euclidianDistance = a.position.distanceTo(b.position)
-    euclidianDistance / (aNeighbors + bNeighbors + 5)
+    euclidianDistance / (aNeighbors + bNeighbors + divFactor)
 }
 
 fun DistanceDAGConnectivity(
@@ -67,7 +68,7 @@ class DistanceDAGConnectivity(
 }
 
 /**
- * More exact connectivity guarantees than the DAG version, but is exponentially slower.
+ * More optimal guarantees than DAG version, but is exponentially slower.
  * Only recommended for very small problems when the heuristics of [DistanceDAGConnectivity] is not enough.
  */
 class DistanceLabelConnectivity(
@@ -75,7 +76,6 @@ class DistanceLabelConnectivity(
     private val rootPoles: Iterable<PolePlacement>,
     private val maxPoleDistance: Long = 500,
 ) {
-    // might be rather slow... we'll see
     fun addConstraints() {
         val rootPoles = rootPoles.toSet()
         val cp = polePlacements.model.cp
@@ -102,17 +102,21 @@ class DistanceLabelConnectivity(
     }
 }
 
-fun PolePlacements.getRootPolesNear(relativePos: Vector): List<PolePlacement> {
+fun PolePlacements.getRootPolesNearRel(relativePos: Vector): List<PolePlacement> {
     val boundingBox = model.placements.enclosingBox()
     val centerPoint = boundingBox.leftTop + boundingBox.size.emul(relativePos)
-    return model.placements.getPosInCircle(centerPoint, 8.0)
+    return getRootPolesNearPoint(centerPoint)
+}
+
+fun PolePlacements.getRootPolesNearPoint(point: Position): List<PolePlacement> {
+    return model.placements.getPosInCircle(point, 8.0)
         .filter { it.prototype is ElectricPolePrototype }
         .toMutableList()
         .let {
             @Suppress("UNCHECKED_CAST")
             it as MutableList<PolePlacement>
         }
-        .apply { sortBy { it.position.squaredDistanceTo(centerPoint) } }
+        .apply { sortBy { it.position.squaredDistanceTo(point) } }
         .let { getMaximalClique(this, it) }
 }
 
@@ -124,7 +128,7 @@ fun PolePlacements.getExistingPoles(): List<PolePlacement> {
 
 fun PolePlacements.rootPolesFromExistingOrNear(relativePos: Vector): List<PolePlacement> {
     return getExistingPoles().ifEmpty {
-        getRootPolesNear(relativePos)
+        getRootPolesNearRel(relativePos)
     }
 }
 

@@ -1,5 +1,6 @@
 package scripts
 
+import glassbricks.factorio.blueprint.Entity
 import glassbricks.factorio.blueprint.Vector
 import glassbricks.factorio.blueprint.entity.ElectricPole
 import glassbricks.factorio.blueprint.entity.removeAllWithConnections
@@ -8,14 +9,12 @@ import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.exportTo
 import glassbricks.factorio.blueprint.json.importBlueprint
 import glassbricks.factorio.blueprint.model.BlueprintModel
-import glassbricks.factorio.blueprint.placement.EntityPlacementModel
-import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
-import glassbricks.factorio.blueprint.placement.addDistanceCostFrom
+import glassbricks.factorio.blueprint.placement.*
 import glassbricks.factorio.blueprint.placement.ops.BeltCosts
 import glassbricks.factorio.blueprint.placement.ops.addEntityNudgingWithInserters
 import glassbricks.factorio.blueprint.placement.ops.optimizeBeltLinesInBp
 import glassbricks.factorio.blueprint.placement.poles.*
-import glassbricks.factorio.blueprint.placement.toEntity
+import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import glassbricks.factorio.scripts.drawEntities
@@ -30,9 +29,9 @@ import java.io.File
 private const val TIME_LIMIT = 60.0
 
 val projectRoot = File(".")
-val inputBp = projectRoot.resolve("blueprints/for-belt-opt.txt")
+private val inputBp = projectRoot.resolve("blueprints/refineries.txt")
 
-val optimizeBelts: BeltCosts? = BeltCosts(
+val optimizeBelts: BeltCosts = BeltCosts(
     mapOf(
         VanillaPrototypes["transport-belt"]!! to 1.0,
         VanillaPrototypes["underground-belt"]!! to 2.4,
@@ -41,8 +40,8 @@ val optimizeBelts: BeltCosts? = BeltCosts(
 )
 val nudgeInserters = false
 
-val optimizePoles = false
-val poleConnectivity: PoleConnectivity? = PoleConnectivity.Distance
+val optimizePoles = true
+val poleConnectivity: PoleConnectivity = PoleConnectivity.Distance
 val addDistanceCost = true
 
 enum class PoleConnectivity { Distance, Label }
@@ -76,11 +75,13 @@ suspend fun main(): Unit = coroutineScope {
             entities.removeWithConnectionsIf { it.prototype is InserterPrototype }
         }
 
-        val polePlacements = model.addPolePlacements(
-            listOf(smallPole),
-            entities.enclosingTileBox(),
-            options = PolePlacementOptions(removeEmptyPolesReach1 = true)
-        )
+        val allPoles: MutableList<Entity<ElectricPolePrototype>> =
+            model.getAllPossibleUnrotatedPlacements(listOf(smallPole), entities.enclosingTileBox())
+                .toMutableList()
+        for (pole in allPoles) {
+            model.addPlacement(pole)
+        }
+        val polePlacements = PolePlacements(model, PolePlacementOptions(removeEmptyPolesReach1 = true))
         polePlacements.poles.forEach {
             if (it is OptionalEntityPlacement<*>) {
                 it.cost = if (it.prototype == smallPole) 1.0 else 4.0

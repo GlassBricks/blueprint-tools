@@ -10,10 +10,11 @@ import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 
 
-class EntityPlacementModel : WithCp {
+class EntityPlacementModel(
+    private val _placements: MutableSpatialDataStructure<EntityPlacement<*>> = DefaultSpatialDataStructure()
+) : WithCp {
     override val cp: CpModel = CpModel()
     val solver: CpSolver = CpSolver()
-    private val _placements: MutableSpatialDataStructure<EntityPlacement<*>> = DefaultSpatialDataStructure()
     val placements: SpatialDataStructure<EntityPlacement<*>> get() = _placements
 
     fun canPlace(placementInfo: Entity<*>): Boolean =
@@ -178,6 +179,8 @@ class PlacementSolution(
     val status: CpSolverStatus,
     val solver: CpSolver,
 ) {
+    val isOk: Boolean get() = status == CpSolverStatus.OPTIMAL || status == CpSolverStatus.FEASIBLE
+
     operator fun contains(placement: EntityPlacement<*>): Boolean =
         solver.booleanValue(placement.selected)
 
