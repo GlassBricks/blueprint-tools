@@ -29,9 +29,12 @@ enum class CardinalDirection {
 value class Axis private constructor(val isNorthSouth: Boolean) {
     val isEastWest: Boolean get() = !isNorthSouth
 
+    override fun toString(): String = if (isNorthSouth) "NorthSouth" else "EastWest"
+
     companion object {
         val NorthSouth get() = Axis(true)
         val EastWest get() = Axis(false)
+        val values = arrayOf(NorthSouth, EastWest)
     }
 }
 

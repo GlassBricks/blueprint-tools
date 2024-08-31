@@ -17,8 +17,8 @@ internal class CellConfigImpl : CellConfig, MutableCellBeltConfig {
 
     private var isLineStart: Boolean = false
     private var isLineEnd: Boolean = false
-    override val propagatesIdForward: Boolean get() = !isLineEnd
-    override val propagatesIdBackward: Boolean get() = !isLineStart
+    override val propagatesForward: Boolean get() = !isLineEnd
+    override val propagatesBackward: Boolean get() = !isLineStart
 
     private var forcedDirection: CardinalDirection? = null
         set(value) {
@@ -40,8 +40,9 @@ internal class CellConfigImpl : CellConfig, MutableCellBeltConfig {
     override fun addOption(
         direction: CardinalDirection,
         beltType: BeltType,
-        lineId: BeltLineId
+        lineId: BeltLineId,
     ) {
+        require(lineId != 0) { "Line ID must be non-zero" }
         beltOptions.getOrPut(direction) { MultiMap() }.add(beltType, lineId)
     }
 
@@ -52,7 +53,7 @@ internal class CellConfigImpl : CellConfig, MutableCellBeltConfig {
 
     override fun makeLineEnd(
         direction: CardinalDirection,
-        lineId: BeltLineId
+        lineId: BeltLineId,
     ) {
         isLineEnd = true
         forceNonEmpty(direction, lineId)
@@ -60,7 +61,7 @@ internal class CellConfigImpl : CellConfig, MutableCellBeltConfig {
 
     override fun forceNonEmpty(
         direction: CardinalDirection,
-        lineId: BeltLineId
+        lineId: BeltLineId,
     ) {
         forcedDirection = direction
         forcedBeltId = lineId
@@ -69,7 +70,7 @@ internal class CellConfigImpl : CellConfig, MutableCellBeltConfig {
     override fun forceAs(
         direction: CardinalDirection,
         lineId: BeltLineId,
-        beltType: BeltType
+        beltType: BeltType,
     ) {
         forcedDirection = direction
         forcedBeltId = lineId

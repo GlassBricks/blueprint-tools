@@ -6,6 +6,7 @@ import glassbricks.factorio.blueprint.placement.MultiMap
 import glassbricks.factorio.blueprint.prototypes.TransportBeltPrototype
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -16,6 +17,13 @@ private val ug get() = VanillaPrototypes.getAs<UndergroundBeltPrototype>("underg
 
 class CellBeltConfigTest {
     val cell = CellConfig().belt
+
+    @Test
+    fun testCantAddId0() {
+        assertThrows<IllegalArgumentException> {
+            cell.addOption(CardinalDirection.North, BeltType.Belt(belt), 0)
+        }
+    }
 
     @Test
     fun testCanAddOption() {
@@ -43,8 +51,8 @@ class CellBeltConfigTest {
         assertEquals<Map<CardinalDirection, Map<out BeltType, Set<BeltLineId>>>>(
             mapOf(CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1))), options
         )
-        assertTrue(cell.propagatesIdForward)
-        assertFalse(cell.propagatesIdBackward)
+        assertTrue(cell.propagatesForward)
+        assertFalse(cell.propagatesBackward)
         assertFalse(cell.canBeEmpty)
     }
 
@@ -60,8 +68,8 @@ class CellBeltConfigTest {
         assertEquals<Map<CardinalDirection, Map<out BeltType, Set<BeltLineId>>>>(
             mapOf(CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1))), options
         )
-        assertFalse(cell.propagatesIdForward)
-        assertTrue(cell.propagatesIdBackward)
+        assertFalse(cell.propagatesForward)
+        assertTrue(cell.propagatesBackward)
         assertFalse(cell.canBeEmpty)
     }
 
@@ -79,8 +87,8 @@ class CellBeltConfigTest {
             mapOf(CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1))), options
         )
 
-        assertFalse(cell.propagatesIdForward)
-        assertFalse(cell.propagatesIdBackward)
+        assertFalse(cell.propagatesForward)
+        assertFalse(cell.propagatesBackward)
         assertFalse(cell.canBeEmpty)
     }
 
@@ -110,10 +118,10 @@ class CellBeltVarsTest {
             ), options
         )
         assertEquals(vars.canBeEmpty, cell.belt.canBeEmpty)
-        assertEquals(vars.propagatesIdForward, cell.belt.propagatesIdForward)
-        assertEquals(vars.propagatesIdBackward, cell.belt.propagatesIdBackward)
+        assertEquals(vars.propagatesForward, cell.belt.propagatesForward)
+        assertEquals(vars.propagatesBackward, cell.belt.propagatesBackward)
 
-        val selectedVars = vars.selectVars
+        val selectedVars = vars.selectedBelt
         assertEquals(setOf(BeltType.Belt(belt)), selectedVars[CardinalDirection.North]!!.keys)
         assertEquals(setOf(BeltType.InputUnderground(ug)), selectedVars[CardinalDirection.East]!!.keys)
         assertEquals(setOf(BeltType.OutputUnderground(ug)), selectedVars[CardinalDirection.West]!!.keys)
