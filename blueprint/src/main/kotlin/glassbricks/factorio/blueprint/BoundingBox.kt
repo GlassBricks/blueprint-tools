@@ -127,6 +127,11 @@ public data class TileBoundingBox(
     override val size: Int
         get() = width * height
 
+    public fun expand(amount: Int): TileBoundingBox = TileBoundingBox(
+        TilePosition(minX - amount, minY - amount),
+        TilePosition(maxXExclusive + amount, maxYExclusive + amount)
+    )
+
     override fun containsAll(elements: Collection<TilePosition>): Boolean = elements.all { it in this }
 
     override fun isEmpty(): Boolean = width == 0 || height == 0

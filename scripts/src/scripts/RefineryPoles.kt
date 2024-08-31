@@ -23,18 +23,13 @@ fun tiledCopiesX(
     entities: Collection<BlueprintEntity>,
     tileSize: Int,
     numTiles: Int
-): MutableSpatialDataStructure<BlueprintEntity> {
-    val result = DefaultSpatialDataStructure<BlueprintEntity>()
-    for (i in 0..<numTiles) {
-        for (entity in entities) {
-            val copy = entity.copyIsolated()
-            copy.position += pos(i * tileSize.toDouble(), 0.0)
-            result.add(copy)
-        }
+): MutableSpatialDataStructure<BlueprintEntity> = DefaultSpatialDataStructure<BlueprintEntity>().apply {
+    for (i in 0..<numTiles) for (entity in entities) {
+        val copy = entity.copyIsolated()
+        copy.position += pos(i * tileSize.toDouble(), 0.0)
+        add(copy)
     }
-    return result
 }
-
 
 suspend fun main(): Unit = coroutineScope {
     val bp = BlueprintModel(importBlueprint(inputBp) as BlueprintJson)
@@ -48,7 +43,7 @@ suspend fun main(): Unit = coroutineScope {
         entity.position -= leftTop
     }
 
-    val results = (1..5).associateWith { numTiles ->
+    val results = (1..4).associateWith { numTiles ->
         val xWrapSize = 8 * numTiles
         val thisEntities = tiledCopiesX(origEntities, 8, numTiles)
 

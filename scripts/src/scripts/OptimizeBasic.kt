@@ -16,7 +16,6 @@ import glassbricks.factorio.blueprint.placement.ops.optimizeBeltLinesInBp
 import glassbricks.factorio.blueprint.placement.poles.*
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.InserterPrototype
-import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import glassbricks.factorio.scripts.drawEntities
 import glassbricks.factorio.scripts.drawHeatmap
 import glassbricks.factorio.scripts.drawingFor
@@ -29,19 +28,21 @@ import java.io.File
 private const val TIME_LIMIT = 60.0
 
 val projectRoot = File(".")
-private val inputBp = projectRoot.resolve("blueprints/refineries.txt")
+private val inputBp = projectRoot.resolve("blueprints/outpost5.txt")
 
-val optimizeBelts: BeltCosts = BeltCosts(
-    mapOf(
-        VanillaPrototypes["transport-belt"]!! to 1.0,
-        VanillaPrototypes["underground-belt"]!! to 2.4,
-    ),
-    overlapCost = 1.0,
-)
+val optimizeBelts: BeltCosts? = null
+
+//BeltCosts(
+//    mapOf(
+//        VanillaPrototypes["transport-belt"]!! to 1.0,
+//        VanillaPrototypes["underground-belt"]!! to 2.4,
+//    ),
+//    overlapCost = 1.0,
+//)
 val nudgeInserters = false
 
 val optimizePoles = true
-val poleConnectivity: PoleConnectivity = PoleConnectivity.Distance
+val poleConnectivity: PoleConnectivity = PoleConnectivity.Label
 val addDistanceCost = true
 
 enum class PoleConnectivity { Distance, Label }
@@ -61,7 +62,7 @@ suspend fun main(): Unit = coroutineScope {
     }
 
     if (optimizePoles) {
-        println("Optimizing boles: setting up problem")
+        println("Optimizing poles: setting up problem")
         val originalPoles = entities.filterIsInstance<ElectricPole>()
         entities.removeAllWithConnections(originalPoles)
 
@@ -76,7 +77,7 @@ suspend fun main(): Unit = coroutineScope {
         }
 
         val allPoles: MutableList<Entity<ElectricPolePrototype>> =
-            model.getAllPossibleUnrotatedPlacements(listOf(smallPole), entities.enclosingTileBox())
+            model.getAllPossibleUnrotatedPlacements(listOf(smallPole), entities.enclosingTileBox().expand(1))
                 .toMutableList()
         for (pole in allPoles) {
             model.addPlacement(pole)
@@ -94,7 +95,7 @@ suspend fun main(): Unit = coroutineScope {
             null -> {}
             PoleConnectivity.Distance -> DistanceDAGConnectivity(
                 polePlacements,
-                rootPoles = polePlacements.rootPolesFromExistingOrNear(Vector(0.5, 0.5)),
+                rootPoles = polePlacements.rootPolesFromExistingOrNear(Vector(0.5, 0.8)),
                 distanceMetric = favorPolesThatPowerMore(polePlacements)
             ).apply {
                 addConstraints()
