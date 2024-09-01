@@ -4,31 +4,33 @@ import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
+import glassbricks.factorio.blueprint.placement.belt.BeltGrid
 import glassbricks.factorio.blueprint.placement.belt.BeltGridConfig
-import glassbricks.factorio.blueprint.placement.belt.BeltGridVars
 import glassbricks.factorio.blueprint.placement.belt.BeltTier
 import glassbricks.factorio.blueprint.placement.belt.BeltType
+import glassbricks.factorio.blueprint.placement.belt.addBeltGrid
 import glassbricks.factorio.blueprint.placement.belt.addBeltLine
-import glassbricks.factorio.blueprint.placement.belt.addBeltPlacementsFromVars
 import glassbricks.factorio.blueprint.placement.belt.getAllBeltTiers
 import glassbricks.factorio.blueprint.placement.belt.getBeltType
+import glassbricks.factorio.blueprint.placement.belt.isIsolatedUnderground
 import glassbricks.factorio.blueprint.placement.toCardinalDirection
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 
-private fun ItemTransportGraph.Node.shouldBeNotEmpty(): Boolean =
+fun ItemTransportGraph.Node.beltShouldBeNotEmpty(): Boolean =
     inEdges.any { it.type != LogisticsEdgeType.Belt } ||
             outEdges.any { it.type != LogisticsEdgeType.Belt }
 
-private fun ItemTransportGraph.Node.shouldMatchExisting(): Boolean =
+fun ItemTransportGraph.Node.beltShouldMatchExisting(): Boolean =
     hasSidewaysInput() || entity is WithControlBehavior && entity.hasControlBehavior()
+            || isIsolatedUnderground()
 
 class BeltLine(
     val start: TilePosition,
     val direction: CardinalDirection,
     val length: Int,
     val mustBeNotEmpty: Collection<TilePosition>,
-    val mustMatchExisting: Map<TilePosition, BeltType>,
+    val mustMatch: Map<TilePosition, BeltType>,
     val beltTiers: Set<BeltTier>,
 )
 
@@ -39,7 +41,7 @@ internal fun BeltGridConfig.addBeltLine(line: BeltLine) {
         length = line.length,
         beltTiers = line.beltTiers,
     )
-    for ((pos, type) in line.mustMatchExisting) {
+    for ((pos, type) in line.mustMatch) {
         this[pos].forceAs(line.direction, id, type)
     }
     for (pos in line.mustBeNotEmpty) {
@@ -48,13 +50,13 @@ internal fun BeltGridConfig.addBeltLine(line: BeltLine) {
 }
 
 fun getBeltLines(
-    entities: MutableSpatialDataStructure<BlueprintEntity>,
+    entities: SpatialDataStructure<BlueprintEntity>,
     prototypes: BlueprintPrototypes = VanillaPrototypes,
 ): List<BeltLine> {
     return getBeltLinesFromTransportGraph(getItemTransportGraph(entities), prototypes)
 }
 
-private fun getBeltLinesFromTransportGraph(
+fun getBeltLinesFromTransportGraph(
     transportGraph: ItemTransportGraph,
     prototypes: BlueprintPrototypes,
 ): List<BeltLine> {
@@ -101,36 +103,43 @@ private fun getBeltLinesFromTransportGraph(
         val length = startPos.manhattanDistanceTo(endPos) + 1
 
 
-        val mustBeNotEmpty = origNodes.filter { it.shouldBeNotEmpty() }.map { it.position.occupiedTile() }
-        val mustMatchExisting = origNodes.filter { it.shouldMatchExisting() }
-            .associate {
-                it.position.occupiedTile() to it.entity.getBeltType()!!
-            }
+        val mustBeNotEmpty = origNodes.filter { it.beltShouldBeNotEmpty() }.map { it.position.occupiedTile() }
+        val mustMatchNodes = origNodes.filter {
+            it.beltShouldMatchExisting()
+        }
+        val mustMatch = mustMatchNodes.associate {
+            it.position.occupiedTile() to it.getBeltType()!!
+        }
         val beltTiers = origNodes.mapTo(mutableSetOf()) { beltTiers[it.entity.prototype]!! }
-
         return BeltLine(
             start = startPos,
             direction = direction,
             length = length,
             mustBeNotEmpty = mustBeNotEmpty,
-            mustMatchExisting = mustMatchExisting,
-            beltTiers = beltTiers
+            mustMatch = mustMatch,
+            beltTiers = beltTiers,
         )
     }
 
     return transportGraph.nodes.mapNotNull { findBeltLine(it) }
 }
 
+fun EntityPlacementModel.addBeltLinesFrom(
+    origEntities: SpatialDataStructure<BlueprintEntity>,
+    prototypes: BlueprintPrototypes = VanillaPrototypes,
+): BeltGrid {
+    return addBeltLinesFrom(getItemTransportGraph(origEntities), prototypes)
+}
+
 // this function can probably be dissected for more advanced usage
 fun EntityPlacementModel.addBeltLinesFrom(
-    origEntities: MutableSpatialDataStructure<BlueprintEntity>,
+    transportGraph: ItemTransportGraph,
     prototypes: BlueprintPrototypes = VanillaPrototypes,
-): BeltGridVars {
+): BeltGrid {
     val grid = BeltGridConfig()
-    for (line in getBeltLines(origEntities, prototypes)) {
+    val beltLines = getBeltLinesFromTransportGraph(transportGraph, prototypes)
+    for (line in beltLines) {
         grid.addBeltLine(line)
     }
-    val gridVars = grid.compile(cp)
-    this.addBeltPlacementsFromVars(gridVars)
-    return gridVars
+    return this.addBeltGrid(grid)
 }

@@ -100,7 +100,7 @@ public open class TileHashMap<T : Spatial> :
     private fun canReachTile(
         tile: TilePosition,
         center: Position,
-        radius: Double
+        radius: Double,
     ): Boolean {
         val xDist = min(abs(center.x - tile.x), abs(center.x - (tile.x + 1)))
         val yDist = min(abs(center.y - tile.y), abs(center.y - (tile.y + 1)))

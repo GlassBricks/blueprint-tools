@@ -18,7 +18,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 /**
- * Stored as 32 bit numbers, with 8 bits for the fractional part.
+ * Stored as 32-bit numbers, with 8 bits for the fractional part.
  *
  * [x] and [y] hold the values as doubles, you can normally use those.
  */
@@ -162,7 +162,7 @@ public data class Vector(
     @Serializable(with = DoubleAsIntSerializer::class)
     val x: Double,
     @Serializable(with = DoubleAsIntSerializer::class)
-    val y: Double
+    val y: Double,
 ) {
     public operator fun plus(other: Vector): Vector = Vector(x + other.x, y + other.y)
     public operator fun minus(other: Vector): Vector = Vector(x - other.x, y - other.y)

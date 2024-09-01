@@ -1,4 +1,4 @@
-package glassbricks.factorio.scripts
+package drawing
 
 import com.github.nwillc.ksvg.RenderMode
 import com.github.nwillc.ksvg.elements.SVG
@@ -33,7 +33,7 @@ abstract class DrawingInBounds(
 ) : Drawing {
     val imageWidth = (imageHeight * bounds.width / bounds.height).let { ceil(it).toInt() }
     val tileDistance = imageHeight / bounds.height
-    fun toSvgPos(tile: Position): Pair<Double, Double> {
+    fun toImagePos(tile: Position): Pair<Double, Double> {
         val (posX, posY) = tile - bounds.leftTop
         return Pair(posX * tileDistance, posY * tileDistance)
     }
@@ -93,8 +93,8 @@ class SvgDrawing(
     override fun draw(entity: Spatial, color: Color) {
         val collisionBox = entity.collisionBox.roundOutToTileBbox()
             .toBoundingBox()
-        val (minX, minY) = toSvgPos(collisionBox.leftTop)
-        val (maxX, maxY) = toSvgPos(collisionBox.rightBottom)
+        val (minX, minY) = toImagePos(collisionBox.leftTop)
+        val (maxX, maxY) = toImagePos(collisionBox.rightBottom)
 
         svg.rect {
             x = minX.toString()
@@ -138,8 +138,8 @@ class BufferedImageDrawing(
     override fun draw(entity: Spatial, color: Color) {
         val collisionBox = entity.collisionBox.roundOutToTileBbox()
             .toBoundingBox()
-        val (minX, minY) = toSvgPos(collisionBox.leftTop)
-        val (maxX, maxY) = toSvgPos(collisionBox.rightBottom)
+        val (minX, minY) = toImagePos(collisionBox.leftTop)
+        val (maxX, maxY) = toImagePos(collisionBox.rightBottom)
         graphics.color = color
         val rect = Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY)
         graphics.fill(rect)
@@ -153,7 +153,8 @@ class BufferedImageDrawing(
     }
 
     override fun saveTo(filename: String) = apply {
-        val file = File("$filename.png")
+        val fileName = if (filename.endsWith(".png")) filename else "$filename.png"
+        val file = File(fileName)
         file.parentFile.mkdirs()
         ImageIO.write(image, "png", file)
     }
@@ -161,9 +162,12 @@ class BufferedImageDrawing(
 
 fun drawingFor(
     entities: SpatialDataStructure<Spatial>,
-    height: Int? = null
+    height: Int? = null,
 ): Drawing {
-    val boundingBox = entities.enclosingBox().roundOutToTileBbox().toBoundingBox()
+    val boundingBox = entities.enclosingBox()
+        .roundOutToTileBbox()
+        .expand(1)
+        .toBoundingBox()
 
 //    return SvgDrawing(boundingBox, height)
     return BufferedImageDrawing(boundingBox, height ?: ceil(boundingBox.height * 5.0).toInt())

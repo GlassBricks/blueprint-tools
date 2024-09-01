@@ -33,23 +33,23 @@ class BeltGridTest {
         }
     }
 
-    private fun entityCostSolve(): Pair<BeltGridVars, CpSolver> {
-        val vars = grid.compile(CpModel())
+    private fun entityCostSolve(): Pair<BeltGrid, CpSolver> {
+        val vars = grid.applyTo(CpModel())
         addEntityCost(vars)
         val solver = CpSolver()
         assertEquals(CpSolverStatus.OPTIMAL, solver.solve(vars.cp))
         return vars to solver
     }
 
-    private fun materialCostSolve(): Pair<BeltGridVars, CpSolver> {
-        val vars = grid.compile(CpModel())
+    private fun materialCostSolve(): Pair<BeltGrid, CpSolver> {
+        val vars = grid.applyTo(CpModel())
         addMaterialCost(vars)
         val solver = CpSolver()
         assertEquals(CpSolverStatus.OPTIMAL, solver.solve(vars.cp))
         return vars to solver
     }
 
-    private fun addEntityCost(vars: BeltGridVars) {
+    private fun addEntityCost(vars: BeltGrid) {
         val cost = LinearExpr.sum(
             vars.map.values
                 .flatMapTo(mutableSetOf()) {
@@ -60,7 +60,7 @@ class BeltGridTest {
         vars.cp.minimize(cost)
     }
 
-    private fun addMaterialCost(vars: BeltGridVars) {
+    private fun addMaterialCost(vars: BeltGrid) {
         val costs = mapOf(
             normalBelt.beltProto to 1,
             normalBelt.ugProto to 4,

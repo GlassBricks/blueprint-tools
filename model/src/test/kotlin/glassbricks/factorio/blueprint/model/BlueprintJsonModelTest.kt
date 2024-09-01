@@ -13,7 +13,7 @@ class BlueprintJsonModelTest {
 
     fun assertBpMatches(
         bp: BlueprintJson,
-        model: BlueprintModel
+        model: Blueprint,
     ) {
         assertEquals(bp.label, model.label)
         assertEquals(bp.label_color, model.label_color)
@@ -42,7 +42,7 @@ class BlueprintJsonModelTest {
 
     private fun assertEntitiesSame(
         entity1: EntityJson,
-        entity2: EntityJson
+        entity2: EntityJson,
     ) {
         removeEntityNumber(entity1)
         removeEntityNumber(entity2)
@@ -60,7 +60,7 @@ class BlueprintJsonModelTest {
     }
 
     fun testBlueprint(name: String) {
-        val bp = importBlueprint(File("../test-blueprints/$name.txt").inputStream()) as BlueprintJson
+        val bp = importBlueprintJson(File("../test-blueprints/$name.txt").inputStream()) as BlueprintJson
 
         bp.entities?.forEach {
             if (it.connections == null && it.control_behavior != null && !it.control_behavior!!.connect_to_logistic_network) {
@@ -101,11 +101,11 @@ class BlueprintJsonModelTest {
             }
         }
 
-        val model = BlueprintModel(bp)
+        val model = Blueprint(bp)
         assertBpMatches(bp, model)
 
         val back = model.toBlueprint()
-        val backAgain = BlueprintModel(back).toBlueprint()
+        val backAgain = Blueprint(back).toBlueprint()
 //        assertEquals(back.entities, backAgain.entities)
         for ((e1, e2) in back.entities!!.zip(backAgain.entities!!)) {
             assertEquals(e1, e2)

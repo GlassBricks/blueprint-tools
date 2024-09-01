@@ -20,6 +20,8 @@ interface MutableBeltConfig : BeltConfig {
     fun makeLineEnd(direction: CardinalDirection, lineId: BeltLineId)
 
     fun forceIsId(lineId: BeltLineId)
+
+    // will also add as option
     fun forceAs(direction: CardinalDirection, lineId: BeltLineId, beltType: BeltType)
 }
 
@@ -86,6 +88,7 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
         forcedDirection = direction
         forcedBeltId = lineId
         forcedBeltType = beltType
+        addOption(direction, beltType, lineId)
     }
 
     override val canBeEmpty: Boolean

@@ -1,17 +1,17 @@
 package scripts
 
+import drawing.drawEntities
+import drawing.smallPole
 import glassbricks.factorio.blueprint.*
 import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.exportTo
-import glassbricks.factorio.blueprint.json.importBlueprint
-import glassbricks.factorio.blueprint.model.BlueprintModel
+import glassbricks.factorio.blueprint.json.importBlueprintJson
+import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.addDistanceCostFrom
 import glassbricks.factorio.blueprint.placement.poles.*
-import glassbricks.factorio.blueprint.placement.toEntity
-import glassbricks.factorio.scripts.drawEntities
-import glassbricks.factorio.scripts.smallPole
+import glassbricks.factorio.blueprint.placement.toBlueprintEntity
 import kotlinx.coroutines.coroutineScope
 import java.io.File
 
@@ -22,7 +22,7 @@ private val inputBp = projectRoot.resolve("blueprints/refineries.txt")
 fun tiledCopiesX(
     entities: Collection<BlueprintEntity>,
     tileSize: Int,
-    numTiles: Int
+    numTiles: Int,
 ): MutableSpatialDataStructure<BlueprintEntity> = DefaultSpatialDataStructure<BlueprintEntity>().apply {
     for (i in 0..<numTiles) for (entity in entities) {
         val copy = entity.copyIsolated()
@@ -32,7 +32,7 @@ fun tiledCopiesX(
 }
 
 suspend fun main(): Unit = coroutineScope {
-    val bp = BlueprintModel(importBlueprint(inputBp) as BlueprintJson)
+    val bp = Blueprint(importBlueprintJson(inputBp) as BlueprintJson)
     val origEntities = bp.entities.filter { it !is ElectricPole }
     bp.entities.clear()
     val originalBox = getEnclosingBox(origEntities.map { it.collisionBox }).roundOutToTileBbox()
@@ -55,22 +55,15 @@ suspend fun main(): Unit = coroutineScope {
         val polePlacements = model.addPolePlacements(
             listOf(smallPole),
             TileBoundingBox(TilePosition.ZERO, TilePosition(xWrapSize, originalBox.height)),
-            PolePlacementOptions(
-//                removeEmptyPolesReach1 = true
-            )
-        )
+        ) {
+            removeEmptyPolesDist2()
+        }
         drawEntities(model.placements).saveTo(File("output/refineries-$numTiles-candidates").absolutePath)
 
 
         val rightPoint = pos(xWrapSize - 1.0, originalBox.height / 4.0)
-        val rootPoles = polePlacements.getRootPolesNearPoint(
-            rightPoint
-        )
-        DistanceDAGConnectivity(
-            polePlacements,
-            rootPoles = rootPoles,
-            distanceMetric = favorPolesThatPowerMore(polePlacements, divFactor = 3.0)
-        ).addConstraints()
+        val rootPoles = polePlacements.getRootPolesNear(rightPoint)
+        polePlacements.enforceConnectedWithDag(rootPoles)
 
         run {
             val poles = polePlacements.poles
@@ -84,8 +77,8 @@ suspend fun main(): Unit = coroutineScope {
                 }
 
                 model.cp.addAtLeastOne(
-                    wrappingPoles.map { it.selected }
-                ).onlyEnforceIf(rootPole.selected)
+                    wrappingPoles.map { it.placement.selected }
+                ).onlyEnforceIf(rootPole.placement.selected)
             }
         }
 
@@ -105,7 +98,7 @@ suspend fun main(): Unit = coroutineScope {
             clear()
             addAll(thisEntities)
             for (pole in solution.getSelectedOptionalEntities()) {
-                add(pole.toEntity())
+                add(pole.toBlueprintEntity())
             }
         }
 

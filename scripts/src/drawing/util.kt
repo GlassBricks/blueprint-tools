@@ -1,4 +1,4 @@
-package glassbricks.factorio.scripts
+package drawing
 
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes

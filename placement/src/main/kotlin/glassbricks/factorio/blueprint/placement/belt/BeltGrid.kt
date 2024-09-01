@@ -11,12 +11,11 @@ import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.WithCp
 import glassbricks.factorio.blueprint.placement.addEquality
-import glassbricks.factorio.blueprint.placement.addHint
 import glassbricks.factorio.blueprint.placement.shifted
 import glassbricks.factorio.blueprint.placement.toFactorioDirection
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 
-class BeltGridVars internal constructor(
+class BeltGrid internal constructor(
     override val cp: CpModel,
     grid: MutableMap<TilePosition, BeltVarsImpl>,
 ) : WithCp {
@@ -28,40 +27,6 @@ class BeltGridVars internal constructor(
     }
 
     operator fun get(tile: TilePosition): BeltVars? = map[tile]
-}
-
-fun BeltGridVars.addDontUseBeltHeuristic() {
-    for ((_, belt) in map) {
-        for ((_, beltTypes) in belt.selectedBelt) {
-            for ((type, selected) in beltTypes) {
-                if (type is BeltType.Belt) cp.addHint(selected, false)
-            }
-        }
-    }
-}
-
-internal fun EntityPlacementModel.addBeltPlacementsFromVars(grid: BeltGridVars) {
-    for ((tile, belt) in grid.map) {
-        for ((direction, beltTypes) in belt.selectedBelt) {
-            for ((type, selected) in beltTypes) when (type) {
-                is BeltType.Belt, is BeltType.InputUnderground -> addPlacement(
-                    type.prototype,
-                    tile.center(),
-                    direction.toFactorioDirection(),
-                    selectedLiteral = selected
-                )
-
-                is BeltType.OutputUnderground -> addPlacement(
-                    createBpEntity(type.prototype, tile.center(), direction.toFactorioDirection())
-                        .apply {
-                            this as UndergroundBelt
-                            this.ioType = IOType.Output
-                            addPlacement(this, selectedLiteral = selected)
-                        }
-                )
-            }
-        }
-    }
 }
 
 private fun WithCp.ensureUndergroundConnectors(grid: MutableMap<TilePosition, BeltVarsImpl>) {
@@ -80,8 +45,11 @@ private fun WithCp.ensureUndergroundConnectors(grid: MutableMap<TilePosition, Be
     for ((_, cell) in grid) cell.constrainUgId(cp)
 }
 
-private fun BeltGridVars.addBeltConstraints() {
+private fun BeltGrid.addBeltConstraints() {
     for ((tile, belt) in map) {
+        for (direction in CardinalDirection.entries) {
+            constrainUndergroundLink(tile, direction)
+        }
         for ((direction, beltTypes) in belt.selectedBelt) {
             constrainBeltPropagation(tile, direction)
             for ((type, thisSelected) in beltTypes) {
@@ -92,7 +60,7 @@ private fun BeltGridVars.addBeltConstraints() {
 }
 
 
-private fun BeltGridVars.constrainBeltPropagation(tile: TilePosition, direction: CardinalDirection) {
+private fun BeltGrid.constrainBeltPropagation(tile: TilePosition, direction: CardinalDirection) {
     val belt = map[tile]!!
     val thisId = belt.lineId
     val nextCell = map[tile.shifted(direction)]
@@ -104,7 +72,7 @@ private fun BeltGridVars.constrainBeltPropagation(tile: TilePosition, direction:
     ) {
         val thisVar = if (thisIsOutput) belt.hasOutputIn[direction] else belt.hasInputIn[direction]
         if (thisVar != null) {
-            val nextVar = if (thisIsOutput) nextCell?.hasInputIn[direction] else nextCell?.hasOutputIn[direction]
+            val nextVar = (if (thisIsOutput) nextCell?.hasInputIn[direction] else nextCell?.hasOutputIn[direction])
                 ?: cp.falseLiteral()
             cp.addImplication(thisVar, nextVar)
             val nextId = nextCell?.lineId ?: cp.newConstant(0)
@@ -114,6 +82,15 @@ private fun BeltGridVars.constrainBeltPropagation(tile: TilePosition, direction:
     if (belt.propagatesForward) constrainEqual(nextCell, true)
     if (belt.propagatesBackward) constrainEqual(prevCell, false)
     // ug connectors always propagate
+}
+
+private fun BeltGrid.constrainUndergroundLink(
+    tile: TilePosition,
+    direction: CardinalDirection,
+) {
+    val belt = map[tile]!!
+    val nextCell = map[tile.shifted(direction)]
+    val prevCell = map[tile.shifted(direction.oppositeDir())]
     for ((prototype, selected) in belt.ugConnectorSelected[direction].orEmpty()) {
         addUndergroundLink(
             prototype = prototype,
@@ -134,21 +111,21 @@ private fun BeltGridVars.constrainBeltPropagation(tile: TilePosition, direction:
     }
 }
 
-private fun BeltGridVars.constrainUnderground(
+private fun BeltGrid.constrainUnderground(
     tile: TilePosition,
     type: BeltType.Underground,
     direction: CardinalDirection,
     thisSelected: Literal,
 ) {
-    if (type.isIsolated) TODO()
-    val belt = map[tile]!!
+    val isIsolated = type.isIsolated
 
+    val belt = map[tile]!!
     val ugDir = when (type) {
         is BeltType.InputUnderground -> direction
         is BeltType.OutputUnderground -> direction.oppositeDir()
     }
 
-    // ug cannot exist at same time as connector on same axis
+    // ug cannot exist at same time as connector in same axis
     belt.ugConnectorSelected[direction]?.get(type.prototype)?.let {
         cp.addImplication(thisSelected, !it)
     }
@@ -157,7 +134,6 @@ private fun BeltGridVars.constrainUnderground(
     }
 
     val nextTile = tile.shifted(ugDir)
-    val oppositeType = type.opposite()!!
     val nextCell = map[nextTile]
 
     addUndergroundLink(
@@ -166,27 +142,35 @@ private fun BeltGridVars.constrainUnderground(
         thisSelected = thisSelected,
         thisId = belt.lineId,
         nextCell = nextCell,
-        nextUgType = oppositeType
+        nextUgType = type.opposite(isolated = false),
+        invert = isIsolated
     )
 
     // ug <= max underground distance: one underground in range selected
-    val withinDistance = (1..type.prototype.max_distance.toInt()).mapNotNull { dist ->
+    // if inverted: enforce _not_ selected
+    val oppositeSameIsolated = type.opposite(isolated = isIsolated)
+    val oppositeWithinDist = (1..type.prototype.max_distance.toInt()).mapNotNull { dist ->
         val nextTile = tile.shifted(ugDir, dist)
-        map[nextTile]?.selectedBelt?.get(direction)?.get(oppositeType)
-    } + !thisSelected
-    cp.addBoolOr(withinDistance)
+        map[nextTile]?.selectedBelt?.get(direction)?.get(oppositeSameIsolated)
+    }
+    if (!isIsolated) {
+        cp.addBoolOr(oppositeWithinDist).onlyEnforceIf(thisSelected)
+    } else {
+        cp.addBoolAnd(oppositeWithinDist.map { !it }).onlyEnforceIf(thisSelected)
+    }
 }
 
-private fun BeltGridVars.addUndergroundLink(
+private fun BeltGrid.addUndergroundLink(
     prototype: UndergroundBeltPrototype,
     direction: CardinalDirection,
     thisSelected: Literal,
     thisId: IntVar,
     nextCell: BeltVars?,
     nextUgType: BeltType.Underground,
+    invert: Boolean = false,
 ) {
     if (nextCell == null) {
-        cp.addEquality(thisSelected, false)
+        if (!invert) cp.addEquality(thisSelected, false)
         return
     }
     val ugConnectorSelected = nextCell.ugConnectorSelected[direction]?.get(prototype) ?: cp.falseLiteral()
@@ -201,19 +185,57 @@ private fun BeltGridVars.addUndergroundLink(
     val nextUgSelected = nextCell.selectedBelt[direction]?.get(nextUgType) ?: cp.falseLiteral()
     val nextId = nextCell.lineId
 
-    cp.addBoolOr(
-        listOf(
-            !thisSelected,
-            ugConnectorSelected,
-            nextUgSelected,
+    if (!invert) {
+        cp.addBoolOr(
+            listOf(
+                !thisSelected,
+                ugConnectorSelected,
+                nextUgSelected,
+            )
         )
-    )
-    cp.addEquality(thisId, ugConnectorId).apply {
-        onlyEnforceIf(thisSelected)
-        onlyEnforceIf(!nextUgSelected)
+        cp.addEquality(thisId, ugConnectorId).apply {
+            onlyEnforceIf(thisSelected)
+            onlyEnforceIf(!nextUgSelected)
+        }
+        cp.addEquality(thisId, nextId).apply {
+            onlyEnforceIf(thisSelected)
+            onlyEnforceIf(nextUgSelected)
+        }
+    } else {
+        // otherwise, there must _not_ be a connection
+        cp.addBoolAnd(listOf(!ugConnectorSelected, !nextUgSelected)).onlyEnforceIf(thisSelected)
     }
-    cp.addEquality(thisId, nextId).apply {
-        onlyEnforceIf(thisSelected)
-        onlyEnforceIf(nextUgSelected)
+}
+
+internal fun EntityPlacementModel.addBeltPlacements(grid: BeltGrid) {
+    for ((tile, belt) in grid.map) {
+        for ((direction, beltTypes) in belt.selectedBelt) {
+            for ((type, selected) in beltTypes) when (type) {
+                is BeltType.Belt -> addPlacement(
+                    type.prototype,
+                    tile.center(),
+                    direction.toFactorioDirection(),
+                    selected = selected
+                )
+
+                is BeltType.Underground -> addPlacement(
+                    createBpEntity(type.prototype, tile.center(), direction.toFactorioDirection())
+                        .apply {
+                            this as UndergroundBelt
+                            ioType = when (type) {
+                                is BeltType.InputUnderground -> IOType.Input
+                                is BeltType.OutputUnderground -> IOType.Output
+                            }
+                            addPlacement(this, selected = selected)
+                        }
+                )
+            }
+        }
     }
+}
+
+fun EntityPlacementModel.addBeltGrid(grid: BeltGridConfig): BeltGrid {
+    val vars = grid.applyTo(cp)
+    addBeltPlacements(vars)
+    return vars
 }

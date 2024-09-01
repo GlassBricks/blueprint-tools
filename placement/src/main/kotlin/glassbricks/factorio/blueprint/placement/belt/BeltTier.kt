@@ -1,9 +1,9 @@
 package glassbricks.factorio.blueprint.placement.belt
 
-import glassbricks.factorio.blueprint.entity.BlueprintEntity
-import glassbricks.factorio.blueprint.entity.TransportBelt
 import glassbricks.factorio.blueprint.entity.UndergroundBelt
 import glassbricks.factorio.blueprint.json.IOType
+import glassbricks.factorio.blueprint.placement.ops.ItemTransportGraph
+import glassbricks.factorio.blueprint.placement.ops.LogisticsEdgeType
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.TransportBeltConnectablePrototype
 import glassbricks.factorio.blueprint.prototypes.TransportBeltPrototype
@@ -47,11 +47,12 @@ sealed interface BeltType {
     sealed interface Underground : BeltType {
         override val prototype: UndergroundBeltPrototype
         val isIsolated: Boolean
-        fun opposite(): Underground?
+        fun oppositeNotIsolated(): Underground?
+        fun opposite(isolated: Boolean): Underground
     }
 
     data class Belt(override val prototype: TransportBeltPrototype) : BeltType {
-        override fun toString(): String = prototype.name
+        override fun toString(): String = "<${prototype.name}>"
         override val hasInput: Boolean get() = true
         override val hasOutput: Boolean get() = true
     }
@@ -60,11 +61,12 @@ sealed interface BeltType {
         override val prototype: UndergroundBeltPrototype,
         override val isIsolated: Boolean = false,
     ) : Underground {
-        override fun toString(): String = "${prototype.name}_in${if (isIsolated) "_isolated" else ""}"
+        override fun toString(): String = "<${prototype.name}_in${if (isIsolated) "_isolated" else ""}>"
         override val hasInput: Boolean get() = true
         override val hasOutput: Boolean get() = false
 
-        override fun opposite(): OutputUnderground? = if (!isIsolated) OutputUnderground(prototype) else null
+        override fun oppositeNotIsolated(): OutputUnderground? = if (!isIsolated) OutputUnderground(prototype) else null
+        override fun opposite(isolated: Boolean): OutputUnderground = OutputUnderground(prototype, isolated)
     }
 
     data class OutputUnderground(
@@ -72,20 +74,34 @@ sealed interface BeltType {
         override val isIsolated: Boolean = false,
     ) :
         Underground {
-        override fun toString(): String = "${prototype.name}_out${if (isIsolated) "_isolated" else ""}"
+        override fun toString(): String = "<${prototype.name}_out${if (isIsolated) "_isolated" else ""}>"
         override val hasInput: Boolean get() = false
         override val hasOutput: Boolean get() = true
 
-        override fun opposite(): InputUnderground? = if (!isIsolated) InputUnderground(prototype) else null
+        override fun oppositeNotIsolated(): InputUnderground? = if (!isIsolated) InputUnderground(prototype) else null
+        override fun opposite(isolated: Boolean): InputUnderground = InputUnderground(prototype, isolated)
     }
 
 }
 
-fun BlueprintEntity.getBeltType(): BeltType? = when (this) {
-    is TransportBelt -> BeltType.Belt(this.prototype)
-    is UndergroundBelt -> when (this.ioType) {
-        IOType.Input -> BeltType.InputUnderground(this.prototype)
-        IOType.Output -> BeltType.OutputUnderground(this.prototype)
+fun ItemTransportGraph.Node.isIsolatedUnderground(): Boolean {
+    if (entity !is UndergroundBelt) return false
+    return when (entity.ioType) {
+        IOType.Input -> outEdges.none { it.type == LogisticsEdgeType.Belt && it.to.entity is UndergroundBelt }
+        IOType.Output -> inEdges.none { it.type == LogisticsEdgeType.Belt && it.from.entity is UndergroundBelt }
+    }
+}
+
+fun ItemTransportGraph.Node.getBeltType(): BeltType? = when (val prototype = prototype) {
+    is TransportBeltPrototype -> BeltType.Belt(prototype)
+    is UndergroundBeltPrototype -> when ((entity as UndergroundBelt).ioType) {
+        IOType.Input -> BeltType.InputUnderground(
+            prototype,
+            isIsolated = outEdges.none { it.type == LogisticsEdgeType.Belt && it.to.entity is UndergroundBelt })
+
+        IOType.Output -> BeltType.OutputUnderground(
+            prototype,
+            isIsolated = inEdges.none { it.type == LogisticsEdgeType.Belt && it.from.entity is UndergroundBelt })
     }
 
     else -> null

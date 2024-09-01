@@ -7,7 +7,7 @@ import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 
-public class BlueprintModel
+public class Blueprint
 private constructor(
     public override var label: String? = null,
     public override var label_color: Color? = null,
@@ -17,14 +17,14 @@ private constructor(
     public val entities: MutableSpatialDataStructure<BlueprintEntity> = DefaultSpatialDataStructure(),
     public var snapToGridSettings: SnapToGridSettings? = null,
     public override var item: String = "blueprint",
-    public override val version: FactorioVersion = FactorioVersion.DEFAULT
+    public override val version: FactorioVersion = FactorioVersion.DEFAULT,
 ) : BlueprintItem {
 
     public constructor(
-        blueprint: BlueprintJson,
-        prototypes: BlueprintPrototypes = VanillaPrototypes
+        blueprint: Importable,
+        prototypes: BlueprintPrototypes = VanillaPrototypes,
     ) : this(
-        label = blueprint.label,
+        label = (blueprint as BlueprintJson).label,
         label_color = blueprint.label_color,
         description = blueprint.description,
         iconsArr = arrayOfNulls<SignalIDJson>(4).apply {
@@ -79,7 +79,7 @@ private constructor(
         bp.setEntitiesFrom(entities.sortedBy { it.position })
     }
 
-    public fun deepCopy(): BlueprintModel = BlueprintModel(
+    public fun deepCopy(): Blueprint = Blueprint(
         label = label,
         label_color = label_color,
         description = description,

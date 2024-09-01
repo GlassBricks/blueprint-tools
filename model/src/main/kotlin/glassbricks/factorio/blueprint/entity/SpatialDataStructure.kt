@@ -29,7 +29,6 @@ public interface SpatialDataStructure<out T : Spatial> : Collection<T> {
 
     /** Gets all entities that collide with the given entity. */
     public fun getColliding(other: Spatial): Sequence<T>
-
     public fun tileIsOccupied(tile: TilePosition): Boolean = getInTile(tile).any()
 
     /**
@@ -55,3 +54,7 @@ public fun <T : Spatial> DefaultSpatialDataStructure(): MutableSpatialDataStruct
 
 public fun <T : Spatial> DefaultSpatialDataStructure(items: Iterable<T>): MutableSpatialDataStructure<T> =
     TileHashMap<T>().also { it.addAll(items) }
+
+public fun <T : Entity<*>> SpatialDataStructure<T>.findMatching(other: Entity<*>): T? =
+    getInTile(other.position.occupiedTile())
+        .find { it.matches(other) }

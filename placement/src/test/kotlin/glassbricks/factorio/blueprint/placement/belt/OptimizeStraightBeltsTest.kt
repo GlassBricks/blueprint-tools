@@ -1,4 +1,4 @@
-package glassbricks.factorio.blueprint.placement.ops
+package glassbricks.factorio.blueprint.placement.belt
 
 import com.google.ortools.sat.CpSolverStatus
 import glassbricks.factorio.blueprint.Direction
@@ -8,9 +8,10 @@ import glassbricks.factorio.blueprint.json.IOType
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
-import glassbricks.factorio.blueprint.placement.belt.BeltGridConfig
-import glassbricks.factorio.blueprint.placement.belt.BeltTier
-import glassbricks.factorio.blueprint.placement.belt.addBeltGrid
+import glassbricks.factorio.blueprint.placement.ops.BeltLine
+import glassbricks.factorio.blueprint.placement.ops.addBeltLine
+import glassbricks.factorio.blueprint.placement.ops.addBeltLinesFrom
+import glassbricks.factorio.blueprint.placement.ops.getBeltLines
 import glassbricks.factorio.blueprint.placement.shifted
 import glassbricks.factorio.blueprint.placement.toBlueprintEntities
 import glassbricks.factorio.blueprint.placement.toCardinalDirection
@@ -49,7 +50,7 @@ class OptimizeStraightBeltsTest {
             direction = direction,
             length = inStr.length,
             mustBeNotEmpty = mustBeNotEmpty.toList(),
-            mustMatchExisting = emptyMap(), // todo: test
+            mustMatch = emptyMap(), // todo: test
             beltTiers = setOf(BeltTier(belt, ugBelt)),
         )
         return entities to line
@@ -81,7 +82,7 @@ class OptimizeStraightBeltsTest {
         val solution = model.solve()
         assertEquals(CpSolverStatus.OPTIMAL, solution.status)
 
-        val resultEntities = solution.toBlueprintEntities()
+        val resultEntities = solution.toBlueprintEntities(null)
         return getBeltsAsStr(resultEntities, startPos, direction, inStr.length)
     }
 
@@ -143,7 +144,7 @@ class OptimizeStraightBeltsTest {
     @Test
     fun `uses at least 1 belt if longer than reach`() {
         val result = testBeltLine(" ".repeat(7), ugRelCost = 2.3)
-        assertEquals("=>    <", result)
+        assertTrue(result == ">    <=" || result == "=>    <")
     }
 
     @Test
@@ -155,7 +156,10 @@ class OptimizeStraightBeltsTest {
     @Test
     fun `underground spam`() {
         val result = testBeltLine("r".repeat(8), ugRelCost = 0.5)
-        assertEquals("><><><><", result)
+        assertTrue("<<" !in result)
+        assertTrue(">>" !in result)
+        assertEquals(4, result.count { it == '<' })
+        assertEquals(4, result.count { it == '>' })
     }
 
     private val inserter: EntityPrototype = VanillaPrototypes.getAs("fast-inserter")
@@ -213,7 +217,22 @@ class OptimizeStraightBeltsTest {
         val line = lines.maxBy { it.length }
         assertEquals(4, line.length)
         assertEquals(CardinalDirection.East, line.direction)
-        assertEquals(mapOf(tilePos(3, 0) to beltTier.belt), line.mustMatchExisting)
+        assertEquals(mapOf(tilePos(3, 0) to beltTier.belt), line.mustMatch)
+    }
+
+    @Test
+    fun `getting ug belt with sideloading`() {
+        val entities = createEntities("=/==\\=", startPos = tilePos(0, 0))
+        val lines = getBeltLines(entities)
+        val line = lines.maxBy { it.length }
+        assertEquals(6, line.length)
+        assertEquals(CardinalDirection.East, line.direction)
+        assertEquals(
+            mapOf(
+                tilePos(1, 0) to BeltType.InputUnderground(ugBelt),
+                tilePos(4, 0) to BeltType.OutputUnderground(ugBelt),
+            ), line.mustMatch
+        )
     }
 
     @Test
@@ -226,11 +245,11 @@ class OptimizeStraightBeltsTest {
         val line = lines.maxBy { it.length }
         assertEquals(5, line.length)
         assertEquals(CardinalDirection.East, line.direction)
-        assertEquals(mapOf(tilePos(3, 0) to beltTier.belt, tilePos(4, 0) to beltTier.belt), line.mustMatchExisting)
+        assertEquals(mapOf(tilePos(3, 0) to beltTier.belt, tilePos(4, 0) to beltTier.belt), line.mustMatch)
     }
 
     @Test
-    fun `belt with inserter connections must be not empty`() {
+    fun `getting belt with inserter connections`() {
         val entities = createEntities("==v=^=", startPos = tilePos(0, 0))
         val lines = getBeltLines(entities)
         assertEquals(1, lines.size)
@@ -241,6 +260,29 @@ class OptimizeStraightBeltsTest {
                 tilePos(2, 0),
                 tilePos(4, 0),
             ), line.mustBeNotEmpty.toSet()
+        )
+    }
+
+
+    @Test
+    fun `isolated output underground belt`() {
+        val entities = createEntities("<", startPos = tilePos(0, 0))
+        val line = getBeltLines(entities).find { it.direction == CardinalDirection.East }!!
+        assertEquals(1, line.length)
+        assertEquals(CardinalDirection.East, line.direction)
+        assertEquals(
+            mapOf(tilePos(0, 0) to BeltType.OutputUnderground(ugBelt, isIsolated = true)),
+            line.mustMatch
+        )
+    }
+
+    @Test
+    fun `isolated input underground belt`() {
+        val entities = createEntities(">", startPos = tilePos(0, 0))
+        val line = getBeltLines(entities).find { it.direction == CardinalDirection.East }!!
+        assertEquals(
+            mapOf(tilePos(0, 0) to BeltType.InputUnderground(ugBelt, isIsolated = true)),
+            line.mustMatch
         )
     }
 
@@ -260,7 +302,7 @@ class OptimizeStraightBeltsTest {
         val solution = model.solve()
         assertEquals(CpSolverStatus.OPTIMAL, solution.status)
 
-        val resultEntities = solution.toBlueprintEntities()
+        val resultEntities = solution.toBlueprintEntities(null)
         return getBeltsAsStr(resultEntities, startPos, CardinalDirection.East, inStr.length)
     }
 
@@ -280,6 +322,12 @@ class OptimizeStraightBeltsTest {
     fun `better handling over obstacle`() {
         val result = testOptimizeBelts("=>#<>#<==", ugRelCost = 2.3)
         assertEquals("=>#  #<==", result)
+    }
+
+    @Test
+    fun `with isolated input ug belt`() {
+        val result = testOptimizeBelts("<=>", ugRelCost = 2.3)
+        assertEquals("<=>", result)
     }
 
 

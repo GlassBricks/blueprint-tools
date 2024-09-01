@@ -9,7 +9,7 @@ import kotlin.test.Test
 class ImportExportKtTest {
 
     private fun testLoadBlueprint(fileName: String) {
-        val bp = importBlueprint(File("../test-blueprints/$fileName"))
+        val bp = importBlueprintJson(File("../test-blueprints/$fileName"))
         println(bp)
 
         val roundTrip = bpJson.decodeFromString(Importable.serializer(), bpJson.encodeToString<Importable>(bp))

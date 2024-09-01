@@ -1,147 +1,74 @@
 package scripts
 
-import glassbricks.factorio.blueprint.Entity
-import glassbricks.factorio.blueprint.Vector
-import glassbricks.factorio.blueprint.entity.ElectricPole
-import glassbricks.factorio.blueprint.entity.removeAllWithConnections
-import glassbricks.factorio.blueprint.entity.removeWithConnectionsIf
-import glassbricks.factorio.blueprint.json.BlueprintJson
+import drawing.drawEntities
 import glassbricks.factorio.blueprint.json.exportTo
-import glassbricks.factorio.blueprint.json.importBlueprint
-import glassbricks.factorio.blueprint.model.BlueprintModel
+import glassbricks.factorio.blueprint.json.importBlueprintJson
+import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placement.*
-import glassbricks.factorio.blueprint.placement.ops.BeltOptimizeConfig
-import glassbricks.factorio.blueprint.placement.ops.addEntityNudgingWithInserters
-import glassbricks.factorio.blueprint.placement.ops.optimizeBeltLinesInBp
-import glassbricks.factorio.blueprint.placement.poles.*
-import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
-import glassbricks.factorio.blueprint.prototypes.InserterPrototype
-import glassbricks.factorio.scripts.drawEntities
-import glassbricks.factorio.scripts.drawHeatmap
-import glassbricks.factorio.scripts.drawingFor
-import glassbricks.factorio.scripts.smallPole
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
-
-// in seconds
-private const val TIME_LIMIT = 60.0
+import kotlin.collections.mapOf
+import kotlin.system.exitProcess
 
 val projectRoot = File(".")
-private val inputBp = projectRoot.resolve("blueprints/outpost5.txt")
-
-val optimizeBelts: BeltOptimizeConfig? = null
-
-//BeltCosts(
-//    mapOf(
-//        VanillaPrototypes["transport-belt"]!! to 1.0,
-//        VanillaPrototypes["underground-belt"]!! to 2.4,
-//    ),
-//    overlapCost = 1.0,
-//)
-val nudgeInserters = false
-
-val optimizePoles = true
-val poleConnectivity: PoleConnectivity = PoleConnectivity.Label
-val addDistanceCost = true
-
-enum class PoleConnectivity { Distance, Label }
 
 suspend fun main(): Unit = coroutineScope {
-    val bp = BlueprintModel(importBlueprint(inputBp) as BlueprintJson)
-    val entities = bp.entities
+    val inputFile = projectRoot.resolve("test-blueprints/earlybase.txt")
+    val bp = Blueprint(importBlueprintJson(inputFile))
+    val modelBuilder = BpModelBuilder(bp).apply {
+        optimizeBeltLines = true
+        optimizePoles = listOf(
+            VanillaPrototypes.getAs("small-electric-pole"),
+//            VanillaPrototypes.getAs("medium-electric-pole"),
+        )
+        enforcePolesConnected = true
 
-    if (optimizeBelts != null) {
-        println("Optimizing belts")
+        setEntityCosts(mapOf(
+            "transport-belt" to 1.5,
+            "underground-belt" to 17.5 / 2,
+            "fast-transport-belt" to 11.5,
+            "fast-underground-belt" to 97.5 / 2,
+            "small-electric-pole" to 0.5,
+            "medium-electric-pole" to 13.5,
+        ).mapValues { it.value + 3.4 })
+//        check(entityCosts["underground-belt"]!! * 3 < entityCosts["transport-belt"]!! * 5)
+//        check(entityCosts["underground-belt"]!! * 3 > entityCosts["transport-belt"]!! * 4)
 
-        if (addDistanceCost) {
-            val center = entities.enclosingBox().center()
-            optimizeBelts.additionalCostFn = { _, pos, _ -> pos.center().distanceTo(center) / 1e8 }
-        }
-        optimizeBeltLinesInBp(entities, optimizeBelts)
+        distanceCostFactor = 1e-4
+
+        preserveWithControlBehavior()
     }
+    val model = modelBuilder.buildModel()
+    model.timeLimitInSeconds = 60.0 * 1.5
 
-    if (optimizePoles) {
-        println("Optimizing poles: setting up problem")
-        val originalPoles = entities.filterIsInstance<ElectricPole>()
-        entities.removeAllWithConnections(originalPoles)
+    val fileName = inputFile.nameWithoutExtension
+    drawEntities(model.placements).saveTo("output/${fileName}-pre-solve")
 
+    val solution = model.solve()
+    println("Solved: ${solution.status}")
+    if (!solution.isOk) exitProcess(1)
 
-        val model = EntityPlacementModel()
-        model.addFixedEntities(entities)
+    val entities = solution.toBlueprintEntities(modelBuilder.entities)
 
-        if (nudgeInserters) {
-            val canNudge = model.placements.filterTo(mutableSetOf()) { it.prototype is InserterPrototype }
-            model.addEntityNudgingWithInserters(canNudge, nudgeCost = 0.0)
-            entities.removeWithConnectionsIf { it.prototype is InserterPrototype }
-        }
-
-        val allPoles: MutableList<Entity<ElectricPolePrototype>> =
-            model.getAllPossibleUnrotatedPlacements(listOf(smallPole), entities.enclosingTileBox().expand(1))
-                .toMutableList()
-        for (pole in allPoles) {
-            model.addPlacement(pole)
-        }
-        val polePlacements = PolePlacements(model, PolePlacementOptions(removeEmptyPolesReach1 = true))
-        polePlacements.poles.forEach {
-            if (it is OptionalEntityPlacement<*>) {
-                it.cost = if (it.prototype == smallPole) 1.0 else 4.0
-            }
-        }
-        drawEntities(model.placements)
-            .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-candidate").absolutePath)
-
-        when (poleConnectivity) {
-            null -> {}
-            PoleConnectivity.Distance -> DistanceDAGConnectivity(
-                polePlacements,
-                rootPoles = polePlacements.rootPolesFromExistingOrNear(Vector(0.5, 0.8)),
-                distanceMetric = favorPolesThatPowerMore(polePlacements)
-            ).apply {
-                addConstraints()
-                launch {
-                    drawingFor(model.placements).apply {
-                        drawEntities(model.placements.filter { it.isFixed })
-                        drawHeatmap(distances)
-                        saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-distances").absolutePath)
-                    }
-                }
-            }
-
-            PoleConnectivity.Label -> DistanceLabelConnectivity(
-                polePlacements,
-                rootPoles = polePlacements.rootPolesFromExistingOrNear(Vector(0.5, 0.5)),
-            ).addConstraints()
-        }
-
-        if (addDistanceCost)
-            model.addDistanceCostFrom(entities.enclosingBox().center())
-
-        println("Solving")
-        model.timeLimitInSeconds = TIME_LIMIT
-        val result = model.solve()
-        println("Solved: ${result.status}")
-
-        val selectedEntities = result.getSelectedOptionalEntities()
-        val poleCounts =
-            selectedEntities.groupingBy { it.prototype }.eachCount()
-        for ((pole, count) in poleCounts) {
-            println("${pole.name}: $count")
-        }
-        for (entity in selectedEntities) {
-            entities.add(entity.toEntity())
-        }
+    val entityCounts =
+        entities.groupingBy { it.prototype.name }.eachCount().entries.sortedByDescending { it.value }.take(20)
+    for ((name, count) in entityCounts) {
+        println("$name: $count")
     }
 
     println("Saving result")
 
+    bp.entities.clear()
+    bp.entities.addAll(entities)
+
     launch {
-        val outFile = projectRoot.resolve("output/${inputBp.name}")
+        val outFile = projectRoot.resolve("output/${fileName}-result.txt")
         outFile.parentFile.mkdirs()
         bp.toBlueprint().exportTo(outFile)
     }
     launch {
-        drawEntities(entities)
-            .saveTo(projectRoot.resolve("output/${inputBp.nameWithoutExtension}-result").absolutePath)
+        drawEntities(entities).saveTo(projectRoot.resolve("output/${fileName}-result.png").absolutePath)
     }
 }

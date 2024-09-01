@@ -64,7 +64,6 @@ fun Node.hasSidewaysInput(): Boolean =
     (entity is TransportBelt || entity is UndergroundBelt) &&
             inEdges.any { it.type == LogisticsEdgeType.Belt && it.from.direction != entity.direction }
 
-
 fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTransportGraph {
     val nodes = mutableSetOf<Node>()
     val entityToNode = mutableMapOf<BlueprintEntity, Node>()
@@ -130,11 +129,15 @@ fun TransportBeltConnectable.canAcceptInputFrom(
     beltDirection: Direction,
 ): Boolean {
     if (targetTile.center() !in collisionBox) return false
-    if (this is WithIoType && ioType != IOType.Input) return false
     return when (this) {
-        is TransportBelt, is UndergroundBelt -> direction != beltDirection.oppositeDirection()
-        is LinkedBelt, is Splitter -> direction == beltDirection
-        is Loader -> direction == beltDirection
+        is TransportBelt -> direction != beltDirection.oppositeDirection()
+        is UndergroundBelt -> when (ioType) {
+            IOType.Input -> direction != beltDirection.oppositeDirection() // same direction or sides
+            IOType.Output -> (direction != beltDirection && direction != beltDirection.oppositeDirection()) // only sides
+        }
+
+        is LinkedBelt -> ioType == IOType.Input && direction == beltDirection
+        is Splitter, is Loader -> direction == beltDirection
     }
 }
 

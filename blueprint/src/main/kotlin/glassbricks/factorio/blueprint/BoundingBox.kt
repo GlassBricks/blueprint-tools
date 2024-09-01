@@ -16,7 +16,7 @@ public data class BoundingBox(
     @SerialName("left_top")
     public val leftTop: Position,
     @SerialName("right_bottom")
-    public val rightBottom: Position
+    public val rightBottom: Position,
 ) {
     public constructor(minX: Double, minY: Double, maxX: Double, maxY: Double) :
             this(Position(minX, minY), Position(maxX, maxY))
@@ -76,7 +76,7 @@ public data class BoundingBox(
     public companion object {
         public fun around(
             point: Position,
-            radius: Double
+            radius: Double,
         ): BoundingBox = bbox(point.x - radius, point.y - radius, point.x + radius, point.y + radius)
 
         public val EMPTY: BoundingBox = BoundingBox(Position.ZERO, Position.ZERO)
@@ -101,14 +101,14 @@ public fun bbox(
     minX: Double,
     minY: Double,
     maxX: Double,
-    maxY: Double
+    maxY: Double,
 ): BoundingBox = BoundingBox(minX, minY, maxX, maxY)
 
 public fun bbox(leftTop: Position, rightBottom: Position): BoundingBox = BoundingBox(leftTop, rightBottom)
 
 public data class TileBoundingBox(
     val leftTop: TilePosition,
-    val rightBottomExclusive: TilePosition
+    val rightBottomExclusive: TilePosition,
 ) : Collection<TilePosition> {
     public constructor(minX: Int, minY: Int, maxX: Int, maxY: Int) :
             this(TilePosition(minX, minY), TilePosition(maxX, maxY))
@@ -164,7 +164,7 @@ public fun tileBbox(
     minX: Int,
     minY: Int,
     maxXExclusive: Int,
-    maxYExclusive: Int
+    maxYExclusive: Int,
 ): TileBoundingBox = TileBoundingBox(minX, minY, maxXExclusive, maxYExclusive)
 
 public fun tileBbox(leftTop: TilePosition, rightBottomExclusive: TilePosition): TileBoundingBox =

@@ -54,7 +54,8 @@ class EntityPlacementModelTest {
     fun getAllPossiblePlacements() {
         model.addFixedPlacement(smallPole, smallPole.tileSnappedPosition(tilePos(0, 0)))
         model.addFixedPlacement(smallPole, smallPole.tileSnappedPosition(tilePos(1, 1)))
-        val placements = model.getAllPossibleUnrotatedPlacements(
+        val placements = getAllUnrotatedTilePlacementsBasic(
+            model,
             listOf(smallPole),
             tileBbox(0, 0, 2, 2)
         )
