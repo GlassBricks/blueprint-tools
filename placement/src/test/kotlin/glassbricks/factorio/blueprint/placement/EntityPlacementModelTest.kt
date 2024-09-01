@@ -12,7 +12,7 @@ class EntityPlacementModelTest {
 
     @Test
     fun addFixedEntity() {
-        val placement = model.addFixedEntity(
+        val placement = model.addFixedPlacement(
             smallPole, smallPole.tileSnappedPosition(tilePos(0, 0)),
         )
         assertEquals(smallPole, placement.prototype)
@@ -52,8 +52,8 @@ class EntityPlacementModelTest {
 
     @Test
     fun getAllPossiblePlacements() {
-        model.addFixedEntity(smallPole, smallPole.tileSnappedPosition(tilePos(0, 0)))
-        model.addFixedEntity(smallPole, smallPole.tileSnappedPosition(tilePos(1, 1)))
+        model.addFixedPlacement(smallPole, smallPole.tileSnappedPosition(tilePos(0, 0)))
+        model.addFixedPlacement(smallPole, smallPole.tileSnappedPosition(tilePos(1, 1)))
         val placements = model.getAllPossibleUnrotatedPlacements(
             listOf(smallPole),
             tileBbox(0, 0, 2, 2)

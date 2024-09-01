@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.placement
 
+import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.TilePosition
 
 
@@ -22,6 +23,22 @@ enum class CardinalDirection {
             else -> Axis.EastWest
         }
 }
+
+fun Direction.toCardinalDirection(): CardinalDirection? = when (this) {
+    Direction.North -> CardinalDirection.North
+    Direction.East -> CardinalDirection.East
+    Direction.South -> CardinalDirection.South
+    Direction.West -> CardinalDirection.West
+    else -> null
+}
+
+fun CardinalDirection.toFactorioDirection(): Direction = when (this) {
+    CardinalDirection.North -> Direction.North
+    CardinalDirection.East -> Direction.East
+    CardinalDirection.South -> Direction.South
+    CardinalDirection.West -> Direction.West
+}
+
 
 @JvmInline
 value class Axis private constructor(val isNorthSouth: Boolean) {

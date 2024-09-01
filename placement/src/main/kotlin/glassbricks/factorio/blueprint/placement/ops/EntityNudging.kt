@@ -1,3 +1,4 @@
+/*
 package glassbricks.factorio.blueprint.placement.ops
 
 import glassbricks.factorio.blueprint.Position
@@ -20,7 +21,7 @@ private class InserterLinks(
 fun EntityPlacementModel.addEntityNudgingWithInserters(
     entitiesToNudge: Set<EntityPlacement<*>>,
     nudgeRange: Int = 2,
-    nudgeCost: Double = 0.01
+    nudgeCost: Double = 0.01,
 ) {
     for (entity in entitiesToNudge) {
         require(entity in placements) { "Entity $entity is not in the model" }
@@ -56,7 +57,7 @@ fun EntityPlacementModel.addEntityNudgingWithInserters(
     fun enforceInserterLink(
         inserter: EntityPlacement<InserterPrototype>,
         linkPosition: Position,
-        linkEntities: Set<EntityPlacement<*>>?
+        linkEntities: Set<EntityPlacement<*>>?,
     ) {
         val atPos = placements.getAtPoint(linkPosition)
         if (linkEntities.isNullOrEmpty()) {
@@ -83,3 +84,4 @@ fun EntityPlacementModel.addEntityNudgingWithInserters(
         }
     }
 }
+*/

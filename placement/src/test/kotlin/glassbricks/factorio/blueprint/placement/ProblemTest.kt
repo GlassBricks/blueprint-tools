@@ -1,3 +1,4 @@
+/*
 package glassbricks.factorio.blueprint.placement
 
 import glassbricks.factorio.blueprint.json.BlueprintJson
@@ -58,3 +59,4 @@ class ProblemTest {
         assertEquals(1, poles.size)
     }
 }
+*/

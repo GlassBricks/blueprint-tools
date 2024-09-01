@@ -98,3 +98,5 @@ public interface WithControlBehavior {
 internal fun WithControlBehavior.shouldExportControlBehavior(): Boolean =
     controlBehavior.let { it is GenericOnOffControlBehavior && it.connectToLogisticNetwork }
             || this is CircuitConnectionPoint && !circuitConnections.isEmpty()
+
+public fun WithControlBehavior.hasControlBehavior(): Boolean = shouldExportControlBehavior()

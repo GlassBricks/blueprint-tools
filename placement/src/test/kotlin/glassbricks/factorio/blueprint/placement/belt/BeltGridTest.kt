@@ -33,7 +33,7 @@ class BeltGridTest {
         }
     }
 
-    private fun entityCostSolve(): Pair<GridVars, CpSolver> {
+    private fun entityCostSolve(): Pair<BeltGridVars, CpSolver> {
         val vars = grid.compile(CpModel())
         addEntityCost(vars)
         val solver = CpSolver()
@@ -41,7 +41,7 @@ class BeltGridTest {
         return vars to solver
     }
 
-    private fun materialCostSolve(): Pair<GridVars, CpSolver> {
+    private fun materialCostSolve(): Pair<BeltGridVars, CpSolver> {
         val vars = grid.compile(CpModel())
         addMaterialCost(vars)
         val solver = CpSolver()
@@ -49,7 +49,7 @@ class BeltGridTest {
         return vars to solver
     }
 
-    private fun addEntityCost(vars: GridVars) {
+    private fun addEntityCost(vars: BeltGridVars) {
         val cost = LinearExpr.sum(
             vars.map.values
                 .flatMapTo(mutableSetOf()) {
@@ -60,7 +60,7 @@ class BeltGridTest {
         vars.cp.minimize(cost)
     }
 
-    private fun addMaterialCost(vars: GridVars) {
+    private fun addMaterialCost(vars: BeltGridVars) {
         val costs = mapOf(
             normalBelt.beltProto to 1,
             normalBelt.ugProto to 4,
@@ -88,7 +88,7 @@ class BeltGridTest {
             start = start,
             direction,
             length = 12,
-            beltTiers = listOf(normalBelt)
+            beltTiers = setOf(normalBelt)
         )
 
         val (vars, solver) = entityCostSolve()
@@ -104,6 +104,12 @@ class BeltGridTest {
             assertTrue(solver.booleanValue(ugVar5))
             assertEquals(1, solver.value(vars[tile5]!!.lineId))
         }
+        for (dist in 1..4) {
+            val tile = start.shifted(direction, dist)
+            val ugConnectorVar = vars[tile]!!.ugConnectorSelected[direction]!![normalBelt.ugProto]!!
+            assertTrue(solver.booleanValue(ugConnectorVar), "dist=$dist")
+            assertEquals(1, solver.value(vars[tile]!!.lineId))
+        }
     }
 
     @ParameterizedTest
@@ -114,7 +120,7 @@ class BeltGridTest {
             start = start,
             direction,
             length = 12,
-            beltTiers = listOf(normalBelt, fastBelt)
+            beltTiers = setOf(normalBelt, fastBelt)
         )
         val (vars, solver) = materialCostSolve()
         assertEquals(12.0, solver.objectiveValue())
@@ -132,13 +138,13 @@ class BeltGridTest {
             start = tilePos(-2, 0),
             direction = CardinalDirection.East,
             length = 4,
-            beltTiers = listOf(normalBelt)
+            beltTiers = setOf(normalBelt)
         )
         grid.addBeltLine(
             start = tilePos(0, -2),
             direction = CardinalDirection.South,
             length = 5,
-            beltTiers = listOf(normalBelt)
+            beltTiers = setOf(normalBelt)
         )
         val (vars, solver) = materialCostSolve()
         assertEquals((4 + 2 * 4).toDouble(), solver.objectiveValue())
@@ -169,13 +175,13 @@ class BeltGridTest {
             start = start,
             direction,
             length = 8 * 3,
-            beltTiers = listOf(fastBelt)
+            beltTiers = setOf(fastBelt)
         )
         grid.addBeltLine(
             start = start.shifted(direction, 6),
             direction,
             length = 6 * 2,
-            beltTiers = listOf(normalBelt)
+            beltTiers = setOf(normalBelt)
         )
         val (vars, solver) = entityCostSolve()
         assertEquals(10.0, solver.objectiveValue())

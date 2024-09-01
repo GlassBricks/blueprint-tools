@@ -1,12 +1,16 @@
 package glassbricks.factorio.blueprint.placement.belt
 
+import glassbricks.factorio.blueprint.entity.BlueprintEntity
+import glassbricks.factorio.blueprint.entity.TransportBelt
+import glassbricks.factorio.blueprint.entity.UndergroundBelt
+import glassbricks.factorio.blueprint.json.IOType
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.TransportBeltConnectablePrototype
 import glassbricks.factorio.blueprint.prototypes.TransportBeltPrototype
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 
 
-class BeltTier(
+data class BeltTier(
     val beltProto: TransportBeltPrototype,
     val ugProto: UndergroundBeltPrototype,
 ) {
@@ -24,8 +28,15 @@ fun BlueprintPrototypes.getBeltTier(belt: TransportBeltPrototype): BeltTier? {
 fun BlueprintPrototypes.getBeltTier(beltName: String): BeltTier? =
     this.dataRaw.`transport-belt`[beltName]?.let { getBeltTier(it) }
 
-fun BlueprintPrototypes.getAllBeltTiers(): Map<TransportBeltPrototype, BeltTier> =
-    dataRaw.`transport-belt`.values.mapNotNull { getBeltTier(it) }.associateBy { it.beltProto }
+fun BlueprintPrototypes.getAllBeltTiers(): Map<TransportBeltConnectablePrototype, BeltTier> {
+    val beltTiers = dataRaw.`transport-belt`.values.mapNotNull { getBeltTier(it) }
+    return buildMap {
+        for (tier in beltTiers) {
+            put(tier.beltProto, tier)
+            put(tier.ugProto, tier)
+        }
+    }
+}
 
 sealed interface BeltType {
     override fun toString(): String
@@ -67,4 +78,15 @@ sealed interface BeltType {
 
         override fun opposite(): InputUnderground? = if (!isIsolated) InputUnderground(prototype) else null
     }
+
+}
+
+fun BlueprintEntity.getBeltType(): BeltType? = when (this) {
+    is TransportBelt -> BeltType.Belt(this.prototype)
+    is UndergroundBelt -> when (this.ioType) {
+        IOType.Input -> BeltType.InputUnderground(this.prototype)
+        IOType.Output -> BeltType.OutputUnderground(this.prototype)
+    }
+
+    else -> null
 }

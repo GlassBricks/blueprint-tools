@@ -3,6 +3,7 @@ package glassbricks.factorio.blueprint.placement
 import com.google.ortools.Loader
 import com.google.ortools.sat.*
 import glassbricks.factorio.blueprint.*
+import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.entity.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.entity.MutableSpatialDataStructure
 import glassbricks.factorio.blueprint.entity.SpatialDataStructure
@@ -11,53 +12,58 @@ import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 
 
 class EntityPlacementModel(
-    private val _placements: MutableSpatialDataStructure<EntityPlacement<*>> = DefaultSpatialDataStructure()
+    private val _placements: MutableSpatialDataStructure<EntityPlacement<*>> = DefaultSpatialDataStructure(),
+    override val cp: CpModel = CpModel(),
 ) : WithCp {
-    override val cp: CpModel = CpModel()
     val solver: CpSolver = CpSolver()
     val placements: SpatialDataStructure<EntityPlacement<*>> get() = _placements
 
     fun canPlace(placementInfo: Entity<*>): Boolean =
         placements.getColliding(placementInfo).none { it is FixedEntity }
 
-    fun <P : EntityPrototype> addFixedEntity(entity: Entity<P>): EntityPlacement<P> =
-        addFixedEntity(entity.prototype, entity.position, entity.direction)
-
-    fun <P : EntityPrototype> addFixedEntity(
-        prototype: P,
-        position: Position,
-        direction: Direction = Direction.North
-    ): EntityPlacement<P> = FixedEntity(cp, prototype, position, direction)
-        .also { _placements.add(it) }
-
-    fun <P : EntityPrototype> addFixedEntities(entities: Iterable<Entity<P>>): List<EntityPlacement<P>> {
-        return entities.map { addFixedEntity(it) }
+    fun <P : EntityPrototype> addFixedPlacement(entity: Entity<P>): EntityPlacement<P> {
+        return FixedEntity(cp, entity)
+            .also { _placements.add(it) }
     }
 
-    fun <P : EntityPrototype> addPlacement(entity: Entity<P>, cost: Double = 1.0): OptionalEntityPlacement<P> =
-        addPlacement(
-            entity.prototype,
-            entity.position,
-            entity.direction,
-            cost
-        )
+    fun <P : EntityPrototype> addFixedPlacement(
+        prototype: P,
+        position: Position,
+        direction: Direction = Direction.North,
+    ): EntityPlacement<P> = addFixedPlacement(BasicEntity(prototype, position, direction))
+
+    fun <P : EntityPrototype> addFixedEntities(entities: Iterable<Entity<P>>): List<EntityPlacement<P>> =
+        entities.map { addFixedPlacement(it) }
 
     fun <P : EntityPrototype> addPlacement(
-        prototype: P, position: Position, direction: Direction
-        = Direction.North, cost: Double = 1.0
+        entity: Entity<P>,
+        cost: Double = 1.0,
+        selectedLiteral: Literal? = null,
     ): OptionalEntityPlacement<P> =
-        EntityOptionImpl(
-            prototype,
-            position,
-            direction,
+        OptionalEntity(
+            entity,
             cost,
+            selectedLiteral,
             cp
-        )
-            .also { _placements.add(it) }
+        ).also { _placements.add(it) }
 
+    fun <P : EntityPrototype> addPlacement(
+        prototype: P,
+        position: Position,
+        direction: Direction = Direction.North,
+        cost: Double = 1.0,
+        selectedLiteral: Literal? = null,
+    ): OptionalEntityPlacement<P> =
+        addPlacement(BasicEntity(prototype, position, direction), cost, selectedLiteral)
+
+    /**
+     * Slightly optimized [addPlacement] that skips if a known fixed entity is in the way.
+     *
+     * Only here to save a bit of memory.
+     */
     fun <P : EntityPrototype> addPlacementIfPossible(
         entity: Entity<P>,
-        cost: Double = 1.0
+        cost: Double = 1.0,
     ): OptionalEntityPlacement<P>? {
         if (!canPlace(entity)) return null
         return addPlacement(entity, cost)
@@ -67,14 +73,17 @@ class EntityPlacementModel(
         prototype: P,
         position: Position,
         direction: Direction = Direction.North,
-        cost: Double = 1.0
-    ): OptionalEntityPlacement<P>? {
-        val option = EntityOptionImpl(prototype, position, direction, cost, cp)
-        if (!canPlace(option)) return null
-        _placements.add(option)
-        return option
-    }
+        cost: Double = 1.0,
+    ): OptionalEntityPlacement<P>? = addPlacementIfPossible(BasicEntity(prototype, position, direction), cost)
 
+    fun remove(placement: EntityPlacement<*>): Boolean {
+        val remove = _placements.remove(placement)
+        if (!remove) return false
+        if (placement is OptionalEntity<*> && placement.selectedOrNull != null) {
+            error("Removed placement with initialized selected variable")
+        }
+        return true
+    }
 
     fun removeAll(toRemove: Iterable<EntityPlacement<*>>) {
         for (placement in toRemove) {
@@ -82,14 +91,6 @@ class EntityPlacementModel(
         }
     }
 
-    fun remove(placement: EntityPlacement<*>): Boolean {
-        val remove = _placements.remove(placement)
-        if (!remove) return false
-        if (placement is EntityOptionImpl<*> && placement.selectedOrNull != null) {
-            error("Removed placement with initialized selected variable")
-        }
-        return true
-    }
 
     private fun setObjective() {
         val entities = placements
@@ -104,8 +105,9 @@ class EntityPlacementModel(
      * - Only one entity can occupy a tile; if an entity occupies a tile, it occupies _all_ of the tile
      * - placeable-off-grid is ignored
      * - Collision masks are ignored (everything collides with everything)
+     * - If fixed entities overlap, we still allow it (handles some edge cases due to assumptions from above)
      */
-    fun addNonOverlappingConstraints() {
+    private fun addNonOverlappingConstraint() {
         for (tile in placements.occupiedTiles()) {
             val entities = placements.getInTile(tile).toList()
             if (entities.any { it.isFixed }) {
@@ -128,12 +130,10 @@ class EntityPlacementModel(
 
     fun solve(
         display: Boolean = true,
-        useDefaults: Boolean = true,
     ): PlacementSolution {
-        if (useDefaults) {
-            addNonOverlappingConstraints()
-            setObjective()
-        }
+        addNonOverlappingConstraint()
+        setObjective()
+
         if (display) {
             val toDisplay = listOf(
                 "Time",
@@ -142,19 +142,17 @@ class EntityPlacementModel(
             )
             println(toDisplay.joinToString("\t| ") { it.padEnd(11) })
         }
-        val callback = object : CpSolverSolutionCallback() {
+        val callback = if (!display) null else object : CpSolverSolutionCallback() {
             override fun onSolutionCallback() {
-                if (display) {
-                    println(
-                        doubleArrayOf(
-                            wallTime(),
-                            objectiveValue(),
-                            bestObjectiveBound(),
-                        ).joinToString("\t| ") {
-                            "%.4f".format(it).padEnd(11)
-                        }
-                    )
-                }
+                println(
+                    doubleArrayOf(
+                        wallTime(),
+                        objectiveValue(),
+                        bestObjectiveBound(),
+                    ).joinToString("\t| ") {
+                        "%.4f".format(it).padEnd(11)
+                    }
+                )
             }
         }
         System.gc()
@@ -192,7 +190,18 @@ class PlacementSolution(
         } as List<OptionalEntityPlacement<*>>
 
     fun getSelectedEntities(): List<EntityPlacement<*>> =
-        model.placements.filter { solver.booleanValue(it.selected) }
+        model.placements.filter {
+            solver.booleanValue(it.selected)
+        }
+}
+
+
+fun PlacementSolution.toBlueprintEntities(): MutableSpatialDataStructure<BlueprintEntity> {
+    val result = DefaultSpatialDataStructure<BlueprintEntity>()
+    for (entity in getSelectedEntities()) {
+        result.add(entity.toBlueprintEntity())
+    }
+    return result
 }
 
 fun <P : EntityPrototype> EntityPlacementModel.getAllPossibleUnrotatedPlacements(

@@ -26,7 +26,7 @@ enum class LogisticsEdgeType {
 class ItemTransportGraph(
     val nodes: Set<Node>,
     val entityToNode: Map<BlueprintEntity, Node>,
-    val beltGrid: Map<TilePosition, Node>
+    val beltGrid: Map<TilePosition, Node>,
 ) {
     fun addEdge(from: Node, to: Node, type: LogisticsEdgeType) {
         val edge = Edge(from, to, type)
@@ -42,7 +42,7 @@ class ItemTransportGraph(
     class Node(
         val entity: BlueprintEntity,
         val outEdges: MutableList<Edge>,
-        val inEdges: MutableList<Edge>
+        val inEdges: MutableList<Edge>,
     ) : Entity<EntityPrototype> by entity {
         fun edgeTo(other: Node): Edge? = outEdges.find { it.to == other }
         fun edgeFrom(other: Node): Edge? = inEdges.find { it.from == other }
@@ -50,21 +50,20 @@ class ItemTransportGraph(
         fun inEdges(type: LogisticsEdgeType): List<Edge> = inEdges.filter { it.type == type }
         fun outEdges(type: LogisticsEdgeType): List<Edge> = outEdges.filter { it.type == type }
 
-        fun isSideloaded(): Boolean = when (entity) {
-            is TransportBelt -> inEdges.count { it.type == LogisticsEdgeType.Belt } > 1
-            is UndergroundBelt -> inEdges.any { it.type == LogisticsEdgeType.Belt && it.from.entity.direction != this.entity.direction }
-            else -> false
-        }
-
         override fun toString(): String = "Node(entity=$entity)"
     }
 
     class Edge(
         val from: Node,
         val to: Node,
-        val type: LogisticsEdgeType
+        val type: LogisticsEdgeType,
     )
 }
+
+fun Node.hasSidewaysInput(): Boolean =
+    (entity is TransportBelt || entity is UndergroundBelt) &&
+            inEdges.any { it.type == LogisticsEdgeType.Belt && it.from.direction != entity.direction }
+
 
 fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTransportGraph {
     val nodes = mutableSetOf<Node>()
@@ -104,7 +103,7 @@ fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTr
     fun addBeltEdge(beltNode: Node, outputTile: TilePosition) {
         val outputNode = belts[outputTile]
         if (outputNode?.entity is TransportBeltConnectable &&
-            (outputNode.entity as TransportBeltConnectable).canAcceptInputFrom(outputTile, beltNode.entity.direction)
+            outputNode.entity.canAcceptInputFrom(outputTile, beltNode.entity.direction)
         ) {
             graph.addEdge(beltNode, outputNode, LogisticsEdgeType.Belt)
         }
@@ -128,7 +127,7 @@ fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTr
  */
 fun TransportBeltConnectable.canAcceptInputFrom(
     targetTile: TilePosition,
-    beltDirection: Direction
+    beltDirection: Direction,
 ): Boolean {
     if (targetTile.center() !in collisionBox) return false
     if (this is WithIoType && ioType != IOType.Input) return false

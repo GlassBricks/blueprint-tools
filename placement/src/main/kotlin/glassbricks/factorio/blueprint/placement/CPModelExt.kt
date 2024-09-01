@@ -56,3 +56,7 @@ fun CpModel.addHint(literal: Literal, value: Boolean) {
         is NotBoolVar -> addHint(literal.not() as BoolVar, if (value) 0 else 1)
     }
 }
+
+fun CpModel.addEquality(literal: Literal, value: Boolean): Constraint {
+    return this.addEquality(literal, if (value) 1L else 0L)
+}

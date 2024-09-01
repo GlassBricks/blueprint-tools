@@ -10,7 +10,7 @@ import glassbricks.factorio.blueprint.json.exportTo
 import glassbricks.factorio.blueprint.json.importBlueprint
 import glassbricks.factorio.blueprint.model.BlueprintModel
 import glassbricks.factorio.blueprint.placement.*
-import glassbricks.factorio.blueprint.placement.ops.BeltCosts
+import glassbricks.factorio.blueprint.placement.ops.BeltOptimizeConfig
 import glassbricks.factorio.blueprint.placement.ops.addEntityNudgingWithInserters
 import glassbricks.factorio.blueprint.placement.ops.optimizeBeltLinesInBp
 import glassbricks.factorio.blueprint.placement.poles.*
@@ -30,7 +30,7 @@ private const val TIME_LIMIT = 60.0
 val projectRoot = File(".")
 private val inputBp = projectRoot.resolve("blueprints/outpost5.txt")
 
-val optimizeBelts: BeltCosts? = null
+val optimizeBelts: BeltOptimizeConfig? = null
 
 //BeltCosts(
 //    mapOf(

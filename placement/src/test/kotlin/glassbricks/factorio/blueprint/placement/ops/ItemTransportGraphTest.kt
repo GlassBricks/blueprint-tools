@@ -14,13 +14,13 @@ class ItemTransportGraphTest {
     private fun belt(
         x: Int,
         y: Int,
-        direction: Direction = Direction.North
+        direction: Direction = Direction.North,
     ): TransportBelt = VanillaPrototypes.createBpEntity("transport-belt", tilePos(x, y).center(), direction)
 
     private fun inputUG(
         x: Int,
         y: Int,
-        direction: Direction = Direction.North
+        direction: Direction = Direction.North,
     ): UndergroundBelt =
         VanillaPrototypes.createBpEntity<UndergroundBelt>("underground-belt", tilePos(x, y).center(), direction)
             .also { it.ioType = IOType.Input }
@@ -28,7 +28,7 @@ class ItemTransportGraphTest {
     private fun outputUg(
         x: Int,
         y: Int,
-        direction: Direction = Direction.North
+        direction: Direction = Direction.North,
     ): UndergroundBelt =
         VanillaPrototypes.createBpEntity<UndergroundBelt>("underground-belt", tilePos(x, y).center(), direction)
             .also { it.ioType = IOType.Output }
@@ -37,7 +37,7 @@ class ItemTransportGraphTest {
         VanillaPrototypes.createBpEntity("splitter", tilePos(x, y).center() + pos(0.5, 0.0), Direction.North)
 
     private fun testEntities(
-        vararg entities: BlueprintEntity
+        vararg entities: BlueprintEntity,
     ): Pair<ItemTransportGraph, List<ItemTransportGraph.Node>> {
         val graph = getItemTransportGraph(entities.asList().let(::DefaultSpatialDataStructure))
         return graph to entities.map { graph.entityToNode[it]!! }
@@ -76,7 +76,7 @@ class ItemTransportGraphTest {
         )
         assertEquals(node1.edgeTo(node2)?.type, LogisticsEdgeType.Belt)
         assertEquals(node2.edgeFrom(node1)?.type, LogisticsEdgeType.Belt)
-        assertTrue(node2.isSideloaded())
+        assertTrue(node2.hasSidewaysInput())
     }
 
     @Test
@@ -168,7 +168,7 @@ class ItemTransportGraphTest {
     private fun inserter(
         x: Int,
         y: Int,
-        direction: Direction = Direction.North
+        direction: Direction = Direction.North,
     ): Inserter = VanillaPrototypes.createBpEntity("inserter", tilePos(x, y).center(), direction)
 
     @Test

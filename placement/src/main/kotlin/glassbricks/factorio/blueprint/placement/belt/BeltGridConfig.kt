@@ -3,6 +3,7 @@ package glassbricks.factorio.blueprint.placement.belt
 import com.google.ortools.sat.CpModel
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.placement.CardinalDirection
+import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.shifted
 
 
@@ -11,22 +12,28 @@ open class BeltGridConfig {
     operator fun get(position: TilePosition): MutableBeltConfig = cells.getOrPut(position) { BeltConfigImpl() }
     fun get(x: Int, y: Int): BeltConfig = get(TilePosition(x, y))
 
-    fun compile(cp: CpModel): GridVars {
+    internal fun compile(cp: CpModel): BeltGridVars {
         val grid = cells.mapValuesTo(hashMapOf()) { (_, config) -> BeltVarsImpl(cp, config) }
-        return GridVars(cp, grid)
+        return BeltGridVars(cp, grid)
     }
 
     private var nextBeltId: BeltLineId = 1
     fun newBeltId(): BeltLineId = nextBeltId++
 }
 
+fun EntityPlacementModel.addBeltGrid(grid: BeltGridConfig): BeltGridVars {
+    val vars = grid.compile(cp)
+    addBeltPlacementsFromVars(vars)
+    return vars
+}
+
 fun BeltGridConfig.addBeltLine(
     start: TilePosition,
     direction: CardinalDirection,
     length: Int,
-    beltTiers: List<BeltTier>,
+    beltTiers: Set<BeltTier>,
     id: BeltLineId = newBeltId(),
-) {
+): BeltLineId {
     val startCell = get(start)
     startCell.makeLineStart(direction, id)
 
@@ -52,4 +59,5 @@ fun BeltGridConfig.addBeltLine(
             cell.addOption(direction, outputUg, id)
         }
     }
+    return id
 }

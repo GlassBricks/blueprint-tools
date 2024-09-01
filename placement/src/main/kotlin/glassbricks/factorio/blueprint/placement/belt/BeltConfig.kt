@@ -19,7 +19,7 @@ interface MutableBeltConfig : BeltConfig {
     fun makeLineStart(direction: CardinalDirection, lineId: BeltLineId)
     fun makeLineEnd(direction: CardinalDirection, lineId: BeltLineId)
 
-    fun forceNonEmpty(direction: CardinalDirection, lineId: BeltLineId)
+    fun forceIsId(lineId: BeltLineId)
     fun forceAs(direction: CardinalDirection, lineId: BeltLineId, beltType: BeltType)
 }
 
@@ -61,7 +61,8 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
 
     override fun makeLineStart(direction: CardinalDirection, lineId: BeltLineId) {
         isLineStart = true
-        forceNonEmpty(direction, lineId)
+        forcedDirection = direction
+        forcedBeltId = lineId
     }
 
     override fun makeLineEnd(
@@ -69,14 +70,11 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
         lineId: BeltLineId,
     ) {
         isLineEnd = true
-        forceNonEmpty(direction, lineId)
+        forcedDirection = direction
+        forcedBeltId = lineId
     }
 
-    override fun forceNonEmpty(
-        direction: CardinalDirection,
-        lineId: BeltLineId,
-    ) {
-        forcedDirection = direction
+    override fun forceIsId(lineId: BeltLineId) {
         forcedBeltId = lineId
     }
 
