@@ -1,17 +1,30 @@
-package glassbricks.factorio.blueprint.placement.grid
+package glassbricks.factorio.blueprint.placement.belt
 
+import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.MultiMap
 import glassbricks.factorio.blueprint.placement.MutableMultiMap
 import java.util.EnumMap
 
-interface CellConfig {
-    val belt: MutableCellBeltConfig
+typealias BeltLineId = Int
+
+interface BeltConfig {
+    fun getOptions(): Map<CardinalDirection, MultiMap<BeltType, BeltLineId>>
+    val canBeEmpty: Boolean
+    val propagatesForward: Boolean
+    val propagatesBackward: Boolean
 }
 
-fun CellConfig(): CellConfig = CellConfigImpl()
+interface MutableBeltConfig : BeltConfig {
+    fun addOption(direction: CardinalDirection, beltType: BeltType, lineId: BeltLineId)
+    fun makeLineStart(direction: CardinalDirection, lineId: BeltLineId)
+    fun makeLineEnd(direction: CardinalDirection, lineId: BeltLineId)
 
-internal class CellConfigImpl : CellConfig, MutableCellBeltConfig {
-    override val belt: MutableCellBeltConfig get() = this
+    fun forceNonEmpty(direction: CardinalDirection, lineId: BeltLineId)
+    fun forceAs(direction: CardinalDirection, lineId: BeltLineId, beltType: BeltType)
+}
+
+
+internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
     private val beltOptions =
         EnumMap<CardinalDirection, MutableMultiMap<BeltType, BeltLineId>>(CardinalDirection::class.java)
 

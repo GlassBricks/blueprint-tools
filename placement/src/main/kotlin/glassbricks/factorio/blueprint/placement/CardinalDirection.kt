@@ -1,8 +1,6 @@
-package glassbricks.factorio.blueprint.placement.grid
+package glassbricks.factorio.blueprint.placement
 
 import glassbricks.factorio.blueprint.TilePosition
-import glassbricks.factorio.blueprint.placement.enumMapOf
-import glassbricks.factorio.blueprint.placement.grid.CardinalDirection.*
 
 
 enum class CardinalDirection {
@@ -39,10 +37,10 @@ value class Axis private constructor(val isNorthSouth: Boolean) {
 }
 
 fun TilePosition.shifted(direction: CardinalDirection, amt: Int = 1): TilePosition = when (direction) {
-    North -> add(0, -amt)
-    East -> add(amt, 0)
-    South -> add(0, amt)
-    West -> add(-amt, 0)
+    CardinalDirection.North -> add(0, -amt)
+    CardinalDirection.East -> add(amt, 0)
+    CardinalDirection.South -> add(0, amt)
+    CardinalDirection.West -> add(-amt, 0)
 }
 
 inline fun <T> mapPerDirection(init: (CardinalDirection) -> T): Map<CardinalDirection, T> {

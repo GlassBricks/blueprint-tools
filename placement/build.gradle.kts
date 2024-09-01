@@ -16,6 +16,7 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.3")
 
     testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.0")
 }
 
 tasks.test {
