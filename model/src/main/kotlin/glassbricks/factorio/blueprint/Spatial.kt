@@ -1,7 +1,5 @@
-package glassbricks.factorio.blueprint.entity
+package glassbricks.factorio.blueprint
 
-import glassbricks.factorio.blueprint.BoundingBox
-import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.prototypes.CollisionMask
 
 
@@ -28,12 +26,13 @@ public interface Spatial {
     /**
      * True if [collisionBox] is exactly the collision box of this entity; true for most entities.
      *
-     * If overriding this to false, you should override [collidesWith] as well.
+     * If overriding this to false, you should override [intersects] as well.
      */
     public val isSimpleCollisionBox: Boolean get() = true
 
+    public infix fun intersects(area: BoundingBox): Boolean = collisionBox intersects area
     public infix fun collidesWith(other: Spatial): Boolean {
         if (!other.isSimpleCollisionBox) return other collidesWith this
-        return collisionBox intersects other.collisionBox && collisionMask collidesWith other.collisionMask
+        return collisionMask collidesWith other.collisionMask && this.intersects(other.collisionBox)
     }
 }

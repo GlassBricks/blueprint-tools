@@ -26,7 +26,7 @@ public class Inserter(override val prototype: InserterPrototype, json: EntityJso
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): Inserter = Inserter(prototype, toDummyJson())
+    override fun copyIsolated(): Inserter = Inserter(prototype, jsonForCopy())
 }
 
 public class InserterControlBehavior(json: ControlBehaviorJson?) : GenericOnOffControlBehavior(json), ControlBehavior {

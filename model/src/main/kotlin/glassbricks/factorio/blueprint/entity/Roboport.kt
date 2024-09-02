@@ -19,7 +19,7 @@ public class Roboport(
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): Roboport = Roboport(prototype, toDummyJson())
+    override fun copyIsolated(): Roboport = Roboport(prototype, jsonForCopy())
 }
 
 public class RoboportControlBehavior(

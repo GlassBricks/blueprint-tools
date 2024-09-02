@@ -3,8 +3,8 @@ package drawing
 import com.github.nwillc.ksvg.RenderMode
 import com.github.nwillc.ksvg.elements.SVG
 import glassbricks.factorio.blueprint.*
-import glassbricks.factorio.blueprint.entity.Spatial
-import glassbricks.factorio.blueprint.entity.SpatialDataStructure
+import glassbricks.factorio.blueprint.Spatial
+import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.placement.EntityPlacement
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
@@ -21,11 +21,24 @@ import javax.imageio.ImageIO
 import kotlin.math.ceil
 
 interface Drawing {
-    fun draw(entity: Spatial, color: Color)
-    fun drawEntity(entity: Spatial) = draw(entity, getEntityColor(entity))
+    fun drawRect(area: BoundingBox, color: Color, fill: Boolean = true)
+    fun drawRect(rect: RotatedRectangle, color: Color)
+    fun drawLine(start: Position, end: Position, color: Color)
+    fun drawPoint(point: Position, color: Color)
+
     fun show(): Any
     fun saveTo(filename: String): Drawing
 }
+
+fun Drawing.drawRect(entity: Spatial, color: Color) {
+    val collisionBox = entity.collisionBox.roundOutToTileBbox()
+        .toBoundingBox()
+    drawRect(collisionBox, color)
+}
+
+fun Drawing.drawEntity(entity: Spatial) = drawRect(entity, getEntityColor(entity))
+
+fun Color.withAlpha(alpha: Int): Color = Color(red, green, blue, alpha)
 
 abstract class DrawingInBounds(
     protected val bounds: BoundingBox,
@@ -75,7 +88,10 @@ fun SVG.saveTo(file: File) {
 
 fun Int.toHex() = toString(16).padStart(2, '0')
 fun Color.toSvgString(): String {
-    return "#${red.toHex()}${green.toHex()}${blue.toHex()}"
+    if (alpha == 0) return "none"
+    if (alpha == 255)
+        return "#${red.toHex()}${green.toHex()}${blue.toHex()}"
+    return "rgba(${red},${green},${blue},${alpha / 255.0})"
 }
 
 class SvgDrawing(
@@ -90,32 +106,61 @@ class SvgDrawing(
         svg.height = imageHeight.toString()
     }
 
-    override fun draw(entity: Spatial, color: Color) {
-        val collisionBox = entity.collisionBox.roundOutToTileBbox()
-            .toBoundingBox()
-        val (minX, minY) = toImagePos(collisionBox.leftTop)
-        val (maxX, maxY) = toImagePos(collisionBox.rightBottom)
+
+    override fun drawRect(area: BoundingBox, color: Color, fill: Boolean) {
+        val (minX, minY) = toImagePos(area.leftTop)
+        val (maxX, maxY) = toImagePos(area.rightBottom)
 
         svg.rect {
             x = minX.toString()
             y = minY.toString()
             width = (maxX - minX).toString()
             height = (maxY - minY).toString()
+            if (fill) this.fill = color.toSvgString()
+        }
+    }
+
+    override fun drawRect(rect: RotatedRectangle, color: Color) {
+        val points = rect.points.map { toImagePos(it) }
+        svg.polygon {
+            this.points = points.joinToString(" ") { (x, y) -> "$x,$y" }
             fill = color.toSvgString()
-            stroke = "black"
+        }
+    }
+
+    override fun drawLine(
+        start: Position,
+        end: Position,
+        color: Color,
+    ) {
+        val (startX, startY) = toImagePos(start)
+        val (endX, endY) = toImagePos(end)
+
+        svg.line {
+            x1 = startX.toString()
+            y1 = startY.toString()
+            x2 = endX.toString()
+            y2 = endY.toString()
+            stroke = color.toSvgString()
             strokeWidth = (0.1 * tileDistance).toString()
         }
     }
 
-    override fun drawEntity(entity: Spatial) {
-        val color = getEntityColor(entity)
-        draw(entity, color)
+    override fun drawPoint(point: Position, color: Color) {
+        val (x, y) = toImagePos(point)
+        svg.circle {
+            cx = x.toString()
+            cy = y.toString()
+            r = (0.1 * tileDistance).toString()
+            fill = color.toSvgString()
+        }
     }
 
     override fun show() = svg.show()
 
     override fun saveTo(filename: String) = apply {
-        val file = File("$filename.svg")
+        val fileName = if (filename.endsWith(".svg")) filename else "$filename.svg"
+        val file = File(fileName)
         file.parentFile.mkdirs()
         svg.saveTo(file)
     }
@@ -135,17 +180,35 @@ class BufferedImageDrawing(
         graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
     }
 
-    override fun draw(entity: Spatial, color: Color) {
-        val collisionBox = entity.collisionBox.roundOutToTileBbox()
-            .toBoundingBox()
-        val (minX, minY) = toImagePos(collisionBox.leftTop)
-        val (maxX, maxY) = toImagePos(collisionBox.rightBottom)
-        graphics.color = color
+    override fun drawRect(area: BoundingBox, color: Color, fill: Boolean) {
+        val (minX, minY) = toImagePos(area.leftTop)
+        val (maxX, maxY) = toImagePos(area.rightBottom)
         val rect = Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY)
-        graphics.fill(rect)
+        if (fill) {
+            graphics.color = color
+            graphics.fill(rect)
+        }
         graphics.color = Color.GRAY
         graphics.stroke = BasicStroke((0.1 * tileDistance).toFloat())
         graphics.draw(rect)
+    }
+
+    override fun drawRect(rect: RotatedRectangle, color: Color) {
+        TODO("Not yet implemented")
+    }
+
+    override fun drawLine(start: Position, end: Position, color: Color) {
+        val (startX, startY) = toImagePos(start)
+        val (endX, endY) = toImagePos(end)
+        graphics.color = color
+        graphics.stroke = BasicStroke((0.1 * tileDistance).toFloat())
+        graphics.drawLine(startX.toInt(), startY.toInt(), endX.toInt(), endY.toInt())
+    }
+
+    override fun drawPoint(point: Position, color: Color) {
+        val (x, y) = toImagePos(point)
+        graphics.color = color
+        graphics.fillOval(x.toInt(), y.toInt(), (0.1 * tileDistance).toInt(), (0.1 * tileDistance).toInt())
     }
 
     override fun show(): Any {
@@ -193,6 +256,6 @@ fun Drawing.drawHeatmap(entities: Map<out Spatial, Double>) {
     for ((entity, value) in entities) {
         val percentile = (value - min) / (max - min)
         val color = getColor(percentile)
-        draw(entity, color)
+        drawRect(entity, color)
     }
 }

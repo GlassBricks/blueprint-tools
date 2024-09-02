@@ -1,10 +1,10 @@
 package glassbricks.factorio.blueprint.placement.belt
 
 import com.google.ortools.sat.CpSolverStatus
+import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
+import glassbricks.factorio.blueprint.MutableSpatialDataStructure
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
-import glassbricks.factorio.blueprint.entity.DefaultSpatialDataStructure
-import glassbricks.factorio.blueprint.entity.MutableSpatialDataStructure
 import glassbricks.factorio.blueprint.entity.placedAtTile
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
@@ -13,7 +13,6 @@ import glassbricks.factorio.blueprint.placement.ops.BeltLine
 import glassbricks.factorio.blueprint.placement.ops.BeltLineTile
 import glassbricks.factorio.blueprint.placement.ops.addBeltLine
 import glassbricks.factorio.blueprint.placement.shifted
-import glassbricks.factorio.blueprint.placement.toBlueprintEntities
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.tilePos
 import org.junit.jupiter.api.Test
@@ -74,7 +73,7 @@ class OptimizeBeltLineTest {
         val solution = model.solve()
         assertEquals(CpSolverStatus.OPTIMAL, solution.status)
 
-        val resultEntities = solution.toBlueprintEntities(null)
+        val resultEntities = solution.export()
         return getBeltsAsStr(resultEntities, startPos, direction, inStr.length)
     }
 

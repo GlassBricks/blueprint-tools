@@ -1,6 +1,5 @@
 package glassbricks.factorio.blueprint
 
-import glassbricks.factorio.blueprint.entity.Spatial
 import glassbricks.factorio.blueprint.prototypes.CollisionMask
 import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.effectiveCollisionMask
@@ -47,7 +46,7 @@ public fun computeCollisionBox(
 public open class BasicEntity<out P : EntityPrototype>(
     public override val prototype: P,
     public override val position: Position,
-    public override val direction: Direction = Direction.North
+    public override val direction: Direction = Direction.North,
 ) : Entity<P> {
     override val collisionBox: BoundingBox get() = computeCollisionBox(prototype, position, direction)
     override val isSimpleCollisionBox: Boolean get() = true
@@ -55,6 +54,6 @@ public open class BasicEntity<out P : EntityPrototype>(
 
 public fun <P : EntityPrototype> P.basicPlacedAtTile(
     position: TilePosition,
-    direction: Direction = Direction.North
+    direction: Direction = Direction.North,
 ): BasicEntity<P> =
     BasicEntity(this, this.tileSnappedPosition(position), direction)

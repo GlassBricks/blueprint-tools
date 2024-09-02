@@ -22,7 +22,7 @@ public class Accumulator(
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): Accumulator = Accumulator(prototype, toDummyJson())
+    override fun copyIsolated(): Accumulator = Accumulator(prototype, jsonForCopy())
 }
 
 public class AccumulatorControlBehavior(

@@ -20,7 +20,7 @@ public class MiningDrill(
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): MiningDrill = MiningDrill(prototype, toDummyJson())
+    override fun copyIsolated(): MiningDrill = MiningDrill(prototype, jsonForCopy())
 }
 
 public class MiningDrillControlBehavior(json: ControlBehaviorJson?) : GenericOnOffControlBehavior(json),

@@ -1,18 +1,21 @@
 package glassbricks.factorio.blueprint.model
 
+import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
+import glassbricks.factorio.blueprint.MutableSpatialDataStructure
 import glassbricks.factorio.blueprint.SignalType
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
+import java.io.File
 
 public class Blueprint
-private constructor(
+public constructor(
     public override var label: String? = null,
     public override var label_color: Color? = null,
     public override var description: String? = null,
-    public val iconsArr: Array<SignalIDJson?>,
+    public val iconsArr: Array<SignalIDJson?> = arrayOfNulls(4),
     public val tiles: TileMap = HashMap(),
     public val entities: MutableSpatialDataStructure<BlueprintEntity> = DefaultSpatialDataStructure(),
     public var snapToGridSettings: SnapToGridSettings? = null,
@@ -46,7 +49,10 @@ private constructor(
         version = blueprint.version,
     )
 
-    public constructor() : this(iconsArr = arrayOfNulls(4), tiles = HashMap())
+    public constructor(
+        file: File,
+        prototypes: BlueprintPrototypes = VanillaPrototypes,
+    ) : this(importBlueprintJson(file), prototypes)
 
     override val icons: List<Icon>
         get() {
@@ -65,7 +71,7 @@ private constructor(
         return listOf(Icon(1, SignalIDJson(name = item, type = SignalType.item)))
     }
 
-    public fun toBlueprint(): BlueprintJson = BlueprintJson(
+    public fun toJson(): BlueprintJson = BlueprintJson(
         item = item,
         label = label,
         label_color = label_color,

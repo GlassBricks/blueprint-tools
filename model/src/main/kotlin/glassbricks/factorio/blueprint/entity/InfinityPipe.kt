@@ -30,7 +30,7 @@ public class InfinityPipe(
         }
     }
 
-    override fun copyIsolated(): InfinityPipe = InfinityPipe(prototype, toDummyJson())
+    override fun copyIsolated(): InfinityPipe = InfinityPipe(prototype, jsonForCopy())
 }
 
 public data class InfinityPipeSettings(

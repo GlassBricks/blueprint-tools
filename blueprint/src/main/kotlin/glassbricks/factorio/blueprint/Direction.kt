@@ -25,6 +25,7 @@ public enum class Direction {
 
     public fun oppositeDirection(): Direction = entries[(ordinal + 4) % 8]
     public val isCardinal: Boolean get() = ordinal % 2 == 0
+    public val radians: Double get() = ordinal * Math.PI / 4
 
     internal object Serializer : EnumOrdinalSerializer<Direction>(Direction::class)
 

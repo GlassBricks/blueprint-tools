@@ -45,6 +45,7 @@ public fun Importable.exportToString(): String {
 }
 
 public fun Importable.exportTo(file: File) {
+    file.parentFile.mkdirs()
     this.exportTo(file.outputStream())
 }
 

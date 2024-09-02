@@ -35,9 +35,20 @@ public abstract class BaseEntity(json: EntityJson) : BlueprintEntity {
 
     private var cachedCollisionBox: BoundingBox? = null
     override val collisionBox: BoundingBox
-        get() = cachedCollisionBox ?: computeCollisionBox(prototype, position, direction).also {
+        get() = cachedCollisionBox ?: this.computeThisCollisionBox(
+            prototype,
+            position,
+            direction,
+        ).also {
             cachedCollisionBox = it
         }
+
+    protected open fun computeThisCollisionBox(
+        prototype: EntityPrototype,
+        position: Position,
+        direction: Direction,
+    ): BoundingBox =
+        computeCollisionBox(prototype, position, direction)
 
     public override val collisionMask: CollisionMask
         get() = prototype.collision_mask ?: CollisionMask.DEFAULT_MASKS[prototype.type]!!
@@ -56,7 +67,7 @@ public abstract class BaseEntity(json: EntityJson) : BlueprintEntity {
 
     protected abstract fun exportToJson(json: EntityJson)
 
-    protected fun toDummyJson(): EntityJson = toJsonIsolated(EntityNumber(1))
+    protected fun jsonForCopy(): EntityJson = toJsonIsolated(EntityNumber(1))
 
     override fun toString(): String = "${this::class.simpleName}(name=$name, position=$position, direction=$direction)"
 }
@@ -71,5 +82,5 @@ public class BasicBpEntity<out P : EntityPrototype>(
     json: EntityJson,
 ) : BaseEntity(json) {
     override fun exportToJson(json: EntityJson) {}
-    override fun copyIsolated(): BasicBpEntity<P> = BasicBpEntity(prototype, toDummyJson())
+    override fun copyIsolated(): BasicBpEntity<P> = BasicBpEntity(prototype, jsonForCopy())
 }

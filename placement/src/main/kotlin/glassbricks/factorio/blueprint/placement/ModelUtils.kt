@@ -1,11 +1,11 @@
 package glassbricks.factorio.blueprint.placement
 
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.Vector
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
-import glassbricks.factorio.blueprint.entity.SpatialDataStructure
-import glassbricks.factorio.blueprint.entity.findMatching
 import glassbricks.factorio.blueprint.entity.hasControlBehavior
+import glassbricks.factorio.blueprint.findMatching
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placement.ops.addBeltLinesFrom
 import glassbricks.factorio.blueprint.placement.poles.addPolePlacements
@@ -33,19 +33,21 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
     var useLabelConnectivity = false
     var poleRootRel: Vector = Vector(0.5, 0.5)
 
+    var hintFromExising = true
 
-    val toPreserve = mutableSetOf<BlueprintEntity>()
 
-    fun preserveWithControlBehavior() {
+    val toKeep = mutableSetOf<BlueprintEntity>()
+
+    fun keepWithControlBehavior() {
         for (entity in entities) {
             if (entity.hasControlBehavior())
-                toPreserve.add(entity)
+                toKeep.add(entity)
         }
     }
 
-    inline fun preserveIf(condition: (BlueprintEntity) -> Boolean) {
+    inline fun keepIf(condition: (BlueprintEntity) -> Boolean) {
         for (entity in entities) {
-            if (condition(entity)) toPreserve.add(entity)
+            if (condition(entity)) toKeep.add(entity)
         }
     }
 
@@ -62,7 +64,7 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
      */
     var distanceCostFactor: Double = 0.0
 
-    fun buildModel(): EntityPlacementModel {
+    fun build(): EntityPlacementModel {
         val model = EntityPlacementModel()
         val beltGrid = if (optimizeBeltLines) {
             model.addBeltLinesFrom(entities)
@@ -105,7 +107,7 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
             }
         }
 
-        for (entity in toPreserve) {
+        for (entity in toKeep) {
             val existingEntity =
                 model.placements.findMatching(entity) ?: error("Entity placement matching preserved entity not found")
             model.cp.addEquality(existingEntity.selected, true)
@@ -120,6 +122,13 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
         if (distanceCostFactor != 0.0) {
             val center = bounds.getRelPoint(distanceCostCenter ?: poleRootRel)
             model.addDistanceCostFrom(center, distanceCostFactor)
+        }
+
+        if (hintFromExising) {
+            for (placement in model.placements) if (placement is OptionalEntityPlacement<*>) {
+                val existingEntity = entities.findMatching(placement)
+                if (existingEntity != null) model.cp.addHint(placement.selected, true)
+            }
         }
 
         return model

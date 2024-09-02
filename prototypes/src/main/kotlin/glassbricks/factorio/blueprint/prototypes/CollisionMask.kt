@@ -67,6 +67,7 @@ public data class CollisionMask(
             )
         )
 
+
         init {
             val sets = arrayOf(
                 PLAIN_OBJECT_MASK,
@@ -78,7 +79,8 @@ public data class CollisionMask(
                         CollisionMaskLayer.`object-layer`,
                         CollisionMaskLayer.`rail-layer`,
                         CollisionMaskLayer.`water-tile`
-                    )
+                    ),
+                    notCollidingWithItself = true
                 ),
                 CollisionMask(
                     EnumSet.of(

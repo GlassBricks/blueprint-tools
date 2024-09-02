@@ -40,7 +40,7 @@ public class ArithmeticCombinator(
         json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): ArithmeticCombinator = ArithmeticCombinator(prototype, toDummyJson())
+    override fun copyIsolated(): ArithmeticCombinator = ArithmeticCombinator(prototype, jsonForCopy())
 }
 
 public class ArithmeticCombinatorControlBehavior(
@@ -64,7 +64,7 @@ public class DeciderCombinator(
         json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): DeciderCombinator = DeciderCombinator(prototype, toDummyJson())
+    override fun copyIsolated(): DeciderCombinator = DeciderCombinator(prototype, jsonForCopy())
 }
 
 public class DeciderCombinatorControlBehavior(
@@ -89,7 +89,7 @@ public class ConstantCombinator(
         json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): ConstantCombinator = ConstantCombinator(prototype, toDummyJson())
+    override fun copyIsolated(): ConstantCombinator = ConstantCombinator(prototype, jsonForCopy())
 }
 
 public class ConstantCombinatorControlBehavior(

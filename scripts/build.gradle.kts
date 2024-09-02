@@ -17,6 +17,9 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlin-jupyter-api:0.12.0-236")
     api("org.jetbrains.kotlinx:kotlin-jupyter-lib-ext:0.12.0-236")
     api("com.github.nwillc.ksvg:ksvg:master-SNAPSHOT")
+
+    testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.0")
 }
 
 
@@ -26,4 +29,13 @@ sourceSets {
             setSrcDirs(listOf("src"))
         }
     }
+    test {
+        kotlin {
+            setSrcDirs(listOf("test"))
+        }
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

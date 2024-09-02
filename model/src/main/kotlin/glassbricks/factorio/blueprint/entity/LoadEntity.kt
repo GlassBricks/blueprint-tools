@@ -33,7 +33,7 @@ public fun EntityPrototype.createBpEntity(
 
 public fun EntityPrototype.placedAtTile(
     position: TilePosition,
-    direction: Direction = Direction.North
+    direction: Direction = Direction.North,
 ): BlueprintEntity = createBpEntity(this, this.tileSnappedPosition(position), direction)
 
 private typealias Constructor = (EntityPrototype, EntityJson, BlueprintJson?) -> BlueprintEntity
@@ -93,6 +93,8 @@ private val matcherMap = hashMapOf<Class<out EntityPrototype>, Constructor>().ap
     add(::DeciderCombinator)
     add(::ConstantCombinator)
     add(::Accumulator)
+    add(::StraightRail)
+    add(::CurvedRail)
     add(::RailSignal)
     add(::RailChainSignal)
     add(::Wall)
@@ -116,7 +118,6 @@ private val matcherMap = hashMapOf<Class<out EntityPrototype>, Constructor>().ap
     basic<ArtilleryTurretPrototype>()
     basic<OffshorePumpPrototype>()
     basic<PipeToGroundPrototype>()
-    basic<RailPrototype>()
     basic<HeatPipePrototype>()
     basic<RadarPrototype>()
     basic<GatePrototype>()

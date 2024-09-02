@@ -137,7 +137,7 @@ public data class TilePosition(val x: Int, val y: Int) : Comparable<TilePosition
 
 
     /** Gets the map position bounding box of this tile. */
-    public fun mapBoundingBox(): BoundingBox = BoundingBox(pos(x.toDouble(), y.toDouble()), pos(x + 1.0, y + 1.0))
+    public fun tileBoundingBox(): BoundingBox = BoundingBox(pos(x.toDouble(), y.toDouble()), pos(x + 1.0, y + 1.0))
 
     public fun manhattanDistanceTo(other: TilePosition): Int = (x - other.x).absoluteValue + (y - other.y).absoluteValue
 
@@ -189,28 +189,20 @@ public data class Vector(
 
     public fun rotate(direction: Direction): Vector = when (direction) {
         Direction.North -> this
-        Direction.Northeast -> Vector(x * sin45 - y * sin45, x * sin45 + y * sin45)
+        Direction.Northeast -> Vector(x * SIN45 - y * SIN45, x * SIN45 + y * SIN45)
         Direction.East -> Vector(-y, x)
-        Direction.Southeast -> Vector(-x * sin45 - y * sin45, x * sin45 - y * sin45)
+        Direction.Southeast -> Vector(-x * SIN45 - y * SIN45, x * SIN45 - y * SIN45)
         Direction.South -> Vector(-x, -y)
-        Direction.Southwest -> Vector(-x * sin45 + y * sin45, -x * sin45 - y * sin45)
+        Direction.Southwest -> Vector(-x * SIN45 + y * SIN45, -x * SIN45 - y * SIN45)
         Direction.West -> Vector(y, -x)
-        Direction.Northwest -> Vector(x * sin45 + y * sin45, -x * sin45 + y * sin45)
+        Direction.Northwest -> Vector(x * SIN45 + y * SIN45, -x * SIN45 + y * SIN45)
     }
 
     public fun closeTo(other: Vector, epsilon: Double = 1e-6): Boolean =
         (x - other.x).absoluteValue < epsilon && (y - other.y).absoluteValue < epsilon
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Vector) return false
-        val xeq = x == other.x
-        val result = xeq && y == other.y
-        return result
-    }
-
     public companion object {
-        private const val sin45 = 0.7071067811865476 // = sqrt(2) / 2
+        private const val SIN45 = 0.7071067811865476 // = sqrt(2) / 2
         public val ZERO: Vector = Vector(0.0, 0.0)
     }
 

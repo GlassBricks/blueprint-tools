@@ -15,5 +15,5 @@ public class Beacon(
         json.items = itemRequests.takeIf { it.isNotEmpty() }
     }
 
-    override fun copyIsolated(): Beacon = Beacon(prototype, toDummyJson())
+    override fun copyIsolated(): Beacon = Beacon(prototype, jsonForCopy())
 }

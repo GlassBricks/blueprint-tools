@@ -17,5 +17,5 @@ public class SimpleEntityWithOwner(
         json.variation = variation
     }
 
-    override fun copyIsolated(): SimpleEntityWithOwner = SimpleEntityWithOwner(prototype, toDummyJson())
+    override fun copyIsolated(): SimpleEntityWithOwner = SimpleEntityWithOwner(prototype, jsonForCopy())
 }

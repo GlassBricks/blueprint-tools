@@ -23,5 +23,5 @@ public class LinkedContainer(
         json.filters = filtersAsIndexList()
     }
 
-    override fun copyIsolated(): LinkedContainer = LinkedContainer(prototype, toDummyJson())
+    override fun copyIsolated(): LinkedContainer = LinkedContainer(prototype, jsonForCopy())
 }

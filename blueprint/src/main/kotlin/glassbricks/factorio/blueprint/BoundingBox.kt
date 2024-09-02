@@ -72,6 +72,7 @@ public data class BoundingBox(
     override fun toString(): String = "BoundingBox(pos($minX, $minY), pos($maxX, $maxY))"
 
     public fun center(): Position = Position((minX + maxX) / 2, (minY + maxY) / 2)
+    public fun centerVec(): Vector = Vector((minX + maxX) / 2, (minY + maxY) / 2)
 
     public companion object {
         public fun around(

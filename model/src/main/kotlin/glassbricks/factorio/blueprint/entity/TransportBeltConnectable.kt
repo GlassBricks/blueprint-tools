@@ -26,7 +26,7 @@ public class TransportBelt(
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): TransportBelt = TransportBelt(prototype, toDummyJson())
+    override fun copyIsolated(): TransportBelt = TransportBelt(prototype, jsonForCopy())
 }
 
 public class TransportBeltControlBehavior(
@@ -58,7 +58,7 @@ public class UndergroundBelt(
         json.type = ioType
     }
 
-    override fun copyIsolated(): UndergroundBelt = UndergroundBelt(prototype, toDummyJson())
+    override fun copyIsolated(): UndergroundBelt = UndergroundBelt(prototype, jsonForCopy())
 }
 
 public class Splitter(
@@ -75,7 +75,7 @@ public class Splitter(
         json.filter = filter
     }
 
-    override fun copyIsolated(): Splitter = Splitter(prototype, toDummyJson())
+    override fun copyIsolated(): Splitter = Splitter(prototype, jsonForCopy())
 }
 
 public class Loader(
@@ -91,7 +91,7 @@ public class Loader(
         json.type = ioType
     }
 
-    override fun copyIsolated(): Loader = Loader(prototype, toDummyJson())
+    override fun copyIsolated(): Loader = Loader(prototype, jsonForCopy())
 }
 
 public class LinkedBelt(
@@ -105,5 +105,5 @@ public class LinkedBelt(
         json.type = ioType
     }
 
-    override fun copyIsolated(): LinkedBelt = LinkedBelt(prototype, toDummyJson())
+    override fun copyIsolated(): LinkedBelt = LinkedBelt(prototype, jsonForCopy())
 }

@@ -104,8 +104,8 @@ class BlueprintJsonModelTest {
         val model = Blueprint(bp)
         assertBpMatches(bp, model)
 
-        val back = model.toBlueprint()
-        val backAgain = Blueprint(back).toBlueprint()
+        val back = model.toJson()
+        val backAgain = Blueprint(back).toJson()
 //        assertEquals(back.entities, backAgain.entities)
         for ((e1, e2) in back.entities!!.zip(backAgain.entities!!)) {
             assertEquals(e1, e2)

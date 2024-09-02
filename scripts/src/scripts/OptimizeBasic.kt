@@ -15,13 +15,13 @@ import kotlin.system.exitProcess
 val projectRoot = File(".")
 
 suspend fun main(): Unit = coroutineScope {
-    val inputFile = projectRoot.resolve("test-blueprints/earlybase.txt")
+    val inputFile = projectRoot.resolve("scripts/test-blueprints/earlybase.txt")
     val bp = Blueprint(importBlueprintJson(inputFile))
-    val modelBuilder = BpModelBuilder(bp).apply {
+    val model = BpModelBuilder(bp).apply {
         optimizeBeltLines = true
         optimizePoles = listOf(
             VanillaPrototypes.getAs("small-electric-pole"),
-//            VanillaPrototypes.getAs("medium-electric-pole"),
+            VanillaPrototypes.getAs("medium-electric-pole"),
         )
         enforcePolesConnected = true
 
@@ -36,12 +36,15 @@ suspend fun main(): Unit = coroutineScope {
 //        check(entityCosts["underground-belt"]!! * 3 < entityCosts["transport-belt"]!! * 5)
 //        check(entityCosts["underground-belt"]!! * 3 > entityCosts["transport-belt"]!! * 4)
 
-        distanceCostFactor = 1e-4
+        distanceCostFactor = 1e-3
 
-        preserveWithControlBehavior()
+        keepWithControlBehavior()
+    }.build()
+    model.timeLimitInSeconds = 60.0 * 10
+    model.solver.parameters.apply {
+        useObjectiveLbSearch = true
+        maxMemoryInMb = 1024 * 8
     }
-    val model = modelBuilder.buildModel()
-    model.timeLimitInSeconds = 60.0 * 1.5
 
     val fileName = inputFile.nameWithoutExtension
     drawEntities(model.placements).saveTo("output/${fileName}-pre-solve")
@@ -50,7 +53,7 @@ suspend fun main(): Unit = coroutineScope {
     println("Solved: ${solution.status}")
     if (!solution.isOk) exitProcess(1)
 
-    val entities = solution.toBlueprintEntities(modelBuilder.entities)
+    val entities = solution.export()
 
     val entityCounts =
         entities.groupingBy { it.prototype.name }.eachCount().entries.sortedByDescending { it.value }.take(20)
@@ -66,7 +69,7 @@ suspend fun main(): Unit = coroutineScope {
     launch {
         val outFile = projectRoot.resolve("output/${fileName}-result.txt")
         outFile.parentFile.mkdirs()
-        bp.toBlueprint().exportTo(outFile)
+        bp.toJson().exportTo(outFile)
     }
     launch {
         drawEntities(entities).saveTo(projectRoot.resolve("output/${fileName}-result.png").absolutePath)

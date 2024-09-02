@@ -37,7 +37,7 @@ public class ProgrammableSpeaker(
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): ProgrammableSpeaker = ProgrammableSpeaker(prototype, toDummyJson())
+    override fun copyIsolated(): ProgrammableSpeaker = ProgrammableSpeaker(prototype, jsonForCopy())
 }
 
 public class ProgrammableSpeakerControlBehavior(json: ControlBehaviorJson?) :

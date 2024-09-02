@@ -1,10 +1,10 @@
 package glassbricks.factorio.blueprint.placement.belt
 
+import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.Direction
+import glassbricks.factorio.blueprint.MutableSpatialDataStructure
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
-import glassbricks.factorio.blueprint.entity.DefaultSpatialDataStructure
-import glassbricks.factorio.blueprint.entity.MutableSpatialDataStructure
 import glassbricks.factorio.blueprint.entity.TransportBelt
 import glassbricks.factorio.blueprint.entity.TransportBeltConnectable
 import glassbricks.factorio.blueprint.entity.UndergroundBelt

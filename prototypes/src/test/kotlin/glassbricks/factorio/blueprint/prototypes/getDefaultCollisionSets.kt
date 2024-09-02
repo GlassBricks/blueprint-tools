@@ -25,7 +25,7 @@ fun main() {
           ["construction-robot"] = {},
           ["container"] = {"item-layer", "object-layer", "player-layer", "water-tile"},
           ["corpse"] = {},
-          ["curved-rail"] = {"floor-layer", "item-layer", "object-layer", "rail-layer", "water-tile"},
+          ["curved-rail"] = {"floor-layer", "item-layer", "object-layer", "rail-layer", "water-tile", "not-colliding-with-itself"},
           ["decider-combinator"] = {"item-layer", "object-layer", "player-layer", "water-tile"},
           ["deconstructible-tile-proxy"] = {"ground-tile"},
           ["electric-energy-interface"] = {"item-layer", "object-layer", "player-layer", "water-tile"},
@@ -95,7 +95,7 @@ fun main() {
           ["splitter"] = {"item-layer", "object-layer", "transport-belt-layer", "water-tile"},
           ["sticker"] = {},
           ["storage-tank"] = {"item-layer", "object-layer", "player-layer", "water-tile"},
-          ["straight-rail"] = {"floor-layer", "item-layer", "object-layer", "rail-layer", "water-tile"},
+          ["straight-rail"] = {"floor-layer", "item-layer", "object-layer", "rail-layer", "water-tile", "not-colliding-with-itself"},
           ["stream"] = {},
           ["tile"] = {},  -- Tile prototypes are required to have a collision mask so have no default
           ["tile-ghost"] = {"ghost-layer"},
@@ -204,7 +204,7 @@ fun main() {
             .map { it.trim().removeSurrounding("\"") }
             .filter { it.isNotEmpty() }
             .toSet()
-        layers.forEach { CollisionMaskLayer.valueOf(it) }
+//        layers.forEach { CollisionMaskLayer.valueOf(it) }
         val index = seenSets.indexOf(layers).let {
             if (it == -1) {
                 seenSets.add(layers)

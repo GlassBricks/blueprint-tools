@@ -1,15 +1,17 @@
 package glassbricks.factorio.blueprint.placement.poles
 
 import glassbricks.factorio.blueprint.BoundingBox
+import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Entity
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.TileBoundingBox
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.computeCollisionBox
-import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.placement.EntityPlacement
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
+import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
 import glassbricks.factorio.blueprint.placement.getAllUnrotatedTilePlacements
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
@@ -36,7 +38,7 @@ class PoleCandidate(
     lateinit var neighbors: MutableList<PoleCandidate>
         internal set
 
-    lateinit var placement: EntityPlacement<ElectricPolePrototype>
+    lateinit var placement: OptionalEntityPlacement<ElectricPolePrototype>
         internal set
 }
 
@@ -138,7 +140,7 @@ fun EntityPlacementModel.createPoleCandidates(
 
 inline fun EntityPlacementModel.addPolePlacements(
     poles: Iterable<ElectricPolePrototype>,
-    bounds: TileBoundingBox,
+    bounds: TileBoundingBox = placements.enclosingTileBox(),
     configure: PoleCandidates.() -> Unit = {},
 ): PolePlacements {
     return createPoleCandidates(poles, bounds).apply(configure).addToModel(this)

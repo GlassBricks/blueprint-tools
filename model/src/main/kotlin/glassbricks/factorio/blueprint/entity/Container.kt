@@ -26,7 +26,7 @@ public open class Container(
         json.filters = filtersAsIndexList()
     }
 
-    override fun copyIsolated(): Container = Container(prototype, toDummyJson())
+    override fun copyIsolated(): Container = Container(prototype, jsonForCopy())
 }
 
 public open class LogisticContainer(
@@ -49,7 +49,7 @@ public open class LogisticContainer(
         json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): LogisticContainer = LogisticContainer(prototype, toDummyJson())
+    override fun copyIsolated(): LogisticContainer = LogisticContainer(prototype, jsonForCopy())
 }
 
 public class LogisticContainerControlBehavior(
@@ -88,7 +88,7 @@ public class InfinityContainer(
         )
     }
 
-    override fun copyIsolated(): InfinityContainer = InfinityContainer(prototype, toDummyJson())
+    override fun copyIsolated(): InfinityContainer = InfinityContainer(prototype, jsonForCopy())
 }
 
 public data class InfinityFilter(

@@ -15,5 +15,5 @@ public class Lab(
         if (itemRequests.isNotEmpty()) json.items = itemRequests
     }
 
-    override fun copyIsolated(): Lab = Lab(prototype, toDummyJson())
+    override fun copyIsolated(): Lab = Lab(prototype, jsonForCopy())
 }

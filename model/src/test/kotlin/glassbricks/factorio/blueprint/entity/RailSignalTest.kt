@@ -6,7 +6,7 @@ import glassbricks.factorio.blueprint.json.ControlBehaviorJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class RailSignalKtTest {
+class RailSignalTest {
     @Test
     fun `can create signals`() {
         testSaveLoad(RailSignal::class, "rail-signal")

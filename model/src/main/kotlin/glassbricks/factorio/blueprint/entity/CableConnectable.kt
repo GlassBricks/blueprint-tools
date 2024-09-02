@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.NotifyingSet
 import glassbricks.factorio.blueprint.json.CableConnectionData
 import glassbricks.factorio.blueprint.json.EntityJson
 import glassbricks.factorio.blueprint.json.EntityNumber

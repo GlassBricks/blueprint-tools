@@ -104,7 +104,7 @@ suspend fun main(): Unit = coroutineScope {
 
         drawEntities(result.entities).saveTo(File("output/refineries-$numTiles-result").absolutePath)
 
-        result.toBlueprint().exportTo(File("output/refineries-$numTiles-result.txt"))
+        result.toJson().exportTo(File("output/refineries-$numTiles-result.txt"))
 
         val numPoles = result.entities.count { it is ElectricPole }
         val cost = numPoles / numTiles.toDouble()

@@ -6,7 +6,6 @@ import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
 import glassbricks.factorio.blueprint.placement.ops.addBeltLinesFrom
-import glassbricks.factorio.blueprint.placement.toBlueprintEntities
 import glassbricks.factorio.blueprint.prototypes.TransportBeltConnectablePrototype
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.tilePos
@@ -30,7 +29,7 @@ class OptimizeBeltsTest {
         val solution = model.solve()
         assertEquals(CpSolverStatus.OPTIMAL, solution.status)
 
-        val resultEntities = solution.toBlueprintEntities(null)
+        val resultEntities = solution.export()
         return getBeltsAsStr(resultEntities, startPos, CardinalDirection.East, inStr.length)
     }
 

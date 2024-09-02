@@ -16,7 +16,7 @@ public class Lamp(
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): Lamp = Lamp(prototype, toDummyJson())
+    override fun copyIsolated(): Lamp = Lamp(prototype, jsonForCopy())
 }
 
 public class LampControlBehavior(json: ControlBehaviorJson?) : ControlBehavior {

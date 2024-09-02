@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.placement.ops
 
+import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.placement.CardinalDirection
@@ -46,7 +47,9 @@ fun BeltGridConfig.addBeltLine(line: BeltLine) {
         val cell = this[line.start.shifted(direction, i)]
         if (i == 0) {
             cell.makeLineStart(direction, id)
-        } else if (i == line.tiles.lastIndex) {
+        }
+        // a single tile line can be both start and end
+        if (i == line.tiles.lastIndex) {
             cell.makeLineEnd(direction, id)
         }
         if (lineTile.mustMatch != null) {

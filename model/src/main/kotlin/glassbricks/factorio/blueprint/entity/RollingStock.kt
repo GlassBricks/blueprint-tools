@@ -46,7 +46,7 @@ public class CargoWagon(
         }
     }
 
-    override fun copyIsolated(): CargoWagon = CargoWagon(prototype, toDummyJson())
+    override fun copyIsolated(): CargoWagon = CargoWagon(prototype, jsonForCopy())
 }
 
 public class Locomotive(
@@ -70,7 +70,7 @@ public class Locomotive(
     }
 
     override fun copyIsolated(): Locomotive =
-        Locomotive(prototype, toDummyJson(), null)
+        Locomotive(prototype, jsonForCopy(), null)
             .also { it.schedule = this.schedule }
 }
 
@@ -85,5 +85,5 @@ public class OtherRollingStock(
         json.orientation = orientation
     }
 
-    override fun copyIsolated(): OtherRollingStock = OtherRollingStock(prototype, toDummyJson())
+    override fun copyIsolated(): OtherRollingStock = OtherRollingStock(prototype, jsonForCopy())
 }

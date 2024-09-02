@@ -11,5 +11,5 @@ public class StorageTank(
 
     override fun exportToJson(json: EntityJson) {}
 
-    override fun copyIsolated(): StorageTank = StorageTank(prototype, toDummyJson())
+    override fun copyIsolated(): StorageTank = StorageTank(prototype, jsonForCopy())
 }

@@ -1,4 +1,4 @@
-package glassbricks.factorio.blueprint.entity
+package glassbricks.factorio.blueprint
 
 internal abstract class NotifyingSet<T : Any> : AbstractMutableSet<T>() {
     protected val inner: MutableSet<T> = LinkedHashSet()

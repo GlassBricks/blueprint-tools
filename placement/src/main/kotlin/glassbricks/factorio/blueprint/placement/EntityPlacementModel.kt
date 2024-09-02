@@ -3,10 +3,10 @@ package glassbricks.factorio.blueprint.placement
 import com.google.ortools.Loader
 import com.google.ortools.sat.*
 import glassbricks.factorio.blueprint.*
+import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
+import glassbricks.factorio.blueprint.MutableSpatialDataStructure
+import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
-import glassbricks.factorio.blueprint.entity.DefaultSpatialDataStructure
-import glassbricks.factorio.blueprint.entity.MutableSpatialDataStructure
-import glassbricks.factorio.blueprint.entity.SpatialDataStructure
 import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 
 
@@ -15,10 +15,17 @@ class EntityPlacementModel(
     override val cp: CpModel = CpModel(),
 ) : WithCp {
     val solver: CpSolver = CpSolver()
-    val placements: SpatialDataStructure<EntityPlacement<*>> get() = _placements
 
-    fun canPlace(placementInfo: Entity<*>): Boolean =
-        placements.getColliding(placementInfo).none { it.isFixed }
+    init {
+        solver.parameters.catchSigintSignal = true
+    }
+
+    val placements: SpatialDataStructure<EntityPlacement<*>> get() = _placements
+    var exportCopySource: SpatialDataStructure<BlueprintEntity>? = null
+
+    fun canPlace(entity: Entity<*>): Boolean =
+        placements.getColliding(entity).none { it.isFixed }
+
 
     fun <P : EntityPrototype> addFixedPlacement(
         prototype: P,
@@ -110,14 +117,21 @@ class EntityPlacementModel(
      */
     private fun addNonOverlappingConstraint() {
         for (tile in placements.occupiedTiles()) {
-            val entities = placements.getInTile(tile).toList()
-            if (entities.any { it.isFixed }) {
-                for (entity in entities) {
-                    if (!entity.isFixed)
-                        cp.addEquality(entity.selected, 0)
+            val entities = placements.getInTile(tile).filterTo(mutableListOf()) { it.isSimpleCollisionBox }
+            if (entities.any { it.isFixed }) continue
+            cp.addAtMostOne(entities.map { it.selected })
+        }
+        for (entity in placements) {
+            if (!entity.isFixed && !entity.isSimpleCollisionBox) {
+                throw NotImplementedError("Optional placements of rails")
+            }
+            if (entity.isFixed) {
+                val colliding = placements.getColliding(entity)
+                for (other in colliding) {
+                    if (!other.isFixed) {
+                        cp.addEquality(other.selected, false)
+                    }
                 }
-            } else {
-                cp.addAtMostOne(entities.map { it.selected })
             }
         }
     }
@@ -129,33 +143,21 @@ class EntityPlacementModel(
         }
 
 
-    fun solve(display: Boolean = true): PlacementSolution {
+    fun solve(
+        display: Boolean = true,
+        optimize: Boolean = true,
+    ): PlacementSolution {
         addNonOverlappingConstraint()
-        setObjective()
+        if (optimize) setObjective()
 
         if (display) {
-            val toDisplay = listOf(
-                "Time",
-                "Obj. value",
-                "Best bound",
-            )
-            println(toDisplay.joinToString("\t| ") { it.padEnd(11) })
-        }
-        val callback = if (!display) null else object : CpSolverSolutionCallback() {
-            override fun onSolutionCallback() {
-                println(
-                    doubleArrayOf(
-                        wallTime(),
-                        objectiveValue(),
-                        bestObjectiveBound(),
-                    ).joinToString("\t| ") {
-                        "%.4f".format(it).padEnd(11)
-                    }
-                )
+            solver.parameters.apply {
+                logSearchProgress = true
+                logToStdout = true
             }
         }
         System.gc()
-        val status = solver.solve(cp, callback)
+        val status = solver.solve(cp)
         return PlacementSolution(
             model = this,
             status = status,
@@ -191,14 +193,14 @@ class PlacementSolution(
         model.placements.filter {
             solver.booleanValue(it.selected)
         }
-}
 
-fun PlacementSolution.toBlueprintEntities(existingToCopyFrom: SpatialDataStructure<BlueprintEntity>?): MutableSpatialDataStructure<BlueprintEntity> {
-    val result = DefaultSpatialDataStructure<BlueprintEntity>()
-    for (entity in getSelectedEntities()) {
-        result.add(entity.toBlueprintEntity(existingToCopyFrom))
+    fun export(): MutableSpatialDataStructure<BlueprintEntity> {
+        val result = DefaultSpatialDataStructure<BlueprintEntity>()
+        for (entity in getSelectedEntities()) {
+            result.add(entity.toBlueprintEntity(model.exportCopySource))
+        }
+        return result
     }
-    return result
 }
 
 fun <P : EntityPrototype, E : Entity<P>> getAllUnrotatedTilePlacements(

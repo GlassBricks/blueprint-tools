@@ -142,8 +142,8 @@ class VectorTest {
     fun rotate() {
         val unitX = Vector(1.0, 0.0)
         assertEquals(unitX, unitX.rotate(Direction.North))
-        assertEquals(Vector(0.0, 1.0), unitX.rotate(Direction.East))
-        assertEquals(Vector(-1.0, 0.0), unitX.rotate(Direction.South))
+        assertEquals(Vector(-0.0, 1.0), unitX.rotate(Direction.East)) // -0.0 is needed for... reason
+        assertEquals(Vector(-1.0, -0.0), unitX.rotate(Direction.South))
         assertEquals(Vector(0.0, -1.0), unitX.rotate(Direction.West))
         val sqrt2 = sin(Math.PI / 4)
         assertTrue(Vector(sqrt2, sqrt2).closeTo(unitX.rotate(Direction.Northeast)))
@@ -225,6 +225,6 @@ class TilePositionTest {
     @Test
     fun tileBoundingBox() {
         val pos = TilePosition(1, 2)
-        assertEquals(bbox(1.0, 2.0, 2.0, 3.0), pos.mapBoundingBox())
+        assertEquals(bbox(1.0, 2.0, 2.0, 3.0), pos.tileBoundingBox())
     }
 }

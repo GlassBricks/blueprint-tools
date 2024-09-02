@@ -1,5 +1,9 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
+import glassbricks.factorio.blueprint.MutableSpatialDataStructure
+import glassbricks.factorio.blueprint.SpatialDataStructure
+
 
 private fun addOldCableConnections(
     old: CableConnectionPoint,
@@ -55,7 +59,7 @@ public fun <T : BlueprintEntity> T.copyWithOldConnections(): T {
 private fun copyCableConnections(
     old: CableConnectionPoint,
     new: CableConnectionPoint,
-    resultMap: Map<out BlueprintEntity, BlueprintEntity>
+    resultMap: Map<out BlueprintEntity, BlueprintEntity>,
 ) {
     for (oldOtherPoint in old.cableConnections) {
         val newEntity = resultMap[oldOtherPoint.entity] ?: continue
@@ -71,7 +75,7 @@ private fun copyCableConnections(
 private fun copyCircuitConnections(
     old: CircuitConnectionSet,
     new: CircuitConnectionSet,
-    resultMap: Map<out BlueprintEntity, BlueprintEntity>
+    resultMap: Map<out BlueprintEntity, BlueprintEntity>,
 ) {
     for (oldOtherPoint in old) {
         val newEntity = resultMap[oldOtherPoint.entity] ?: continue
@@ -87,7 +91,7 @@ private fun copyCircuitConnections(
 private fun copyCircuitConnections(
     old: CircuitConnectionPoint,
     new: CircuitConnectionPoint,
-    resultMap: Map<out BlueprintEntity, BlueprintEntity>
+    resultMap: Map<out BlueprintEntity, BlueprintEntity>,
 ) {
     copyCircuitConnections(old.circuitConnections.red, new.circuitConnections.red, resultMap)
     copyCircuitConnections(old.circuitConnections.green, new.circuitConnections.green, resultMap)

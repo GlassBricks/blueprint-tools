@@ -1,5 +1,6 @@
 package glassbricks.factorio.blueprint.entity
 
+import glassbricks.factorio.blueprint.NotifyingSet
 import glassbricks.factorio.blueprint.json.CircuitID
 import glassbricks.factorio.blueprint.json.ConnectionData
 import glassbricks.factorio.blueprint.json.ConnectionPointJson

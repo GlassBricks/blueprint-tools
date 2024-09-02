@@ -26,7 +26,7 @@ public class PowerSwitch(
         override val cableConnections: CableConnections = CableConnections(this)
     }
 
-    override fun copyIsolated(): PowerSwitch = PowerSwitch(prototype, toDummyJson())
+    override fun copyIsolated(): PowerSwitch = PowerSwitch(prototype, jsonForCopy())
 }
 
 public class PowerSwitchControlBehavior(

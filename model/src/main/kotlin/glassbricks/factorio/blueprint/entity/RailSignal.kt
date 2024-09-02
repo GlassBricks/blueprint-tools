@@ -26,7 +26,7 @@ public class RailSignal(
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): RailSignal = RailSignal(prototype, toDummyJson())
+    override fun copyIsolated(): RailSignal = RailSignal(prototype, jsonForCopy())
 }
 
 public class RailSignalControlBehavior(
@@ -69,7 +69,7 @@ public class RailChainSignal(
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): RailChainSignal = RailChainSignal(prototype, toDummyJson())
+    override fun copyIsolated(): RailChainSignal = RailChainSignal(prototype, jsonForCopy())
 }
 
 public class RailChainSignalControlBehavior(

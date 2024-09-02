@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 
 class SimpleSpatial(
     override val position: Position,
-    val localCollisionBox: BoundingBox = BoundingBox.around(Position.ZERO, 0.5)
+    val localCollisionBox: BoundingBox = BoundingBox.around(Position.ZERO, 0.5),
 ) : Spatial {
     override val collisionBox: BoundingBox
         get() = localCollisionBox.translate(position)
@@ -26,7 +26,7 @@ class Oracle : MutableSpatialDataStructure<SimpleSpatial>,
         getInArea(area.toBoundingBox())
 
     override fun getInTile(tile: TilePosition): Sequence<SimpleSpatial> =
-        getInArea(tile.mapBoundingBox())
+        getInArea(tile.tileBoundingBox())
 
     override fun getAtPoint(position: Position): Sequence<SimpleSpatial> =
         asSequence().filter { position in it.collisionBox }
@@ -84,7 +84,7 @@ class TileHashMapTest {
 
     fun <T> assertMatches(
         oracleSeq: Sequence<T>,
-        testeeSeq: Sequence<T>
+        testeeSeq: Sequence<T>,
     ) {
         val oracleResult = oracleSeq.toSet()
         val testeeListResult = testeeSeq.toList()

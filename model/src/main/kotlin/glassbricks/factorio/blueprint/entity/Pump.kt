@@ -17,7 +17,7 @@ public class Pump(
         if (this.shouldExportControlBehavior()) json.control_behavior = controlBehavior.exportToJson()
     }
 
-    override fun copyIsolated(): Pump = Pump(prototype, toDummyJson())
+    override fun copyIsolated(): Pump = Pump(prototype, jsonForCopy())
 }
 
 public class PumpControlBehavior(json: ControlBehaviorJson?) : ControlBehavior {

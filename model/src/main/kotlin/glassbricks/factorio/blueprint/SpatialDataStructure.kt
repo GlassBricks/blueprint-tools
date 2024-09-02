@@ -1,6 +1,6 @@
-package glassbricks.factorio.blueprint.entity
+package glassbricks.factorio.blueprint
 
-import glassbricks.factorio.blueprint.*
+import glassbricks.factorio.blueprint.entity.TileHashMap
 
 
 /**
@@ -32,7 +32,7 @@ public interface SpatialDataStructure<out T : Spatial> : Collection<T> {
     public fun tileIsOccupied(tile: TilePosition): Boolean = getInTile(tile).any()
 
     /**
-     * Iterates over all tiles in the data structure that contain entities.
+     * Iterates over all tiles in the data structure that might contain entities.
      */
     public fun occupiedTiles(): Iterable<TilePosition>
 

@@ -29,7 +29,9 @@ public open class TileHashMap<T : Spatial> :
     protected open fun addInTileMap(element: T) {
         val tileBox = element.collisionBox.roundOutToTileBbox()
         for (tile in tileBox) {
-            byTile.getOrPut(tile, ::hashSetOf).add(element)
+            if (element.isSimpleCollisionBox || element.intersects(tile.tileBoundingBox())) {
+                byTile.getOrPut(tile, ::hashSetOf).add(element)
+            }
         }
     }
 
@@ -42,9 +44,8 @@ public open class TileHashMap<T : Spatial> :
     protected open fun removeInTileMap(element: T) {
         val tileBox = element.collisionBox.roundOutToTileBbox()
         for (tile in tileBox) {
-            byTile[tile]?.let {
-                it.remove(element)
-                if (it.isEmpty()) byTile.remove(tile)
+            byTile[tile]?.let { set ->
+                if (set.remove(element) && set.isEmpty) byTile.remove(tile)
             }
         }
     }
@@ -62,7 +63,9 @@ public open class TileHashMap<T : Spatial> :
     }
 
     override fun getInTile(tile: TilePosition): Sequence<T> =
-        byTile[tile]?.asSequence().orEmpty()
+        byTile[tile]
+            .orEmpty()
+            .asSequence()
 
     override fun getInArea(area: TileBoundingBox): Sequence<T> =
         area.asSequence()
@@ -71,17 +74,16 @@ public open class TileHashMap<T : Spatial> :
 
     override fun getInArea(area: BoundingBox): Sequence<T> =
         getInArea(area.roundOutToTileBbox())
-            .filter { area intersects it.collisionBox }
+            .filter { it.intersects(area) }
 
+    // todo: handle rails/move responsibility to spatial
     override fun getAtPoint(position: Position): Sequence<T> =
         getInTile(position.occupiedTile())
             .filter { position in it.collisionBox }
 
-    override fun getColliding(other: Spatial): Sequence<T> {
-        val otherBox = other.collisionBox
-        return getInArea(otherBox.roundOutToTileBbox())
+    override fun getColliding(other: Spatial): Sequence<T> =
+        getInArea(other.collisionBox.roundOutToTileBbox())
             .filter { it collidesWith other }
-    }
 
     override fun getPosInCircle(center: Position, radius: Double): Sequence<T> =
         BoundingBox.around(center, radius).roundOutToTileBbox().asSequence()

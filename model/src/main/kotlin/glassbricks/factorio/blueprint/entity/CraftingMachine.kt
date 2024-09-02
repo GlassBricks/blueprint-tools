@@ -32,7 +32,7 @@ public open class AssemblingMachine(
         json.recipe = recipe
     }
 
-    override fun copyIsolated(): AssemblingMachine = AssemblingMachine(prototype, toDummyJson())
+    override fun copyIsolated(): AssemblingMachine = AssemblingMachine(prototype, jsonForCopy())
 }
 
 public class RocketSilo(
@@ -48,12 +48,12 @@ public class RocketSilo(
         json.auto_launch = autoLaunch
     }
 
-    override fun copyIsolated(): RocketSilo = RocketSilo(prototype, toDummyJson())
+    override fun copyIsolated(): RocketSilo = RocketSilo(prototype, jsonForCopy())
 }
 
 public class Furnace(
     override val prototype: FurnacePrototype,
     json: EntityJson,
 ) : CraftingMachine(json) {
-    override fun copyIsolated(): Furnace = Furnace(prototype, toDummyJson())
+    override fun copyIsolated(): Furnace = Furnace(prototype, jsonForCopy())
 }
