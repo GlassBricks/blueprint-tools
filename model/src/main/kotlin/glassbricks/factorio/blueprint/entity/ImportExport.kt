@@ -7,11 +7,12 @@ import glassbricks.factorio.blueprint.json.*
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 
-public inline fun <reified T : BlueprintEntity> BlueprintPrototypes.entityFromJson(
+public fun <T : BlueprintEntity> BlueprintPrototypes.entityFromJson(
     json: EntityJson,
     blueprint: BlueprintJson? = null,
 ): T {
     val prototype = this.blueprintableEntities[json.name] ?: UnknownPrototype(json.name)
+    @Suppress("UNCHECKED_CAST")
     return createBpEntity(prototype, json, blueprint) as T
 }
 

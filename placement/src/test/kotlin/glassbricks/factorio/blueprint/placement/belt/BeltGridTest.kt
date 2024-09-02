@@ -64,8 +64,8 @@ class BeltGridTest {
         val costs = mapOf(
             normalBelt.beltProto to 1,
             normalBelt.ugProto to 4,
-            fastBelt.beltProto to 10,
-            fastBelt.ugProto to 50,
+            fastTier.beltProto to 10,
+            fastTier.ugProto to 50,
         )
         val cost =
             vars.map.values
@@ -120,7 +120,7 @@ class BeltGridTest {
             start = start,
             direction,
             length = 12,
-            beltTiers = setOf(normalBelt, fastBelt)
+            beltTiers = setOf(normalBelt, fastTier)
         )
         val (vars, solver) = materialCostSolve()
         assertEquals(12.0, solver.objectiveValue())
@@ -175,7 +175,7 @@ class BeltGridTest {
             start = start,
             direction,
             length = 8 * 3,
-            beltTiers = setOf(fastBelt)
+            beltTiers = setOf(fastTier)
         )
         grid.addBeltLine(
             start = start.shifted(direction, 6),
@@ -187,10 +187,10 @@ class BeltGridTest {
         assertEquals(10.0, solver.objectiveValue())
         for (dist in listOf(0, 8, 16)) {
             val tile = start.shifted(direction, dist)
-            assertTrue(solver.booleanValue(vars[tile]!!.selectedBelt[direction]!![fastBelt.inputUg]!!))
+            assertTrue(solver.booleanValue(vars[tile]!!.selectedBelt[direction]!![fastTier.inputUg]!!))
             assertEquals(1, solver.value(vars[tile]!!.lineId))
             val tile7 = start.shifted(direction, dist + 7)
-            assertTrue(solver.booleanValue(vars[tile7]!!.selectedBelt[direction]!![fastBelt.outputUg]!!))
+            assertTrue(solver.booleanValue(vars[tile7]!!.selectedBelt[direction]!![fastTier.outputUg]!!))
             assertEquals(1, solver.value(vars[tile7]!!.lineId))
         }
         for (dist in listOf(6, 12)) {

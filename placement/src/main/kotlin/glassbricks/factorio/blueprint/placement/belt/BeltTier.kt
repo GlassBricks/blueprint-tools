@@ -13,10 +13,12 @@ import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 data class BeltTier(
     val beltProto: TransportBeltPrototype,
     val ugProto: UndergroundBeltPrototype,
-) {
+) : Comparable<BeltTier> {
     val belt: BeltType.Belt = BeltType.Belt(beltProto)
     val inputUg: BeltType.InputUnderground = BeltType.InputUnderground(ugProto)
     val outputUg: BeltType.OutputUnderground = BeltType.OutputUnderground(ugProto)
+    override fun compareTo(other: BeltTier): Int = beltProto.speed.compareTo(other.beltProto.speed)
+    override fun toString(): String = "BeltTier(${beltProto.name}, ${ugProto.name})"
 }
 
 fun BlueprintPrototypes.getBeltTier(belt: TransportBeltPrototype): BeltTier? {

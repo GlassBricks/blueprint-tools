@@ -17,7 +17,7 @@ open class BeltGridConfig {
     }
 
     private var nextBeltId: BeltLineId = 1
-    fun newBeltId(): BeltLineId = nextBeltId++
+    fun newLineId(): BeltLineId = nextBeltId++
 }
 
 fun BeltGridConfig.addBeltLine(
@@ -25,7 +25,7 @@ fun BeltGridConfig.addBeltLine(
     direction: CardinalDirection,
     length: Int,
     beltTiers: Set<BeltTier>,
-    id: BeltLineId = newBeltId(),
+    id: BeltLineId = newLineId(),
 ): BeltLineId {
     val startCell = get(start)
     startCell.makeLineStart(direction, id)

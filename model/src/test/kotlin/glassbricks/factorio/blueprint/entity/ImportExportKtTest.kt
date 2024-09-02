@@ -43,7 +43,6 @@ class ImportExportKtTest {
             position = Position(1.0, 2.0),
         )
         val entity = VanillaPrototypes.entityFromJson<UnknownEntity>(entityJson)
-        assertTrue(entity is UnknownEntity)
         assertEquals(entity.name, "foo")
         assertEquals(entity.type, "unknown")
 

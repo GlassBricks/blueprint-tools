@@ -1,17 +1,11 @@
 package glassbricks.factorio.blueprint.placement.belt
 
 import glassbricks.factorio.blueprint.placement.CardinalDirection
-import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-
-internal val normalBelt by lazy { VanillaPrototypes.getBeltTier("transport-belt")!! }
-internal val fastBelt by lazy { VanillaPrototypes.getBeltTier("fast-transport-belt")!! }
-internal val belt get() = normalBelt.beltProto
-internal val ug get() = normalBelt.ugProto
 
 internal class BeltConfigTest {
     val config = BeltConfigImpl()
