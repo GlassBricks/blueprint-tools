@@ -2,7 +2,7 @@ package glassbricks.factorio.blueprint
 
 import glassbricks.factorio.blueprint.entity.StraightRail
 import glassbricks.factorio.blueprint.entity.createBpEntity
-import glassbricks.factorio.blueprint.json.importBlueprintJson
+import glassbricks.factorio.blueprint.json.importBlueprintFrom
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import org.junit.jupiter.api.Test
@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 class RailBlobTest {
     @Test
     fun `test rail blob`() {
-        val bp = Blueprint(importBlueprintJson(File("../test-blueprints/rail-blob.txt")))
+        val bp = Blueprint(importBlueprintFrom(File("../test-blueprints/rail-blob.txt")))
         bp.entities.forEach { entity ->
             val colliding = bp.entities.getColliding(entity).toList()
                 .filter { it != entity }

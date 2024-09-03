@@ -14,18 +14,18 @@ import java.util.zip.DeflaterOutputStream
 import java.util.zip.InflaterInputStream
 
 public fun importBlueprintString(string: String): Importable {
-    return importBlueprintJson(string.byteInputStream())
+    return importBlueprintFrom(string.byteInputStream())
 }
 
-public fun importBlueprintJson(file: File): Importable {
-    return importBlueprintJson(file.inputStream())
+public fun importBlueprintFrom(file: File): Importable {
+    return importBlueprintFrom(file.inputStream())
 }
 
-public fun importBlueprintJson(stream: InputStream): Importable {
-    return importBlueprintJson(stream, Importable.serializer())
+public fun importBlueprintFrom(stream: InputStream): Importable {
+    return importBlueprintFrom(stream, Importable.serializer())
 }
 
-internal fun <T> importBlueprintJson(stream: InputStream, serializer: KSerializer<T>): T {
+internal fun <T> importBlueprintFrom(stream: InputStream, serializer: KSerializer<T>): T {
     val firstChar = skipWhitespaceTillFirstChar(stream)
     if (firstChar != '0') throw SerializationException("Invalid version identifier: $firstChar")
     return stream

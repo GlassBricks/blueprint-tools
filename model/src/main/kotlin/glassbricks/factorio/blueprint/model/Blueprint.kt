@@ -52,7 +52,7 @@ public constructor(
     public constructor(
         file: File,
         prototypes: BlueprintPrototypes = VanillaPrototypes,
-    ) : this(importBlueprintJson(file), prototypes)
+    ) : this(importBlueprintFrom(file), prototypes)
 
     override val icons: List<Icon>
         get() {

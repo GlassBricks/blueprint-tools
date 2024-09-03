@@ -53,19 +53,20 @@ fun getBeltsAsStr(
 fun createEntities(
     inStr: String,
     startPos: TilePosition,
+    direction: Direction = Direction.East,
 ): MutableSpatialDataStructure<BlueprintEntity> {
     val entities = DefaultSpatialDataStructure<BlueprintEntity>()
     for ((index, c) in inStr.withIndex()) {
-        val pos = startPos.shifted(Direction.East, index)
+        val pos = startPos.shifted(direction, index)
         when (c) {
-            '=', '+', 'v', '^', '|' -> entities.add(belt.placedAtTile(pos, Direction.East))
+            '=', '+', 'v', '^', '|' -> entities.add(belt.placedAtTile(pos, direction))
             '>', '/' -> entities.add(
-                ug.placedAtTile(pos, Direction.East).also { it as UndergroundBelt; it.ioType = IOType.Input })
+                ug.placedAtTile(pos, direction).also { it as UndergroundBelt; it.ioType = IOType.Input })
 
             '<', '\\' -> entities.add(
-                ug.placedAtTile(pos, Direction.East).also { it as UndergroundBelt; it.ioType = IOType.Output })
+                ug.placedAtTile(pos, direction).also { it as UndergroundBelt; it.ioType = IOType.Output })
 
-            '#' -> entities.add(blocker.placedAtTile(pos, Direction.East))
+            '#' -> entities.add(blocker.placedAtTile(pos, direction))
         }
         when (c) {
             '+', '/', '\\', '|' -> entities.add(

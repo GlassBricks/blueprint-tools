@@ -1,6 +1,6 @@
 import glassbricks.factorio.blueprint.entity.ElectricPole
 import glassbricks.factorio.blueprint.json.BlueprintJson
-import glassbricks.factorio.blueprint.json.importBlueprintJson
+import glassbricks.factorio.blueprint.json.importBlueprintFrom
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placement.BpModelBuilder
 import org.junit.jupiter.params.ParameterizedTest
@@ -19,7 +19,7 @@ class FeasibleTest {
     @MethodSource("findFiles")
     fun testIsFeasible(file: File) {
         if (file.toPath().fileSize() > 1024 * 100) return
-        val blueprint = importBlueprintJson(file) as? BlueprintJson ?: return
+        val blueprint = importBlueprintFrom(file) as? BlueprintJson ?: return
         val bp = Blueprint(blueprint)
         val model = BpModelBuilder(bp).apply {
             optimizeBeltLines = true

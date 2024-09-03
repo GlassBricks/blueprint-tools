@@ -23,6 +23,8 @@ interface MutableBeltConfig : BeltConfig {
 
     // will also add as option
     fun forceAs(direction: CardinalDirection, lineId: BeltLineId, beltType: BeltType)
+
+    fun mustNotTakeInputIn(direction: CardinalDirection)
 }
 
 
@@ -35,9 +37,12 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
     override val propagatesForward: Boolean get() = !isLineEnd
     override val propagatesBackward: Boolean get() = !isLineStart
 
+    private var directionSetReason: String? = null
     private var forcedDirection: CardinalDirection? = null
         set(value) {
-            check(field == null || field == value) { "Direction already set" }
+            check(field == null || field == value) {
+                "Direction already set: $directionSetReason"
+            }
             field = value
         }
     private var forcedBeltId: BeltLineId? = null
@@ -65,6 +70,7 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
         isLineStart = true
         forcedDirection = direction
         forcedBeltId = lineId
+        directionSetReason = "start"
     }
 
     override fun makeLineEnd(
@@ -74,6 +80,7 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
         isLineEnd = true
         forcedDirection = direction
         forcedBeltId = lineId
+        directionSetReason = "end"
     }
 
     override fun forceIsId(lineId: BeltLineId) {
@@ -86,13 +93,19 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
         beltType: BeltType,
     ) {
         forcedDirection = direction
+        directionSetReason = "forceAs"
         forcedBeltId = lineId
         forcedBeltType = beltType
         addOption(direction, beltType, lineId)
     }
 
+    override fun mustNotTakeInputIn(direction: CardinalDirection) {
+        forcedDirection = direction.oppositeDir()
+        directionSetReason = "mustNotTakeInputIn"
+    }
+
     override val canBeEmpty: Boolean
-        get() = forcedBeltId == null && forcedDirection == null && forcedBeltType == null
+        get() = forcedBeltId == null && forcedBeltType == null
 
     override fun getOptions(): Map<CardinalDirection, MultiMap<BeltType, BeltLineId>> {
         if (forcedBeltId == null && forcedDirection == null && forcedBeltType == null) return beltOptions

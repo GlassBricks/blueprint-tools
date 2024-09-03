@@ -2,21 +2,36 @@ package scripts
 
 import drawing.drawEntities
 import glassbricks.factorio.blueprint.json.exportTo
-import glassbricks.factorio.blueprint.json.importBlueprintJson
+import glassbricks.factorio.blueprint.json.importBlueprintFrom
+import glassbricks.factorio.blueprint.json.importBlueprintString
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placement.*
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import java.awt.Toolkit
+import java.awt.datatransfer.DataFlavor
 import java.io.File
 import kotlin.collections.mapOf
 import kotlin.system.exitProcess
 
 val projectRoot = File(".")
 
+private val sourceFile = "test-blueprints/base8.txt"
+//val sourceFile: String = ""
+
 suspend fun main(): Unit = coroutineScope {
-    val inputFile = projectRoot.resolve("scripts/test-blueprints/earlybase.txt")
-    val bp = Blueprint(importBlueprintJson(inputFile))
+    println("importing blueprint")
+    val bp: Blueprint
+    val fileName: String
+    if (sourceFile.isNotEmpty()) {
+        bp = Blueprint(importBlueprintFrom(projectRoot.resolve(sourceFile)))
+        fileName = projectRoot.resolve(sourceFile).nameWithoutExtension
+    } else {
+        val clipboardContents = Toolkit.getDefaultToolkit().systemClipboard.getData(DataFlavor.stringFlavor) as String
+        bp = Blueprint(importBlueprintString(clipboardContents))
+        fileName = "clipboard"
+    }
     val model = BpModelBuilder(bp).apply {
         optimizeBeltLines = true
         optimizePoles = listOf(
@@ -32,38 +47,40 @@ suspend fun main(): Unit = coroutineScope {
             "fast-underground-belt" to 97.5 / 2,
             "small-electric-pole" to 0.5,
             "medium-electric-pole" to 13.5,
-        ).mapValues { it.value + 3.4 })
+        ).mapValues { it.value + 3.5 })
 //        check(entityCosts["underground-belt"]!! * 3 < entityCosts["transport-belt"]!! * 5)
 //        check(entityCosts["underground-belt"]!! * 3 > entityCosts["transport-belt"]!! * 4)
 
-        distanceCostFactor = 1e-3
+        distanceCostFactor = 5e-4
 
         keepWithControlBehavior()
     }.build()
-    model.timeLimitInSeconds = 60.0 * 10
+    model.timeLimitInSeconds = 60.0 * 15
     model.solver.parameters.apply {
-        useObjectiveLbSearch = true
-        maxMemoryInMb = 1024 * 8
+        maxMemoryInMb = 1024 * 16
     }
+    bp.entities.clear()
 
-    val fileName = inputFile.nameWithoutExtension
-    drawEntities(model.placements).saveTo("output/${fileName}-pre-solve")
+//    drawEntities(model.placements).saveTo("output/${fileName}-pre-solve")
 
     val solution = model.solve()
-    println("Solved: ${solution.status}")
-    if (!solution.isOk) exitProcess(1)
+    if (!solution.isOk) {
+        println("Failed to find a solution: ${solution.status}")
+        exitProcess(1)
+    }
 
     val entities = solution.export()
 
     val entityCounts =
-        entities.groupingBy { it.prototype.name }.eachCount().entries.sortedByDescending { it.value }.take(20)
+        entities.groupingBy { it.prototype.name }.eachCount()
+            .entries.sortedByDescending { it.value }
+            .take(20)
     for ((name, count) in entityCounts) {
         println("$name: $count")
     }
 
     println("Saving result")
 
-    bp.entities.clear()
     bp.entities.addAll(entities)
 
     launch {

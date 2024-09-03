@@ -4,17 +4,12 @@ import com.google.ortools.sat.CpModel
 import com.google.ortools.sat.IntVar
 import com.google.ortools.sat.Literal
 import com.google.ortools.util.Domain
-import glassbricks.factorio.blueprint.placement.Axis
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.MultiMap
-import glassbricks.factorio.blueprint.placement.enumMapOf
 import glassbricks.factorio.blueprint.placement.mapToArray
 import glassbricks.factorio.blueprint.placement.mapValuesNotNull
-import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 
 typealias BeltSelectVars = Map<CardinalDirection, Map<BeltType, Literal>>
-typealias UgConnectorVars = Map<CardinalDirection, Map<UndergroundBeltPrototype, Literal>>
-typealias UgConnectorIds = Map<Axis, Map<UndergroundBeltPrototype, IntVar>>
 
 interface Belt : BeltConfig {
     val isEmpty: Literal
@@ -23,8 +18,6 @@ interface Belt : BeltConfig {
     val selectedBelt: BeltSelectVars
     val hasOutputIn: Map<CardinalDirection, Literal>
     val hasInputIn: Map<CardinalDirection, Literal>
-    val ugConnectorSelected: UgConnectorVars
-    val ugConnectorId: UgConnectorIds
 }
 
 
@@ -32,7 +25,7 @@ internal class BeltImpl(
     cp: CpModel,
     config: BeltConfig,
 ) : Belt {
-    override val isEmpty = cp.newBoolVar("isEmpty")
+    override val isEmpty: Literal = cp.newBoolVar("isEmpty")
 
     override val lineId: IntVar
     override val lineIdDomainMap: Map<Int, Literal>
@@ -43,26 +36,27 @@ internal class BeltImpl(
     override val propagatesForward: Boolean = config.propagatesForward
     override val propagatesBackward: Boolean = config.propagatesBackward
 
-    init {
-        if (!canBeEmpty) cp.addEquality(isEmpty, 0)
-    }
 
     init {
-        val possibleBeltIds = hashSetOf<Long>()
-        possibleBeltIds.add(0)
+        val possibleBeltIds = mutableSetOf<Long>()
         for (a in beltOptions.values) for (b in a.values) for (c in b) {
             possibleBeltIds.add(c.toLong())
         }
-        this.lineId = cp.newIntVarFromDomain(Domain.fromValues(possibleBeltIds.toLongArray()), "beltLineId")
+        if (possibleBeltIds.isEmpty()) {
+            this.lineId = cp.falseLiteral() as IntVar
+            this.lineIdDomainMap = emptyMap()
+        } else {
+            this.lineId = cp.newIntVarFromDomain(Domain.fromValues(possibleBeltIds.toLongArray()), "beltLineId")
 
-        val beltIdDomainMap = mutableMapOf<Int, Literal>()
-        for (beltId in possibleBeltIds) {
-            val lit = if (beltId == -1L) isEmpty else cp.newBoolVar("beltLineId_$beltId")
-            cp.addEquality(lineId, beltId.toLong()).onlyEnforceIf(lit)
-            cp.addDifferent(lineId, beltId.toLong()).onlyEnforceIf(!lit)
-            beltIdDomainMap[beltId.toInt()] = lit
+            val beltIdDomainMap = mutableMapOf<Int, Literal>()
+            for (beltId in possibleBeltIds) {
+                val lit = cp.newBoolVar("lineId_${beltId}")
+                cp.addEquality(lineId, beltId.toLong()).onlyEnforceIf(lit)
+                cp.addDifferent(lineId, beltId.toLong()).onlyEnforceIf(!lit)
+                beltIdDomainMap[beltId.toInt()] = lit
+            }
+            this.lineIdDomainMap = beltIdDomainMap
         }
-        this.lineIdDomainMap = beltIdDomainMap
     }
 
     override val selectedBelt: BeltSelectVars = beltOptions.mapValues { (direction, beltTypes) ->
@@ -75,9 +69,8 @@ internal class BeltImpl(
     }
 
     init {
-        cp.addExactlyOne(
-            selectedBelt.values.flatMap { it.values } + isEmpty
-        )
+        cp.addAtLeastOne(selectedBelt.values.flatMap { it.values } + isEmpty)
+        if (!canBeEmpty) cp.addEquality(isEmpty, 0)
     }
 
     override val hasOutputIn: Map<CardinalDirection, Literal> =
@@ -108,38 +101,5 @@ internal class BeltImpl(
     init {
         // this is redundant, but it might help cp
         cp.addAtMostOne(hasOutputIn.values)
-    }
-
-    private val _ugConnectorSelected = enumMapOf<CardinalDirection, MutableMap<UndergroundBeltPrototype, Literal>>()
-    override val ugConnectorSelected: UgConnectorVars get() = _ugConnectorSelected
-    private val _ugConnectorId = mutableMapOf<Axis, MutableMap<UndergroundBeltPrototype, IntVar>>()
-    override val ugConnectorId: UgConnectorIds get() = _ugConnectorId
-    internal fun ensureUgConnector(
-        cp: CpModel,
-        direction: CardinalDirection,
-        prototype: UndergroundBeltPrototype,
-    ): Literal {
-        val map = _ugConnectorSelected.getOrPut(direction) { hashMapOf() }
-        return map.getOrPut(prototype) {
-            cp.newBoolVar("ugConnector_${direction}_${prototype.name}")
-        }
-    }
-
-    internal fun constrainUgId(cp: CpModel) {
-        for ((direction, map) in _ugConnectorSelected) {
-            val axis = direction.axis
-            val axisMap = _ugConnectorId.getOrPut(axis) { hashMapOf() }
-            for ((prototype, connectorSelected) in map) {
-                val ugId = axisMap.getOrPut(prototype) {
-                    cp.newIntVar(0, Int.MAX_VALUE.toLong(), "ugConnectorId_${axis}_${prototype.name}")
-                }
-                cp.addDifferent(ugId, 0).onlyEnforceIf(connectorSelected)
-                val oppositeDir = direction.oppositeDir()
-                if (oppositeDir.ordinal > direction.ordinal) {
-                    val oppositeSelected = _ugConnectorSelected[oppositeDir]?.get(prototype)
-                    if (oppositeSelected != null) cp.addAtMostOne(listOf(connectorSelected, oppositeSelected))
-                }
-            }
-        }
     }
 }

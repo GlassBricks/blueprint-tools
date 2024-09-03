@@ -17,6 +17,10 @@ import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
 import glassbricks.factorio.blueprint.roundOutToTileBbox
+import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.stream.Collectors
+
+private val logger = KotlinLogging.logger {}
 
 class PoleCandidate(
     override val prototype: ElectricPolePrototype,
@@ -40,6 +44,7 @@ class PoleCandidate(
     override fun toString(): String = "PoleCandidate(${prototype.name}, $position)"
 }
 
+
 // refactoring of above
 class PoleCandidates(
     allEntities: SpatialDataStructure<EntityPlacement<*>>,
@@ -50,6 +55,7 @@ class PoleCandidates(
 
     init {
         // compute covering entities
+        logger.info { "Computing pole powered entities and neighbors" }
         poleCandidates.parallelStream().forEach { pole ->
             val poweredEntities = computePoweredEntities(pole)
             val neighbors = computeNeighbors(pole)
@@ -79,16 +85,16 @@ class PoleCandidates(
         poles.getPosInCircle(pole.position, pole.prototype.maximum_wire_distance)
             .filterTo(ArrayList()) { it != pole && pole.canConnectToPole(it) }
 
-    fun removeIf(predicate: (PoleCandidate) -> Boolean) {
-        for (pole in poles.filter(predicate)) {
-            poles.remove(pole)
-            for (neighbor in pole.neighbors) neighbor._neighbors.remove(pole)
-            for (entity in pole.poweredEntities) entityPoweredMap[entity]!!.remove(pole)
-        }
+    fun removeIfParallel(predicate: (PoleCandidate) -> Boolean) {
+        logger.info { "Removing poles" }
+        val toRemove = poles.parallelStream().filter(predicate).collect(Collectors.toSet())
+        poles.removeAll(toRemove)
+        poles.parallelStream().forEach { it._neighbors.removeAll(toRemove) }
+        entityPoweredMap.values.parallelStream().forEach { it.removeAll(toRemove) }
     }
 
     fun removeEmptyPolesDist2() {
-        removeIf { pole ->
+        removeIfParallel { pole ->
             pole.poweredEntities.isEmpty() && pole.neighbors.all { it.poweredEntities.isEmpty() }
         }
     }

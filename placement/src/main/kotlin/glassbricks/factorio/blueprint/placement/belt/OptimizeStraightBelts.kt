@@ -17,8 +17,9 @@ import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.TransportBeltPrototype
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
-import kotlin.collections.get
-import kotlin.to
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val logger = KotlinLogging.logger {}
 
 fun ItemTransportGraph.Node.isIsolatedUnderground(): Boolean {
     if (entity !is UndergroundBelt) return false
@@ -33,11 +34,11 @@ fun ItemTransportGraph.Node.getBeltType(): BeltType? = when (val prototype = pro
     is UndergroundBeltPrototype -> when ((entity as UndergroundBelt).ioType) {
         IOType.Input -> BeltType.InputUnderground(
             prototype,
-            isIsolated = outEdges.none { it.type == LogisticsEdgeType.Belt && it.to.entity is UndergroundBelt })
+            isIsolated = outEdges.none { it.type == LogisticsEdgeType.Belt && it.to.entity is UndergroundBelt && it.to.direction == direction })
 
         IOType.Output -> BeltType.OutputUnderground(
             prototype,
-            isIsolated = inEdges.none { it.type == LogisticsEdgeType.Belt && it.from.entity is UndergroundBelt })
+            isIsolated = inEdges.none { it.type == LogisticsEdgeType.Belt && it.from.entity is UndergroundBelt && it.from.direction == direction })
     }
 
     else -> null
@@ -55,6 +56,7 @@ class BeltLine(
     val start: TilePosition,
     val direction: CardinalDirection,
     val tiles: List<BeltLineTile>,
+    val outputsToNothing: Boolean = false,
 )
 
 data class BeltLineTile(
@@ -68,12 +70,14 @@ fun GridConfig.addBeltLine(line: BeltLine) {
     val direction = line.direction
     val id = newLineId()
     for ((i, lineTile) in line.tiles.withIndex()) {
+        val isStart = i == 0
+        val isEnd = i == line.tiles.lastIndex
         val cell = this[line.start.shifted(direction, i)]
-        if (i == 0) {
+        if (isStart) {
             cell.makeLineStart(direction, id)
         }
         // a single tile line can be both start and end
-        if (i == line.tiles.lastIndex) {
+        if (isEnd) {
             cell.makeLineEnd(direction, id)
         }
         if (lineTile.mustMatch != null) {
@@ -81,13 +85,19 @@ fun GridConfig.addBeltLine(line: BeltLine) {
         } else {
             for (tier in lineTile.allowedBeltTiers) {
                 cell.addOption(direction, tier.belt, id)
-                cell.addOption(direction, tier.inputUg, id)
-                cell.addOption(direction, tier.outputUg, id)
+                if (!isEnd)
+                    cell.addOption(direction, tier.inputUg, id)
+                if (!isStart)
+                    cell.addOption(direction, tier.outputUg, id)
             }
             if (lineTile.mustBeNotEmpty) {
                 cell.forceIsId(id)
             }
         }
+    }
+    if (line.outputsToNothing) {
+        val cell = this[line.start.shifted(direction, line.tiles.size)]
+        cell.mustNotTakeInputIn(direction)
     }
 }
 
@@ -198,10 +208,16 @@ fun findBeltLineFrom(
         )
     }
 
+    val lastNode = curNode
+    val outputsToNothing = lastNode.entity.let {
+        it is Belt || it is UndergroundBelt && it.ioType == IOType.Output
+    } && lastNode.outEdges.none { it.type == LogisticsEdgeType.Belt }
+
     return BeltLine(
         start = startTile,
         direction = direction,
         tiles = resultTiles,
+        outputsToNothing = outputsToNothing,
     ) to nodes
 }
 
@@ -209,6 +225,7 @@ fun getBeltLinesFromTransportGraph(
     transportGraph: ItemTransportGraph,
     prototypes: BlueprintPrototypes = VanillaPrototypes,
 ): List<BeltLine> {
+    logger.info { "Finding belt lines" }
     val beltTiers = prototypes.getAllBeltTiers()
     val visited = mutableSetOf<ItemTransportGraph.Node>()
     val result = transportGraph.nodes.mapNotNull {
@@ -225,6 +242,7 @@ fun EntityPlacementModel.addBeltLinesFrom(
     origEntities: SpatialDataStructure<BlueprintEntity>,
     prototypes: BlueprintPrototypes = VanillaPrototypes,
 ): Grid {
+    logger.info { "Start: add belt lines" }
     return addBeltLinesFrom(getItemTransportGraph(origEntities), prototypes)
 }
 

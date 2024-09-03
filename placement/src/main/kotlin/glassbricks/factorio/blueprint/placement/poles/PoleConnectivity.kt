@@ -39,8 +39,9 @@ fun PolePlacements.enforceConnectedWithDag(
     rootPoles: Collection<PoleCandidate>,
     distanceMetric: DistanceMetric = ::defaultConnectivityDistanceMetric,
 ) {
+    logger.info { "Adding connectivity using DAG" }
     require(rootPoles.isNotEmpty()) {
-        "Adding connectivity constraints without any root poles is the same as not adding any constraints"
+        "Adding connectivity without any root poles is the same as not adding any constraints"
     }
     val poleGraph = getPoleGraph(distanceMetric)
     val distances = dijkstras(poleGraph, rootPoles).distances
@@ -66,6 +67,7 @@ fun PolePlacements.enforceConnectedWithDistanceLabels(
     rootPoles: Collection<PoleCandidate>,
     maxPoleDistance: Long = 200,
 ) {
+    logger.info { "Adding connectivity using DAG" }
     require(rootPoles.isNotEmpty()) {
         "Adding connectivity constraints without any root poles is the same as not adding any constraints"
     }

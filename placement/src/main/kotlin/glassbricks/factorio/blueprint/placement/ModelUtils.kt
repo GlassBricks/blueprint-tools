@@ -20,8 +20,10 @@ import glassbricks.factorio.blueprint.prototypes.TransportBeltPrototype
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import glassbricks.factorio.blueprint.roundOutToTileBbox
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 
+private val logger = KotlinLogging.logger {}
 // for handling nudging (in the future, make sure preserveWithControlBehavior still works as expected)
 
 class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
@@ -65,6 +67,7 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
     var distanceCostFactor: Double = 0.0
 
     fun build(): EntityPlacementModel {
+        logger.info { "Building model" }
         val model = EntityPlacementModel()
         val beltGrid = if (optimizeBeltLines) {
             model.addBeltLinesFrom(entities)
@@ -81,17 +84,19 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
             true
         }
 
+        logger.info { "Adding fixed placements" }
         for (entity in entitiesToAdd)
             model.addFixedPlacement(entity)
 
         // fixed placements added first, so that poles work
 
         if (optimizePoles != null) {
+            logger.info { "Adding pole placements" }
             val placements = model.addPolePlacements(
                 optimizePoles!!, bounds = bounds.roundOutToTileBbox()
             ) {
                 removeEmptyPolesDist2()
-                removeIf {
+                removeIfParallel {
                     it.collisionBox.roundOutToTileBbox().any {
                         beltGrid?.get(it)?.canBeEmpty == false
                     }
@@ -107,6 +112,7 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
             }
         }
 
+        logger.info { "Other config..." }
         for (entity in toKeep) {
             val existingEntity =
                 model.placements.findMatching(entity) ?: error("Entity placement matching preserved entity not found")
@@ -127,10 +133,11 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
         if (hintFromExising) {
             for (placement in model.placements) if (placement is OptionalEntityPlacement<*>) {
                 val existingEntity = entities.findMatching(placement)
-                if (existingEntity != null) model.cp.addHint(placement.selected, true)
+                model.cp.addHint(placement.selected, existingEntity != null)
             }
         }
 
+        model.exportCopySource = entities
         return model
     }
 }

@@ -1,7 +1,7 @@
 package glassbricks.factorio
 
 import glassbricks.factorio.blueprint.json.bpJson
-import glassbricks.factorio.blueprint.json.importBlueprintJson
+import glassbricks.factorio.blueprint.json.importBlueprintFrom
 import glassbricks.factorio.blueprint.json.importBlueprintString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -20,7 +20,7 @@ fun main() {
         } catch (e: Exception) {
             println("As simple json")
             try {
-                val backToString = importBlueprintJson(str.byteInputStream(), JsonElement.serializer())
+                val backToString = importBlueprintFrom(str.byteInputStream(), JsonElement.serializer())
                 val pretty = bpJsonPretty.encodeToString(backToString)
                 println(pretty)
             } catch (e: Exception) {

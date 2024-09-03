@@ -6,7 +6,7 @@ import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.entity.Rail
 import glassbricks.factorio.blueprint.entity.createBpEntity
-import glassbricks.factorio.blueprint.json.importBlueprintJson
+import glassbricks.factorio.blueprint.json.importBlueprintFrom
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.pos
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
@@ -63,7 +63,7 @@ class DrawRails {
 
     @Test
     fun `draw rail blob`() {
-        val bp = Blueprint(importBlueprintJson(File("../test-blueprints/rail-blob.txt")))
+        val bp = Blueprint(importBlueprintFrom(File("../test-blueprints/rail-blob.txt")))
         val entities = bp.entities
         entities.retainAll { it is Rail }
         val drawing = drawingFor(entities)

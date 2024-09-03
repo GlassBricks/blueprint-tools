@@ -8,7 +8,10 @@ import glassbricks.factorio.blueprint.MutableSpatialDataStructure
 import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.prototypes.EntityPrototype
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.math.round
 
+private val logger = KotlinLogging.logger {}
 
 class EntityPlacementModel(
     private val _placements: MutableSpatialDataStructure<EntityPlacement<*>> = DefaultSpatialDataStructure(),
@@ -100,14 +103,6 @@ class EntityPlacementModel(
         return optionalEntity
     }
 
-    private fun setObjective() {
-        val entities = placements
-            .filterIsInstance<OptionalEntityPlacement<*>>()
-        val vars = entities.map { it.selected }.toTypedArray()
-        val costs = entities.map { it.cost }.toDoubleArray()
-        cp.minimize(DoubleLinearExpr(vars, costs, 0.0))
-    }
-
     /**
      * This makes the following simplifying assumptions:
      * - Only one entity can occupy a tile; if an entity occupies a tile, it occupies _all_ of the tile
@@ -142,11 +137,29 @@ class EntityPlacementModel(
             solver.parameters.maxTimeInSeconds = value
         }
 
+    /**
+     * Costs are rounded to the nearest fraction of this value; e.g 20 means provide 1/20th of a cost unit.
+     *
+     * Set to Int.MAX_VALUE to disable rounding.
+     */
+    var costResolution: Int = 500
+
+    private fun setObjective() {
+        val entities = placements
+            .filterIsInstance<OptionalEntityPlacement<*>>()
+        val vars = entities.map { it.selected }.toTypedArray()
+        val costs = entities.map {
+            round(it.cost * costResolution) / costResolution
+        }.toDoubleArray()
+        cp.minimize(DoubleLinearExpr(vars, costs, 0.0))
+    }
+
 
     fun solve(
         display: Boolean = true,
         optimize: Boolean = true,
     ): PlacementSolution {
+        logger.info { "Adding final constraints" }
         addNonOverlappingConstraint()
         if (optimize) setObjective()
 
@@ -156,7 +169,8 @@ class EntityPlacementModel(
                 logToStdout = true
             }
         }
-        System.gc()
+        attemptAggresiveGc()
+        logger.info { "Starting cp solve" }
         val status = solver.solve(cp)
         return PlacementSolution(
             model = this,
@@ -211,6 +225,7 @@ fun <P : EntityPrototype, E : Entity<P>> getAllUnrotatedTilePlacements(
 ): List<E> {
     val boundsPos = bounds.toBoundingBox()
     val tiles = bounds.toList()
+    logger.info { "Generating placements for ${prototypes.take(5).joinToString { it.name }}" }
     return prototypes.toSet().parallelStream().flatMap { prototype: P ->
         tiles.parallelStream().map { tile -> createEntity(prototype, tile) }
     }.filter { it.collisionBox in boundsPos && allowPlacement(it) }.toList()
@@ -227,4 +242,28 @@ fun <P : EntityPrototype> getAllUnrotatedTilePlacementsBasic(
         allowPlacement = { model.canPlace(it) },
         createEntity = { prototype, tile -> prototype.basicPlacedAtTile(tile) }
     )
+}
+
+
+fun attemptAggresiveGc() {
+    val r = Runtime.getRuntime()
+    r.gc()
+    var f = r.freeMemory()
+    var m = r.maxMemory()
+    var t = r.totalMemory()
+    repeat(10) {
+        r.gc()
+//        Thread.sleep(20)
+        val f2 = r.freeMemory()
+        val m2 = r.maxMemory()
+        val t2 = r.totalMemory()
+        if (f == f2 && m == m2 && t == t2) {
+            println("Full GC achieved.")
+            return
+        }
+        f = f2
+        m = m2
+        t = t2
+    }
+    println("Failed to achieve full GC.")
 }

@@ -4,15 +4,21 @@ import com.google.ortools.sat.CpModel
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.shifted
+import io.github.oshai.kotlinlogging.KotlinLogging
 
+private val logger = KotlinLogging.logger {}
 
 open class GridConfig {
     private val cells: MutableMap<TilePosition, MutableBeltConfig> = mutableMapOf()
     operator fun get(position: TilePosition): MutableBeltConfig = cells.getOrPut(position) { BeltConfigImpl() }
     fun get(x: Int, y: Int): BeltConfig = get(TilePosition(x, y))
 
+    /**
+     * Doesn't actually create any entity placements
+     */
     internal fun applyTo(cp: CpModel): Grid {
-        val grid = cells.mapValuesTo(hashMapOf()) { (_, config) -> BeltImpl(cp, config) }
+        logger.info { "Applying belt grid config to cp" }
+        val grid = cells.mapValuesTo(HashMap()) { (_, config) -> BeltImpl(cp, config) }
         return Grid(cp, grid)
     }
 

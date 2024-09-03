@@ -8,7 +8,9 @@ import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 import glassbricks.factorio.blueprint.prototypes.Loader1x1Prototype
 import glassbricks.factorio.blueprint.prototypes.Loader1x2Prototype
+import io.github.oshai.kotlinlogging.KotlinLogging
 
+private val logger = KotlinLogging.logger {}
 // this class may be reused in the future for more complex things?
 
 // node types:
@@ -65,6 +67,7 @@ fun Node.hasSidewaysInput(): Boolean =
             inEdges.any { it.type == LogisticsEdgeType.Belt && it.from.direction != entity.direction }
 
 fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTransportGraph {
+    logger.info { "Building item transport graph" }
     val nodes = mutableSetOf<Node>()
     val entityToNode = mutableMapOf<BlueprintEntity, Node>()
     val belts = mutableMapOf<TilePosition, Node>()

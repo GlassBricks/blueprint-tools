@@ -60,7 +60,7 @@ class BlueprintJsonModelTest {
     }
 
     fun testBlueprint(name: String) {
-        val bp = importBlueprintJson(File("../test-blueprints/$name.txt").inputStream()) as BlueprintJson
+        val bp = importBlueprintFrom(File("../test-blueprints/$name.txt").inputStream()) as BlueprintJson
 
         bp.entities?.forEach {
             if (it.connections == null && it.control_behavior != null && !it.control_behavior!!.connect_to_logistic_network) {

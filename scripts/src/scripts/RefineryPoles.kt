@@ -6,7 +6,7 @@ import glassbricks.factorio.blueprint.*
 import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.json.BlueprintJson
 import glassbricks.factorio.blueprint.json.exportTo
-import glassbricks.factorio.blueprint.json.importBlueprintJson
+import glassbricks.factorio.blueprint.json.importBlueprintFrom
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.addDistanceCostFrom
@@ -32,7 +32,7 @@ fun tiledCopiesX(
 }
 
 suspend fun main(): Unit = coroutineScope {
-    val bp = Blueprint(importBlueprintJson(inputBp) as BlueprintJson)
+    val bp = Blueprint(importBlueprintFrom(inputBp) as BlueprintJson)
     val origEntities = bp.entities.filter { it !is ElectricPole }
     bp.entities.clear()
     val originalBox = getEnclosingBox(origEntities.map { it.collisionBox }).roundOutToTileBbox()

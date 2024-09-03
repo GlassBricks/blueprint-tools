@@ -1,5 +1,7 @@
 plugins {
     kotlin("jvm")
+    application
+    id("com.gradleup.shadow") version "8.3.0"
 }
 
 group = "glassbricks.factorio"
@@ -38,4 +40,8 @@ sourceSets {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+application {
+    mainClass = "scripts.OptimizeKt"
 }
