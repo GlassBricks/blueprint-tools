@@ -9,7 +9,7 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class BlueprintJsonModelTest {
+class BlueprintJsonTest {
 
     fun assertBpMatches(
         bp: BlueprintJson,
