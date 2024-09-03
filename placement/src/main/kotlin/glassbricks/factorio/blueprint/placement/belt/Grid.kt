@@ -29,6 +29,7 @@ class Grid internal constructor(
 private fun Grid.addGridConstraints() {
     for ((tile, belt) in belts) {
         for (direction in CardinalDirection.entries) constrainBeltPropagation(tile, direction)
+        belt.mustNotOutputIn?.let { constrainMustNotOutputIn(tile, it) }
         for ((direction, beltTypes) in belt.selectedBelt) {
             for ((type, thisSelected) in beltTypes) {
                 if (type is BeltType.Underground)
@@ -61,6 +62,29 @@ private fun Grid.constrainBeltPropagation(tile: TilePosition, direction: Cardina
     }
     if (belt.propagatesForward) constrainEqual(nextCell, true)
     if (belt.propagatesBackward) constrainEqual(prevCell, false)
+}
+
+private fun Grid.constrainMustNotOutputIn(
+    tile: TilePosition,
+    direction: CardinalDirection,
+) {
+    val belt = belts[tile]!!
+    val nextTile = tile.shifted(direction)
+    val nextBelt = belts[nextTile] ?: return
+    // allowed if:
+    // - opposite direction
+    // - is output underground in same direction
+    // - is input underground in opposite direction (covered by 1st item)
+    // all other not allowed
+    for ((nextDirection, beltTypes) in nextBelt.selectedBelt) {
+        for ((type, selected) in beltTypes) {
+            val allowed = direction == nextDirection.oppositeDir()
+                    || (type is BeltType.OutputUnderground && direction == nextDirection)
+            if (!allowed) {
+                cp.addEquality(selected, false).onlyEnforceIf(belt.hasOutputIn[direction] ?: cp.falseLiteral())
+            }
+        }
+    }
 }
 
 private fun Grid.constrainUnderground(

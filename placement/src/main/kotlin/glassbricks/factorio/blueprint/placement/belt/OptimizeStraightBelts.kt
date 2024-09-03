@@ -45,12 +45,10 @@ fun ItemTransportGraph.Node.getBeltType(): BeltType? = when (val prototype = pro
 }
 
 fun ItemTransportGraph.Node.beltShouldBeNotEmpty(): Boolean =
-    inEdges.any { it.type != LogisticsEdgeType.Belt } ||
-            outEdges.any { it.type != LogisticsEdgeType.Belt }
+    inEdges.any { it.type != LogisticsEdgeType.Belt } || outEdges.any { it.type != LogisticsEdgeType.Belt }
 
 fun ItemTransportGraph.Node.beltShouldMatchExisting(): Boolean =
-    hasSidewaysInput() || entity is WithControlBehavior && entity.hasControlBehavior()
-            || isIsolatedUnderground()
+    hasSidewaysInput() || entity is WithControlBehavior && entity.hasControlBehavior() || isIsolatedUnderground()
 
 class BeltLine(
     val start: TilePosition,
@@ -79,25 +77,21 @@ fun GridConfig.addBeltLine(line: BeltLine) {
         // a single tile line can be both start and end
         if (isEnd) {
             cell.makeLineEnd(direction, id)
+            if (line.outputsToNothing)
+                cell.mustNotOutputIn(direction)
         }
         if (lineTile.mustMatch != null) {
             cell.forceAs(direction, id, lineTile.mustMatch)
         } else {
             for (tier in lineTile.allowedBeltTiers) {
                 cell.addOption(direction, tier.belt, id)
-                if (!isEnd)
-                    cell.addOption(direction, tier.inputUg, id)
-                if (!isStart)
-                    cell.addOption(direction, tier.outputUg, id)
+                if (!isEnd) cell.addOption(direction, tier.inputUg, id)
+                if (!isStart) cell.addOption(direction, tier.outputUg, id)
             }
             if (lineTile.mustBeNotEmpty) {
                 cell.forceIsId(id)
             }
         }
-    }
-    if (line.outputsToNothing) {
-        val cell = this[line.start.shifted(direction, line.tiles.size)]
-        cell.mustNotTakeInputIn(direction)
     }
 }
 
@@ -121,9 +115,7 @@ fun findBeltLineFrom(
     // traverse backwards while possible to find start node
     var curNode = initialNode
     while (true) {
-        val prevNode = curNode.inEdges(LogisticsEdgeType.Belt)
-            .find { it.from.isPartOfLine() }
-            ?.from ?: break
+        val prevNode = curNode.inEdges(LogisticsEdgeType.Belt).find { it.from.isPartOfLine() }?.from ?: break
         curNode = prevNode
     }
     val startNode = curNode
@@ -147,11 +139,10 @@ fun findBeltLineFrom(
     fun endSegment(endIndex: Int) {
         if (segmentStartIndex > endIndex) return
         curSegmentTiers.sort()
-        val segmentTiers =
-            cachedTierLists.find { it == curSegmentTiers } ?: curSegmentTiers.also {
-                cachedTierLists += it
-                curSegmentTiers = mutableListOf()
-            }
+        val segmentTiers = cachedTierLists.find { it == curSegmentTiers } ?: curSegmentTiers.also {
+            cachedTierLists += it
+            curSegmentTiers = mutableListOf()
+        }
 
         while (segmentStartIndex <= endIndex) {
             tiles[segmentStartIndex].allowedBeltTiers = segmentTiers
@@ -188,10 +179,7 @@ fun findBeltLineFrom(
     visitNode(startNode)
     curNode = startNode
     while (true) {
-        val nextNode = curNode.outEdges(LogisticsEdgeType.Belt)
-            .firstOrNull()?.to
-            ?.takeIf { it.isPartOfLine() }
-            ?: break
+        val nextNode = curNode.outEdges(LogisticsEdgeType.Belt).firstOrNull()?.to?.takeIf { it.isPartOfLine() } ?: break
         curNode = nextNode
         visitNode(curNode)
     }
@@ -210,7 +198,7 @@ fun findBeltLineFrom(
 
     val lastNode = curNode
     val outputsToNothing = lastNode.entity.let {
-        it is Belt || it is UndergroundBelt && it.ioType == IOType.Output
+        it is TransportBelt || it is UndergroundBelt && it.ioType == IOType.Output
     } && lastNode.outEdges.none { it.type == LogisticsEdgeType.Belt }
 
     return BeltLine(
@@ -231,7 +219,6 @@ fun getBeltLinesFromTransportGraph(
     val result = transportGraph.nodes.mapNotNull {
         if (it in visited) return@mapNotNull null
         val lineInfo = findBeltLineFrom(it, beltTiers) ?: return@mapNotNull null
-//        check(lineInfo.second.none { it in visited })
         visited += lineInfo.second
         lineInfo.first
     }

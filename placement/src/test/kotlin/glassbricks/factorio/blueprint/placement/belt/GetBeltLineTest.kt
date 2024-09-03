@@ -153,4 +153,14 @@ class GetBeltLineTest {
         assertTrue(line.tiles.all { it.mustMatch == null })
         assertTrue(line.tiles.all { it.allowedBeltTiers == allTiers })
     }
+
+    @Test
+    fun `t intersection`() {
+        val ent1 = createEntities("=", tilePos(0, 1), Direction.North)
+        val ent2 = createEntities("> <", tilePos(-1, 0), Direction.East)
+        ent1.addAll(ent2)
+        val lines = getBeltLines(ent1)
+        val line1 = lines.find { it.direction == CardinalDirection.North }!!
+        assertTrue(line1.outputsToNothing)
+    }
 }

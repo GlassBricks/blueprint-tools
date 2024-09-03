@@ -12,6 +12,7 @@ interface BeltConfig {
     val canBeEmpty: Boolean
     val propagatesForward: Boolean
     val propagatesBackward: Boolean
+    val mustNotOutputIn: CardinalDirection?
 }
 
 interface MutableBeltConfig : BeltConfig {
@@ -24,7 +25,7 @@ interface MutableBeltConfig : BeltConfig {
     // will also add as option
     fun forceAs(direction: CardinalDirection, lineId: BeltLineId, beltType: BeltType)
 
-    fun mustNotTakeInputIn(direction: CardinalDirection)
+    fun mustNotOutputIn(direction: CardinalDirection)
 }
 
 
@@ -36,13 +37,11 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
     private var isLineEnd: Boolean = false
     override val propagatesForward: Boolean get() = !isLineEnd
     override val propagatesBackward: Boolean get() = !isLineStart
+    override var mustNotOutputIn: CardinalDirection? = null
 
-    private var directionSetReason: String? = null
     private var forcedDirection: CardinalDirection? = null
         set(value) {
-            check(field == null || field == value) {
-                "Direction already set: $directionSetReason"
-            }
+            check(field == null || field == value) { "Direction already set" }
             field = value
         }
     private var forcedBeltId: BeltLineId? = null
@@ -70,7 +69,6 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
         isLineStart = true
         forcedDirection = direction
         forcedBeltId = lineId
-        directionSetReason = "start"
     }
 
     override fun makeLineEnd(
@@ -80,7 +78,6 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
         isLineEnd = true
         forcedDirection = direction
         forcedBeltId = lineId
-        directionSetReason = "end"
     }
 
     override fun forceIsId(lineId: BeltLineId) {
@@ -93,15 +90,13 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
         beltType: BeltType,
     ) {
         forcedDirection = direction
-        directionSetReason = "forceAs"
         forcedBeltId = lineId
         forcedBeltType = beltType
         addOption(direction, beltType, lineId)
     }
 
-    override fun mustNotTakeInputIn(direction: CardinalDirection) {
-        forcedDirection = direction.oppositeDir()
-        directionSetReason = "mustNotTakeInputIn"
+    override fun mustNotOutputIn(direction: CardinalDirection) {
+        mustNotOutputIn = direction
     }
 
     override val canBeEmpty: Boolean

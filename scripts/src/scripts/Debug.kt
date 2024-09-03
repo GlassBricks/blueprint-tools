@@ -24,7 +24,7 @@ fun bisectBp(
     }
     if (!tryRun(curBp)) error("Initial run does not throw")
     while (true) {
-        val quarter = curBounds.splitIntoQuarters().firstOrNull { tryRun(curBp.subset(it)) }
+        val quarter = curBounds.split().firstOrNull { tryRun(curBp.subset(it)) }
         if (quarter == null) {
             return curBp
         }
@@ -35,14 +35,16 @@ fun bisectBp(
     }
 }
 
-fun TileBoundingBox.splitIntoQuarters(): List<TileBoundingBox> {
+fun TileBoundingBox.split(): List<TileBoundingBox> {
     val midX = (minX + maxXExclusive) / 2
     val midY = (minY + maxYExclusive) / 2
     return listOf(
-        TileBoundingBox(minX, minY, midX, midY),
-        TileBoundingBox(midX, minY, maxXExclusive, midY),
-        TileBoundingBox(minX, midY, midX, maxYExclusive),
-        TileBoundingBox(midX, midY, maxXExclusive, maxYExclusive),
+        // cut on x only
+        TileBoundingBox(minX, minY, maxXExclusive, midY),
+        TileBoundingBox(minX, midY, maxXExclusive, maxYExclusive),
+        // cut on y only
+        TileBoundingBox(minX, minY, midX, maxYExclusive),
+        TileBoundingBox(midX, minY, maxXExclusive, maxYExclusive),
     ).filter {
         it.isNotEmpty() && it != this
     }

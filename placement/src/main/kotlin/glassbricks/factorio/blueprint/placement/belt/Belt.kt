@@ -35,7 +35,7 @@ internal class BeltImpl(
     override val canBeEmpty: Boolean = config.canBeEmpty
     override val propagatesForward: Boolean = config.propagatesForward
     override val propagatesBackward: Boolean = config.propagatesBackward
-
+    override val mustNotOutputIn: CardinalDirection? = config.mustNotOutputIn
 
     init {
         val possibleBeltIds = mutableSetOf<Long>()

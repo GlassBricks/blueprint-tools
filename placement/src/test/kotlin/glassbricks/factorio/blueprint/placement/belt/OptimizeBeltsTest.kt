@@ -91,4 +91,17 @@ class OptimizeBeltsTest {
         val entityCount = resultEntities.groupingBy { it.prototype.name }.eachCount()
         assertEquals(4, entityCount["transport-belt"])
     }
+
+    @Test
+    fun `overlapping lines`() {
+        val line1 = createEntities(">  <", tilePos(0, 0), Direction.East)
+        val line2 = createEntities(" == ", tilePos(0, 0), Direction.East)
+        line1.addAll(line2)
+
+        val solution = runOptimize(line1, ugRelCost = 2.3)
+        val resultEntities = solution.export()
+        val entityCount = resultEntities.groupingBy { it.prototype.name }.eachCount()
+        assertEquals(2, entityCount["transport-belt"])
+        assertEquals(2, entityCount["underground-belt"])
+    }
 }
