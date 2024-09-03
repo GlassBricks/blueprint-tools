@@ -16,7 +16,7 @@ typealias BeltSelectVars = Map<CardinalDirection, Map<BeltType, Literal>>
 typealias UgConnectorVars = Map<CardinalDirection, Map<UndergroundBeltPrototype, Literal>>
 typealias UgConnectorIds = Map<Axis, Map<UndergroundBeltPrototype, IntVar>>
 
-interface BeltVars : BeltConfig {
+interface Belt : BeltConfig {
     val isEmpty: Literal
     val lineId: IntVar
     val lineIdDomainMap: Map<Int, Literal>
@@ -28,10 +28,10 @@ interface BeltVars : BeltConfig {
 }
 
 
-internal class BeltVarsImpl(
+internal class BeltImpl(
     cp: CpModel,
     config: BeltConfig,
-) : BeltVars {
+) : Belt {
     override val isEmpty = cp.newBoolVar("isEmpty")
 
     override val lineId: IntVar

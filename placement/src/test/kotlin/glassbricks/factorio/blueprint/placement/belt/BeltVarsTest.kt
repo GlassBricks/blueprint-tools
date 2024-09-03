@@ -22,7 +22,7 @@ internal class BeltVarsTest {
         config.addOption(CardinalDirection.East, BeltType.InputUnderground(ug), 2)
         config.addOption(CardinalDirection.West, BeltType.OutputUnderground(ug), 3)
 
-        val vars = BeltVarsImpl(cp, config)
+        val vars = BeltImpl(cp, config)
         val options = vars.getOptions()
         assertEquals<Map<CardinalDirection, MultiMap<BeltType, BeltLineId>>>(
             mapOf(

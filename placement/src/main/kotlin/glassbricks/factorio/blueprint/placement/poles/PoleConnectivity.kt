@@ -62,7 +62,7 @@ fun PolePlacements.enforceConnectedWithDag(
  * More optimal guarantees than DAG version, but is exponentially slower.
  * Only recommended for small problems when the heuristics of [enforceConnectedWithDag] is not enough.
  */
-fun PolePlacements.enforceConnectedByDistanceLabels(
+fun PolePlacements.enforceConnectedWithDistanceLabels(
     rootPoles: Collection<PoleCandidate>,
     maxPoleDistance: Long = 200,
 ) {

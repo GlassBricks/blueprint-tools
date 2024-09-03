@@ -15,21 +15,21 @@ import glassbricks.factorio.blueprint.placement.shifted
 import glassbricks.factorio.blueprint.placement.toFactorioDirection
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 
-class BeltGrid internal constructor(
+class Grid internal constructor(
     override val cp: CpModel,
-    grid: MutableMap<TilePosition, BeltVarsImpl>,
+    grid: MutableMap<TilePosition, BeltImpl>,
 ) : WithCp {
-    val map: Map<TilePosition, BeltVars> = grid
+    val map: Map<TilePosition, Belt> = grid
 
     init {
         ensureUndergroundConnectors(grid)
         addBeltConstraints()
     }
 
-    operator fun get(tile: TilePosition): BeltVars? = map[tile]
+    operator fun get(tile: TilePosition): Belt? = map[tile]
 }
 
-private fun WithCp.ensureUndergroundConnectors(grid: MutableMap<TilePosition, BeltVarsImpl>) {
+private fun WithCp.ensureUndergroundConnectors(grid: MutableMap<TilePosition, BeltImpl>) {
     for ((tile, cell) in grid.entries.toList()) for ((direction, beltOptions) in cell.getOptions()) for (type in beltOptions.keys) {
         val mul = when (type) {
             is BeltType.InputUnderground -> 1
@@ -39,13 +39,13 @@ private fun WithCp.ensureUndergroundConnectors(grid: MutableMap<TilePosition, Be
         val prototype = type.prototype
         for (dist in 1..prototype.max_distance.toInt()) {
             val nextTile = tile.shifted(direction, dist * mul)
-            grid.getOrPut(nextTile) { BeltVarsImpl(cp, BeltConfigImpl()) }.ensureUgConnector(cp, direction, prototype)
+            grid.getOrPut(nextTile) { BeltImpl(cp, BeltConfigImpl()) }.ensureUgConnector(cp, direction, prototype)
         }
     }
     for ((_, cell) in grid) cell.constrainUgId(cp)
 }
 
-private fun BeltGrid.addBeltConstraints() {
+private fun Grid.addBeltConstraints() {
     for ((tile, belt) in map) {
         for (direction in CardinalDirection.entries) {
             constrainUndergroundLink(tile, direction)
@@ -60,14 +60,14 @@ private fun BeltGrid.addBeltConstraints() {
 }
 
 
-private fun BeltGrid.constrainBeltPropagation(tile: TilePosition, direction: CardinalDirection) {
+private fun Grid.constrainBeltPropagation(tile: TilePosition, direction: CardinalDirection) {
     val belt = map[tile]!!
     val thisId = belt.lineId
     val nextCell = map[tile.shifted(direction)]
     val prevCell = map[tile.shifted(direction.oppositeDir())]
 
     fun constrainEqual(
-        nextCell: BeltVars?,
+        nextCell: Belt?,
         thisIsOutput: Boolean,
     ) {
         val thisVar = if (thisIsOutput) belt.hasOutputIn[direction] else belt.hasInputIn[direction]
@@ -84,7 +84,7 @@ private fun BeltGrid.constrainBeltPropagation(tile: TilePosition, direction: Car
     // ug connectors always propagate
 }
 
-private fun BeltGrid.constrainUndergroundLink(
+private fun Grid.constrainUndergroundLink(
     tile: TilePosition,
     direction: CardinalDirection,
 ) {
@@ -111,7 +111,7 @@ private fun BeltGrid.constrainUndergroundLink(
     }
 }
 
-private fun BeltGrid.constrainUnderground(
+private fun Grid.constrainUnderground(
     tile: TilePosition,
     type: BeltType.Underground,
     direction: CardinalDirection,
@@ -160,12 +160,12 @@ private fun BeltGrid.constrainUnderground(
     }
 }
 
-private fun BeltGrid.addUndergroundLink(
+private fun Grid.addUndergroundLink(
     prototype: UndergroundBeltPrototype,
     direction: CardinalDirection,
     thisSelected: Literal,
     thisId: IntVar,
-    nextCell: BeltVars?,
+    nextCell: Belt?,
     nextUgType: BeltType.Underground,
     invert: Boolean = false,
 ) {
@@ -207,7 +207,7 @@ private fun BeltGrid.addUndergroundLink(
     }
 }
 
-internal fun EntityPlacementModel.addBeltPlacements(grid: BeltGrid) {
+internal fun EntityPlacementModel.addBeltPlacements(grid: Grid) {
     for ((tile, belt) in grid.map) {
         for ((direction, beltTypes) in belt.selectedBelt) {
             for ((type, selected) in beltTypes) when (type) {
@@ -234,7 +234,7 @@ internal fun EntityPlacementModel.addBeltPlacements(grid: BeltGrid) {
     }
 }
 
-fun EntityPlacementModel.addBeltGrid(grid: BeltGridConfig): BeltGrid {
+fun EntityPlacementModel.addBeltGrid(grid: GridConfig): Grid {
     val vars = grid.applyTo(cp)
     addBeltPlacements(vars)
     return vars

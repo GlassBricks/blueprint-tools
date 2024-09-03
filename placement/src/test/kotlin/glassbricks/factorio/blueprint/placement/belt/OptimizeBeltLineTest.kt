@@ -9,9 +9,6 @@ import glassbricks.factorio.blueprint.entity.placedAtTile
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
-import glassbricks.factorio.blueprint.placement.ops.BeltLine
-import glassbricks.factorio.blueprint.placement.ops.BeltLineTile
-import glassbricks.factorio.blueprint.placement.ops.addBeltLine
 import glassbricks.factorio.blueprint.placement.shifted
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.tilePos
@@ -58,7 +55,7 @@ class OptimizeBeltLineTest {
             startPos,
             direction,
         )
-        val beltGrid = BeltGridConfig()
+        val beltGrid = GridConfig()
         beltGrid.addBeltLine(line)
 
         val model = EntityPlacementModel()

@@ -1,23 +1,47 @@
-package glassbricks.factorio.blueprint.placement.ops
+package glassbricks.factorio.blueprint.placement.belt
 
 import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.entity.*
+import glassbricks.factorio.blueprint.json.IOType
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
-import glassbricks.factorio.blueprint.placement.belt.BeltGrid
-import glassbricks.factorio.blueprint.placement.belt.BeltGridConfig
-import glassbricks.factorio.blueprint.placement.belt.BeltTier
-import glassbricks.factorio.blueprint.placement.belt.BeltType
-import glassbricks.factorio.blueprint.placement.belt.addBeltGrid
-import glassbricks.factorio.blueprint.placement.belt.getAllBeltTiers
-import glassbricks.factorio.blueprint.placement.belt.getBeltType
-import glassbricks.factorio.blueprint.placement.belt.isIsolatedUnderground
+import glassbricks.factorio.blueprint.placement.ops.ItemTransportGraph
+import glassbricks.factorio.blueprint.placement.ops.LogisticsEdgeType
+import glassbricks.factorio.blueprint.placement.ops.getItemTransportGraph
+import glassbricks.factorio.blueprint.placement.ops.hasSidewaysInput
 import glassbricks.factorio.blueprint.placement.shifted
 import glassbricks.factorio.blueprint.placement.toCardinalDirection
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.EntityPrototype
+import glassbricks.factorio.blueprint.prototypes.TransportBeltPrototype
+import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
+import kotlin.collections.get
+import kotlin.to
+
+fun ItemTransportGraph.Node.isIsolatedUnderground(): Boolean {
+    if (entity !is UndergroundBelt) return false
+    return when (entity.ioType) {
+        IOType.Input -> outEdges.none { it.type == LogisticsEdgeType.Belt && it.to.entity is UndergroundBelt }
+        IOType.Output -> inEdges.none { it.type == LogisticsEdgeType.Belt && it.from.entity is UndergroundBelt }
+    }
+}
+
+fun ItemTransportGraph.Node.getBeltType(): BeltType? = when (val prototype = prototype) {
+    is TransportBeltPrototype -> BeltType.Belt(prototype)
+    is UndergroundBeltPrototype -> when ((entity as UndergroundBelt).ioType) {
+        IOType.Input -> BeltType.InputUnderground(
+            prototype,
+            isIsolated = outEdges.none { it.type == LogisticsEdgeType.Belt && it.to.entity is UndergroundBelt })
+
+        IOType.Output -> BeltType.OutputUnderground(
+            prototype,
+            isIsolated = inEdges.none { it.type == LogisticsEdgeType.Belt && it.from.entity is UndergroundBelt })
+    }
+
+    else -> null
+}
 
 fun ItemTransportGraph.Node.beltShouldBeNotEmpty(): Boolean =
     inEdges.any { it.type != LogisticsEdgeType.Belt } ||
@@ -40,7 +64,7 @@ data class BeltLineTile(
     val mustMatch: BeltType?,
 )
 
-fun BeltGridConfig.addBeltLine(line: BeltLine) {
+fun GridConfig.addBeltLine(line: BeltLine) {
     val direction = line.direction
     val id = newLineId()
     for ((i, lineTile) in line.tiles.withIndex()) {
@@ -200,7 +224,7 @@ fun getBeltLinesFromTransportGraph(
 fun EntityPlacementModel.addBeltLinesFrom(
     origEntities: SpatialDataStructure<BlueprintEntity>,
     prototypes: BlueprintPrototypes = VanillaPrototypes,
-): BeltGrid {
+): Grid {
     return addBeltLinesFrom(getItemTransportGraph(origEntities), prototypes)
 }
 
@@ -208,8 +232,8 @@ fun EntityPlacementModel.addBeltLinesFrom(
 fun EntityPlacementModel.addBeltLinesFrom(
     transportGraph: ItemTransportGraph,
     prototypes: BlueprintPrototypes = VanillaPrototypes,
-): BeltGrid {
-    val grid = BeltGridConfig()
+): Grid {
+    val grid = GridConfig()
     val beltLines = getBeltLinesFromTransportGraph(transportGraph, prototypes)
     for (line in beltLines) {
         grid.addBeltLine(line)

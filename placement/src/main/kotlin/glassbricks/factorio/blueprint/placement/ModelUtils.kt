@@ -7,10 +7,10 @@ import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.entity.hasControlBehavior
 import glassbricks.factorio.blueprint.findMatching
 import glassbricks.factorio.blueprint.model.Blueprint
-import glassbricks.factorio.blueprint.placement.ops.addBeltLinesFrom
+import glassbricks.factorio.blueprint.placement.belt.addBeltLinesFrom
 import glassbricks.factorio.blueprint.placement.poles.addPolePlacements
-import glassbricks.factorio.blueprint.placement.poles.enforceConnectedByDistanceLabels
 import glassbricks.factorio.blueprint.placement.poles.enforceConnectedWithDag
+import glassbricks.factorio.blueprint.placement.poles.enforceConnectedWithDistanceLabels
 import glassbricks.factorio.blueprint.placement.poles.getRelPoint
 import glassbricks.factorio.blueprint.placement.poles.getRootPolesNear
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
@@ -102,7 +102,7 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
                 if (!useLabelConnectivity) {
                     placements.enforceConnectedWithDag(rootPoles)
                 } else {
-                    placements.enforceConnectedByDistanceLabels(rootPoles)
+                    placements.enforceConnectedWithDistanceLabels(rootPoles)
                 }
             }
         }

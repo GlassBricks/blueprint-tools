@@ -1,9 +1,5 @@
 package glassbricks.factorio.blueprint.placement.belt
 
-import glassbricks.factorio.blueprint.entity.UndergroundBelt
-import glassbricks.factorio.blueprint.json.IOType
-import glassbricks.factorio.blueprint.placement.ops.ItemTransportGraph
-import glassbricks.factorio.blueprint.placement.ops.LogisticsEdgeType
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.TransportBeltConnectablePrototype
 import glassbricks.factorio.blueprint.prototypes.TransportBeltPrototype
@@ -84,27 +80,4 @@ sealed interface BeltType {
         override fun opposite(isolated: Boolean): InputUnderground = InputUnderground(prototype, isolated)
     }
 
-}
-
-fun ItemTransportGraph.Node.isIsolatedUnderground(): Boolean {
-    if (entity !is UndergroundBelt) return false
-    return when (entity.ioType) {
-        IOType.Input -> outEdges.none { it.type == LogisticsEdgeType.Belt && it.to.entity is UndergroundBelt }
-        IOType.Output -> inEdges.none { it.type == LogisticsEdgeType.Belt && it.from.entity is UndergroundBelt }
-    }
-}
-
-fun ItemTransportGraph.Node.getBeltType(): BeltType? = when (val prototype = prototype) {
-    is TransportBeltPrototype -> BeltType.Belt(prototype)
-    is UndergroundBeltPrototype -> when ((entity as UndergroundBelt).ioType) {
-        IOType.Input -> BeltType.InputUnderground(
-            prototype,
-            isIsolated = outEdges.none { it.type == LogisticsEdgeType.Belt && it.to.entity is UndergroundBelt })
-
-        IOType.Output -> BeltType.OutputUnderground(
-            prototype,
-            isIsolated = inEdges.none { it.type == LogisticsEdgeType.Belt && it.from.entity is UndergroundBelt })
-    }
-
-    else -> null
 }

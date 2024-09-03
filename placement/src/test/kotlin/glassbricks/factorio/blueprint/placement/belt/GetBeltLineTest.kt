@@ -4,7 +4,6 @@ import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.entity.TransportBelt
 import glassbricks.factorio.blueprint.entity.placedAtTile
 import glassbricks.factorio.blueprint.placement.CardinalDirection
-import glassbricks.factorio.blueprint.placement.ops.getBeltLines
 import glassbricks.factorio.blueprint.tilePos
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

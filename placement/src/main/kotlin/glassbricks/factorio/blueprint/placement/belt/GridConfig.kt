@@ -6,21 +6,21 @@ import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.shifted
 
 
-open class BeltGridConfig {
+open class GridConfig {
     private val cells: MutableMap<TilePosition, MutableBeltConfig> = mutableMapOf()
     operator fun get(position: TilePosition): MutableBeltConfig = cells.getOrPut(position) { BeltConfigImpl() }
     fun get(x: Int, y: Int): BeltConfig = get(TilePosition(x, y))
 
-    internal fun applyTo(cp: CpModel): BeltGrid {
-        val grid = cells.mapValuesTo(hashMapOf()) { (_, config) -> BeltVarsImpl(cp, config) }
-        return BeltGrid(cp, grid)
+    internal fun applyTo(cp: CpModel): Grid {
+        val grid = cells.mapValuesTo(hashMapOf()) { (_, config) -> BeltImpl(cp, config) }
+        return Grid(cp, grid)
     }
 
     private var nextBeltId: BeltLineId = 1
     fun newLineId(): BeltLineId = nextBeltId++
 }
 
-fun BeltGridConfig.addBeltLine(
+fun GridConfig.addBeltLine(
     start: TilePosition,
     direction: CardinalDirection,
     length: Int,
