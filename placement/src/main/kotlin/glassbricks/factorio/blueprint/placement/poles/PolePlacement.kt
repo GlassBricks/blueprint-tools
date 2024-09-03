@@ -17,11 +17,7 @@ import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
 import glassbricks.factorio.blueprint.roundOutToTileBbox
-import io.github.oshai.kotlinlogging.KotlinLogging
 
-private val logger = KotlinLogging.logger {}
-
-//typealias PoleCandidate = BasicEntity<ElectricPolePrototype>
 class PoleCandidate(
     override val prototype: ElectricPolePrototype,
     tilePosition: TilePosition,
@@ -35,11 +31,13 @@ class PoleCandidate(
         internal set
 
     @Volatile
-    lateinit var neighbors: MutableList<PoleCandidate>
-        internal set
+    internal lateinit var _neighbors: MutableList<PoleCandidate>
+    val neighbors: List<PoleCandidate> get() = _neighbors
 
     lateinit var placement: OptionalEntityPlacement<ElectricPolePrototype>
         internal set
+
+    override fun toString(): String = "PoleCandidate(${prototype.name}, $position)"
 }
 
 // refactoring of above
@@ -57,7 +55,7 @@ class PoleCandidates(
             val neighbors = computeNeighbors(pole)
             // slightly better memory contention stuff
             pole.poweredEntities = poweredEntities
-            pole.neighbors = neighbors
+            pole._neighbors = neighbors
         }
     }
 
@@ -84,7 +82,7 @@ class PoleCandidates(
     fun removeIf(predicate: (PoleCandidate) -> Boolean) {
         for (pole in poles.filter(predicate)) {
             poles.remove(pole)
-            for (neighbor in pole.neighbors) neighbor.neighbors.remove(pole)
+            for (neighbor in pole.neighbors) neighbor._neighbors.remove(pole)
             for (entity in pole.poweredEntities) entityPoweredMap[entity]!!.remove(pole)
         }
     }

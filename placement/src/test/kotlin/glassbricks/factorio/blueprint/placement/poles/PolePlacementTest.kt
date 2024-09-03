@@ -1,11 +1,9 @@
-/*
 package glassbricks.factorio.blueprint.placement.poles
 
+import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.Entity
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
-import glassbricks.factorio.blueprint.entity.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.placement.*
-import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 import glassbricks.factorio.blueprint.prototypes.usesElectricity
 import glassbricks.factorio.blueprint.tilePos
 import kotlin.test.Test
@@ -18,51 +16,31 @@ class PolePlacementTest {
     @Test
     fun `test pole placement`() {
         val model = EntityPlacementModel()
-        val entityList = model.addFixedEntities(
+        val addedEntities = model.addFixedEntities(
             listOf<Entity<*>>(
                 powerable(tilePos(0, 0)),
                 powerable(tilePos(1, 0)),
                 powerable(tilePos(3, 0)),
                 nonPowerable(tilePos(4, 0)),
-                powerable(tilePos(6, 1)),
-                powerable(tilePos(-40, 0))
+                powerable(tilePos(6, 0)),
+                powerable(tilePos(8, 0)),
             )
         )
-        listOf(
-            tilePos(2, 1),
-            tilePos(6, 0),
-            tilePos(20, 1),
-        ).map {
-            model.addPlacement(smallPole, smallPole.tileSnappedPosition(it))
-        }
-        val polePlacements = PolePlacements(model, PolePlacementOptions(addToModel = false))
+        val polePlacements = model.addPolePlacements(listOf(smallPole))
         assertEquals(3, polePlacements.poles.size)
+        val poles = polePlacements.poles.associateBy { it.position.x.toInt() }
 
-        val pole2 = model.placements.getInTile(tilePos(2, 1)).single() as PolePlacement
-        assertEquals(
-            setOf(entityList[0], entityList[1], entityList[2]),
-            polePlacements.poweredEntities[pole2]!!.toSet()
-        )
+        val entities = List(9) { i -> model.placements.find { it.position.x.toInt() == i }!! }
 
-        val pole5 = model.placements.getInTile(tilePos(6, 0)).single() as PolePlacement
-        assertEquals(setOf(entityList[4]), polePlacements.poweredEntities[pole5]!!.toSet())
-
-        val pole20 = model.placements.getInTile(tilePos(20, 1)).single()
-        assertEquals(emptySet(), polePlacements.poweredEntities[pole20]!!.toSet())
-
-        assertEquals(listOf(pole2), polePlacements.poweringPoles[entityList[0]])
-        assertEquals(listOf(pole2), polePlacements.poweringPoles[entityList[1]])
-        assertEquals(listOf(pole2), polePlacements.poweringPoles[entityList[2]])
-        assertEquals(null, polePlacements.poweringPoles[entityList[3]])
-        assertEquals(listOf(pole5), polePlacements.poweringPoles[entityList[4]])
-        assertEquals(null, polePlacements.poweringPoles[entityList[5]])
-
-        // connections
-
-        assertEquals(listOf(pole5), polePlacements.neighborsMap[pole2])
-        assertEquals(listOf(pole2), polePlacements.neighborsMap[pole5])
-
-        assertEquals(emptyList(), polePlacements.neighborsMap[pole20])
+        val pole2 = poles[2]!!
+        val pole5 = poles[5]!!
+        val pole7 = poles[7]!!
+        assertEquals(setOf(entities[0], entities[1], entities[3]), pole2.poweredEntities.toSet())
+        assertEquals(setOf(pole5, pole7), pole2.neighbors.toSet())
+        assertEquals(setOf(entities[3], entities[6]), pole5.poweredEntities.toSet())
+        assertEquals(setOf(pole2, pole7), pole5.neighbors.toSet())
+        assertEquals(setOf(entities[6], entities[8]), pole7.poweredEntities.toSet())
+        assertEquals(setOf(pole5, pole2), pole7.neighbors.toSet())
     }
 
     @Test
@@ -80,11 +58,7 @@ class PolePlacementTest {
         )
         val model = EntityPlacementModel()
         val fixedPlacements = model.addFixedEntities(entities)
-        val polePlacements = model.addPolePlacements(
-            polesToAdd = listOf(smallPole),
-            bounds = entities.enclosingTileBox(),
-            options = PolePlacementOptions(removeEmptyPolesReach1 = true)
-        )
+        val polePlacements = model.addPolePlacements(poles = listOf(smallPole))
         assertEquals(9, model.placements.size)
         model.timeLimitInSeconds = 1.0
         val solution = model.solve()
@@ -95,14 +69,11 @@ class PolePlacementTest {
 
         for (entity in fixedPlacements) {
             if (entity.prototype.usesElectricity) {
-                val poweringPoles = polePlacements.poweringPoles[entity]!!
-                // compiler bug?
-                @Suppress("RemoveExplicitTypeArguments")
-                val usedPole = poweringPoles.firstOrNull { usedPoles.contains<EntityPlacement<*>>(it) }
+                val poweringPoles = polePlacements.poles.filter { it.poweredEntities.contains(entity) }
+                val usedPole = poweringPoles.firstOrNull { it.placement in usedPoles }
                 assertNotNull(usedPole)
-                assertTrue(entity in polePlacements.poweredEntities[usedPole].orEmpty())
+                assertTrue(entity in usedPole.poweredEntities)
             }
         }
     }
 }
-*/

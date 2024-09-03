@@ -60,7 +60,7 @@ fun PolePlacements.enforceConnectedWithDag(
 
 /**
  * More optimal guarantees than DAG version, but is exponentially slower.
- * Only recommended for very small problems when the heuristics of [DistanceDAGConnectivity] is not enough.
+ * Only recommended for small problems when the heuristics of [enforceConnectedWithDag] is not enough.
  */
 fun PolePlacements.enforceConnectedByDistanceLabels(
     rootPoles: Collection<PoleCandidate>,
