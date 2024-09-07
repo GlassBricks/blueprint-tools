@@ -15,8 +15,8 @@ private val logger = KotlinLogging.logger {}
 
 class EntityPlacementModel(
     private val _placements: MutableSpatialDataStructure<EntityPlacement<*>> = DefaultSpatialDataStructure(),
-    override val cp: CpModel = CpModel(),
-) : WithCp {
+    val cp: CpModel = CpModel(),
+) {
     val solver: CpSolver = CpSolver()
 
     init {
@@ -130,12 +130,6 @@ class EntityPlacementModel(
             }
         }
     }
-
-    var timeLimitInSeconds: Double
-        get() = solver.parameters.maxTimeInSeconds
-        set(value) {
-            solver.parameters.maxTimeInSeconds = value
-        }
 
     /**
      * Costs are rounded to the nearest fraction of this value; e.g 20 means provide 1/20th of a cost unit.
@@ -253,7 +247,7 @@ fun attemptAggresiveGc() {
     var t = r.totalMemory()
     repeat(10) {
         r.gc()
-//        Thread.sleep(20)
+        Thread.sleep(5)
         val f2 = r.freeMemory()
         val m2 = r.maxMemory()
         val t2 = r.totalMemory()

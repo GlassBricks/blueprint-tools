@@ -84,7 +84,7 @@ suspend fun main(): Unit = coroutineScope {
 
         model.addDistanceCostFrom(rightPoint)
 
-        model.timeLimitInSeconds = 60.0
+        model.solver.parameters.maxTimeInSeconds = 60.0 * 2
         println("Running for $numTiles tiles")
         val solution = model.solve()
         println(solution.status)

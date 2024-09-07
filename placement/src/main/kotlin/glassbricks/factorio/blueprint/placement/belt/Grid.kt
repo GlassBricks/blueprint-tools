@@ -1,23 +1,19 @@
 package glassbricks.factorio.blueprint.placement.belt
 
-import com.google.ortools.sat.CpModel
 import com.google.ortools.sat.Literal
 import glassbricks.factorio.blueprint.TilePosition
-import glassbricks.factorio.blueprint.entity.UndergroundBelt
-import glassbricks.factorio.blueprint.entity.createBpEntity
-import glassbricks.factorio.blueprint.json.IOType
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
-import glassbricks.factorio.blueprint.placement.WithCp
 import glassbricks.factorio.blueprint.placement.addEquality
+import glassbricks.factorio.blueprint.placement.get
 import glassbricks.factorio.blueprint.placement.shifted
-import glassbricks.factorio.blueprint.placement.toFactorioDirection
 
 class Grid internal constructor(
-    override val cp: CpModel,
+    val model: EntityPlacementModel,
     grid: MutableMap<TilePosition, BeltImpl>,
-) : WithCp {
+) {
     val belts: Map<TilePosition, Belt> = grid
+    val cp get() = model.cp
 
     init {
         addGridConstraints()
@@ -30,11 +26,10 @@ private fun Grid.addGridConstraints() {
     for ((tile, belt) in belts) {
         for (direction in CardinalDirection.entries) constrainBeltPropagation(tile, direction)
         belt.mustNotOutputIn?.let { constrainMustNotOutputIn(tile, it) }
-        for ((direction, beltTypes) in belt.selectedBelt) {
-            for ((type, thisSelected) in beltTypes) {
-                if (type is BeltType.Underground)
-                    constrainUnderground(tile, direction, type, thisSelected)
-            }
+        for ((entry, thisPlacement) in belt.selectedBelt) {
+            val (direction, type) = entry
+            if (type is BeltType.Underground)
+                constrainUnderground(tile, direction, type, thisPlacement.selected)
         }
     }
 }
@@ -69,6 +64,8 @@ private fun Grid.constrainMustNotOutputIn(
     direction: CardinalDirection,
 ) {
     val belt = belts[tile]!!
+    val hasOutput = belt.hasOutputIn[direction] ?: return
+
     val nextTile = tile.shifted(direction)
     val nextBelt = belts[nextTile] ?: return
     // allowed if:
@@ -76,13 +73,12 @@ private fun Grid.constrainMustNotOutputIn(
     // - is output underground in same direction
     // - is input underground in opposite direction (covered by 1st item)
     // all other not allowed
-    for ((nextDirection, beltTypes) in nextBelt.selectedBelt) {
-        for ((type, selected) in beltTypes) {
-            val allowed = direction == nextDirection.oppositeDir()
-                    || (type is BeltType.OutputUnderground && direction == nextDirection)
-            if (!allowed) {
-                cp.addEquality(selected, false).onlyEnforceIf(belt.hasOutputIn[direction] ?: cp.falseLiteral())
-            }
+    for ((entry, placement) in nextBelt.selectedBelt) {
+        val (nextDirection, nextType) = entry
+        val allowed = direction == nextDirection.oppositeDir()
+                || (direction == nextDirection && nextType is BeltType.OutputUnderground)
+        if (!allowed) {
+            cp.addImplication(hasOutput, !placement.selected)
         }
     }
 }
@@ -117,7 +113,8 @@ private fun Grid.constrainNormalUnderground(
     for (dist in 1..thisType.prototype.max_distance.toInt()) {
         val otherBelt = belts[tile.shifted(ugDir, dist)] ?: continue
 
-        val pairSelected = otherBelt.selectedBelt[thisDirection]?.get(oppositeType)
+//        val pairSelected = otherBelt.selectedBelt[thisDirection]?.get(oppositeType)
+        val pairSelected = otherBelt.selectedBelt[thisDirection, oppositeType]?.selected
         if (pairSelected != null) {
             cp.addEquality(belt.lineId, otherBelt.lineId).apply {
                 onlyEnforceIf(thisSelected)
@@ -127,7 +124,7 @@ private fun Grid.constrainNormalUnderground(
         }
 
         fun disallow(type: BeltType.Underground, direction: CardinalDirection) {
-            val lit = otherBelt.selectedBelt[direction]?.get(type) ?: return
+            val lit = otherBelt.selectedBelt[direction, type]?.selected ?: return
             cp.addEquality(lit, false).apply {
                 onlyEnforceIf(thisSelected)
                 for (previous in previousPairs) onlyEnforceIf(!previous)
@@ -163,14 +160,19 @@ private fun Grid.constrainIsolatedUnderground(
                 for (previous in breaksPair) onlyEnforceIf(!previous)
             }
         }
-        for ((otherType, otherSelected) in otherBelt.selectedBelt[direction].orEmpty()) {
+        for ((entry, placement) in otherBelt.selectedBelt) {
+            val (otherDirection, otherType) = entry
+            if (otherDirection != direction) continue
             if (thisType.prototype != otherType.prototype) continue
             if (thisType.hasInput == otherType.hasInput)
-                breaksPairThisTile.add(otherSelected) // same direction, same type -- breaks pair
+                breaksPairThisTile.add(placement.selected) // same direction, same type -- breaks pair
             else
-                disallow(otherSelected) // would pair with this one
+                disallow(placement.selected) // would pair with this one
         }
-        for ((otherType, otherSelected) in otherBelt.selectedBelt[direction.oppositeDir()].orEmpty()) {
+        for ((entry, placement) in otherBelt.selectedBelt) {
+            val (otherDirection, otherType) = entry
+            if (otherDirection != direction.oppositeDir()) continue
+            val otherSelected = placement.selected
             if (thisType.prototype != otherType.prototype) continue
             if (thisType.hasInput == otherType.hasInput) // would pair with this one
                 disallow(otherSelected)
@@ -179,37 +181,4 @@ private fun Grid.constrainIsolatedUnderground(
         }
         breaksPair += breaksPairThisTile
     }
-}
-
-internal fun EntityPlacementModel.addBeltPlacements(grid: Grid) {
-    for ((tile, belt) in grid.belts) {
-        for ((direction, beltTypes) in belt.selectedBelt) {
-            for ((type, selected) in beltTypes) when (type) {
-                is BeltType.Belt -> addPlacement(
-                    type.prototype,
-                    tile.center(),
-                    direction.toFactorioDirection(),
-                    selected = selected
-                )
-
-                is BeltType.Underground -> addPlacement(
-                    createBpEntity(type.prototype, tile.center(), direction.toFactorioDirection())
-                        .apply {
-                            this as UndergroundBelt
-                            ioType = when (type) {
-                                is BeltType.InputUnderground -> IOType.Input
-                                is BeltType.OutputUnderground -> IOType.Output
-                            }
-                            addPlacement(this, selected = selected)
-                        }
-                )
-            }
-        }
-    }
-}
-
-fun EntityPlacementModel.addBeltGrid(grid: GridConfig): Grid {
-    val vars = grid.applyTo(cp)
-    addBeltPlacements(vars)
-    return vars
 }

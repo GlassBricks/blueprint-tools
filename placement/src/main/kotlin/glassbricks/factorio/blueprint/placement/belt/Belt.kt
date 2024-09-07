@@ -1,36 +1,40 @@
 package glassbricks.factorio.blueprint.placement.belt
 
-import com.google.ortools.sat.CpModel
 import com.google.ortools.sat.IntVar
 import com.google.ortools.sat.Literal
 import com.google.ortools.util.Domain
+import glassbricks.factorio.blueprint.TilePosition
+import glassbricks.factorio.blueprint.entity.UndergroundBelt
+import glassbricks.factorio.blueprint.entity.createBpEntity
+import glassbricks.factorio.blueprint.json.IOType
 import glassbricks.factorio.blueprint.placement.CardinalDirection
-import glassbricks.factorio.blueprint.placement.MultiMap
-import glassbricks.factorio.blueprint.placement.mapToArray
-import glassbricks.factorio.blueprint.placement.mapValuesNotNull
-
-typealias BeltSelectVars = Map<CardinalDirection, Map<BeltType, Literal>>
+import glassbricks.factorio.blueprint.placement.EntityPlacementModel
+import glassbricks.factorio.blueprint.placement.MultiTable
+import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
+import glassbricks.factorio.blueprint.placement.Table
+import glassbricks.factorio.blueprint.placement.toFactorioDirection
 
 interface Belt : BeltConfig {
     val isEmpty: Literal
     val lineId: IntVar
     val lineIdDomainMap: Map<Int, Literal>
-    val selectedBelt: BeltSelectVars
+    val selectedBelt: Table<CardinalDirection, BeltType, OptionalEntityPlacement<*>>
     val hasOutputIn: Map<CardinalDirection, Literal>
     val hasInputIn: Map<CardinalDirection, Literal>
 }
 
 
 internal class BeltImpl(
-    cp: CpModel,
+    model: EntityPlacementModel,
     config: BeltConfig,
 ) : Belt {
-    override val isEmpty: Literal = cp.newBoolVar("isEmpty")
+    override val pos = config.pos
+    override val isEmpty: Literal = model.cp.newBoolVar("isEmpty")
 
     override val lineId: IntVar
     override val lineIdDomainMap: Map<Int, Literal>
     private val beltOptions = config.getOptions()
-    override fun getOptions(): Map<CardinalDirection, MultiMap<BeltType, BeltLineId>> = beltOptions
+    override fun getOptions(): MultiTable<CardinalDirection, BeltType, BeltLineId> = beltOptions
 
     override val canBeEmpty: Boolean = config.canBeEmpty
     override val propagatesForward: Boolean = config.propagatesForward
@@ -39,9 +43,10 @@ internal class BeltImpl(
 
     init {
         val possibleBeltIds = mutableSetOf<Long>()
-        for (a in beltOptions.values) for (b in a.values) for (c in b) {
+        for (values in beltOptions.values) for (c in values) {
             possibleBeltIds.add(c.toLong())
         }
+        val cp = model.cp
         if (possibleBeltIds.isEmpty()) {
             this.lineId = cp.falseLiteral() as IntVar
             this.lineIdDomainMap = emptyMap()
@@ -59,47 +64,81 @@ internal class BeltImpl(
         }
     }
 
-    override val selectedBelt: BeltSelectVars = beltOptions.mapValues { (direction, beltTypes) ->
-        beltTypes.mapValues { (beltType, ids) ->
-            val selectedVar = cp.newBoolVar("selected_${beltType}_${direction}")
-            cp.addBoolOr(ids.map { lineIdDomainMap[it]!! })
-                .onlyEnforceIf(selectedVar)
-            selectedVar
+    override val selectedBelt: Table<CardinalDirection, BeltType, OptionalEntityPlacement<*>> =
+        beltOptions.mapValues { (entry, lineIds) ->
+            val (direction, beltType) = entry
+            model.createPlacement(
+                pos,
+                direction,
+                beltType,
+            )
+                .also {
+                    model.cp.addBoolOr(lineIds.map { lineIdDomainMap[it]!! })
+                        .onlyEnforceIf(it.selected)
+                }
         }
-    }
 
     init {
-        cp.addAtLeastOne(selectedBelt.values.flatMap { it.values } + isEmpty)
-        if (!canBeEmpty) cp.addEquality(isEmpty, 0)
+        model.cp.addAtLeastOne(selectedBelt.values.map { it.selected } + isEmpty)
+        if (!canBeEmpty) model.cp.addEquality(isEmpty, 0)
     }
 
-    override val hasOutputIn: Map<CardinalDirection, Literal> =
-        this.selectedBelt.mapValuesNotNull { (direction, beltTypeSelected) ->
-            val withOutput = beltTypeSelected.keys.filter { it.hasOutput }
-            if (withOutput.isEmpty()) return@mapValuesNotNull null
-
-            val hasOutVar = cp.newBoolVar("hasOutputIn_${direction}")
-            val selected = withOutput.map { beltTypeSelected[it]!! }
+    override val hasOutputIn: Map<CardinalDirection, Literal> = buildMap {
+        for (direction in CardinalDirection.entries) {
+            val selected = selectedBelt
+                .entries
+                .filter { it.key.first == direction && it.key.second.hasOutput }
+                .map { it.value.selected }
+            if (selected.isEmpty()) continue
+            val hasOutVar = model.cp.newBoolVar("hasOutputIn_${direction}")
             // has out <=> any selected
-            cp.addBoolOr(selected).onlyEnforceIf(hasOutVar)
-            for (literal in selected) cp.addImplication(literal, hasOutVar)
-            hasOutVar
+            model.cp.addBoolOr(selected).onlyEnforceIf(hasOutVar)
+            for (literal in selected) model.cp.addImplication(literal, hasOutVar)
+            put(direction, hasOutVar)
         }
+    }
 
     // todo: handle sideloading, which makes hasInputIn more complicated
-    override val hasInputIn: Map<CardinalDirection, Literal> =
-        this.selectedBelt.mapValuesNotNull { (direction, beltTypeSelected) ->
-            val withInput = beltTypeSelected.keys.filter { it.hasInput }
-            if (withInput.isEmpty()) return@mapValuesNotNull null
-
-            val hasInVar = cp.newBoolVar("hasInputIn_${direction}")
-            cp.addBoolOr(withInput.mapToArray { beltTypeSelected[it]!! })
-                .onlyEnforceIf(hasInVar)
-            hasInVar
+    override val hasInputIn: Map<CardinalDirection, Literal> = buildMap {
+        for (direction in CardinalDirection.entries) {
+            val selected = selectedBelt
+                .entries
+                .filter { it.key.first == direction && it.key.second.hasInput }
+                .map { it.value.selected }
+            if (selected.isEmpty()) continue
+            val hasInVar = model.cp.newBoolVar("hasInputIn_${direction}")
+            // has in <=> any selected
+            model.cp.addBoolOr(selected).onlyEnforceIf(hasInVar)
+            for (literal in selected) model.cp.addImplication(literal, hasInVar)
+            put(direction, hasInVar)
         }
+    }
 
     init {
         // this is redundant, but it might help cp
-        cp.addAtMostOne(hasOutputIn.values)
+        model.cp.addAtMostOne(hasOutputIn.values)
     }
+}
+
+internal fun EntityPlacementModel.createPlacement(
+    tile: TilePosition,
+    direction: CardinalDirection,
+    type: BeltType,
+): OptionalEntityPlacement<*> = when (type) {
+    is BeltType.Belt -> addPlacement(
+        type.prototype,
+        tile.center(),
+        direction.toFactorioDirection(),
+    )
+
+    is BeltType.Underground ->
+        createBpEntity(type.prototype, tile.center(), direction.toFactorioDirection())
+            .apply {
+                this as UndergroundBelt
+                ioType = when (type) {
+                    is BeltType.InputUnderground -> IOType.Input
+                    is BeltType.OutputUnderground -> IOType.Output
+                }
+            }
+            .let { addPlacement(it) }
 }

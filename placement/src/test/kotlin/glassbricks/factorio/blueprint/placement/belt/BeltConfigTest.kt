@@ -1,6 +1,8 @@
 package glassbricks.factorio.blueprint.placement.belt
 
 import glassbricks.factorio.blueprint.placement.CardinalDirection
+import glassbricks.factorio.blueprint.placement.multiTableOf
+import glassbricks.factorio.blueprint.tilePos
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -8,7 +10,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 internal class BeltConfigTest {
-    val config = BeltConfigImpl()
+    val config = BeltConfigImpl(tilePos(0, 0))
 
     @Test
     fun testCantAddId0() {
@@ -23,10 +25,16 @@ internal class BeltConfigTest {
         config.addOption(CardinalDirection.East, BeltType.Belt(belt), 2)
 
         val options = config.getOptions()
-        assertEquals<Map<CardinalDirection, Map<out BeltType, Set<BeltLineId>>>>(
-            mapOf(
-                CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1)),
-                CardinalDirection.East to mapOf(BeltType.Belt(belt) to setOf(2))
+//        assertEquals<Map<CardinalDirection, Map<out BeltType, Set<BeltLineId>>>>(
+//            mapOf(
+//                CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1)),
+//                CardinalDirection.East to mapOf(BeltType.Belt(belt) to setOf(2))
+//            ), options
+//        )
+        assertEquals(
+            multiTableOf<CardinalDirection, BeltType, BeltLineId>(
+                (CardinalDirection.North to normalBelt.belt) to 1,
+                (CardinalDirection.East to normalBelt.belt) to 2
             ), options
         )
     }
@@ -40,8 +48,10 @@ internal class BeltConfigTest {
         config.makeLineStart(CardinalDirection.North, 1)
 
         val options = config.getOptions()
-        assertEquals<Map<CardinalDirection, Map<out BeltType, Set<BeltLineId>>>>(
-            mapOf(CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1))), options
+        assertEquals(
+            multiTableOf<CardinalDirection, BeltType, BeltLineId>(
+                (CardinalDirection.North to normalBelt.belt) to 1
+            ), options
         )
         assertTrue(config.propagatesForward)
         assertFalse(config.propagatesBackward)
@@ -57,8 +67,13 @@ internal class BeltConfigTest {
         config.makeLineEnd(CardinalDirection.North, 1)
 
         val options = config.getOptions()
-        assertEquals<Map<CardinalDirection, Map<out BeltType, Set<BeltLineId>>>>(
-            mapOf(CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1))), options
+//        assertEquals<Map<CardinalDirection, Map<out BeltType, Set<BeltLineId>>>>(
+//            mapOf(CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1))), options
+//        )
+        assertEquals(
+            multiTableOf<CardinalDirection, BeltType, BeltLineId>(
+                (CardinalDirection.North to normalBelt.belt) to 1
+            ), options
         )
         assertFalse(config.propagatesForward)
         assertTrue(config.propagatesBackward)
@@ -75,8 +90,13 @@ internal class BeltConfigTest {
         config.makeLineEnd(CardinalDirection.North, 1)
 
         val options = config.getOptions()
-        assertEquals<Map<CardinalDirection, Map<out BeltType, Set<BeltLineId>>>>(
-            mapOf(CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1))), options
+//        assertEquals<Map<CardinalDirection, Map<out BeltType, Set<BeltLineId>>>>(
+//            mapOf(CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1))), options
+//        )
+        assertEquals(
+            multiTableOf<CardinalDirection, BeltType, BeltLineId>(
+                (CardinalDirection.North to normalBelt.belt) to 1
+            ), options
         )
 
         assertFalse(config.propagatesForward)

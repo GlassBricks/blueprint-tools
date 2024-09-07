@@ -45,7 +45,7 @@ class EntityPlacementModelTest {
         placement2.cost = 2.0
         model.cp.addBoolOr(listOf(placement1.selected, placement2.selected))
 
-        model.timeLimitInSeconds = 1.0
+        model.solver.parameters.maxTimeInSeconds = 1.0
         val solution = model.solve()
         assertTrue(placement1 in solution)
         assertFalse(placement2 in solution)

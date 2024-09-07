@@ -55,9 +55,9 @@ suspend fun main(): Unit = coroutineScope {
 
         keepWithControlBehavior()
     }.build()
-    model.timeLimitInSeconds = 60.0 * 65
     model.solver.parameters.apply {
-        maxMemoryInMb = 1024 * 16
+        maxTimeInSeconds = 60.0 * 10
+        maxMemoryInMb = 1024 * 12
     }
     bp.entities.clear()
 

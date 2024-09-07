@@ -8,10 +8,6 @@ import com.google.ortools.sat.LinearExpr
 import com.google.ortools.sat.Literal
 import com.google.ortools.sat.NotBoolVar
 
-interface WithCp {
-    val cp: CpModel
-}
-
 fun CpModel.addExactlyOneLenient(literals: Collection<Literal>): Constraint = when (literals.size) {
     0 -> error("addExactlyOneLenient called with no literals, impossible to satisfy")
     1 -> addEquality(literals.first(), 1L)

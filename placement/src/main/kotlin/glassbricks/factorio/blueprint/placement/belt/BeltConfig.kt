@@ -1,14 +1,17 @@
 package glassbricks.factorio.blueprint.placement.belt
 
+import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.placement.CardinalDirection
-import glassbricks.factorio.blueprint.placement.MultiMap
-import glassbricks.factorio.blueprint.placement.MutableMultiMap
-import java.util.EnumMap
+import glassbricks.factorio.blueprint.placement.MultiTable
+import glassbricks.factorio.blueprint.placement.add
+import glassbricks.factorio.blueprint.placement.mutableMultiTableOf
+import glassbricks.factorio.blueprint.placement.retainAllM
 
 typealias BeltLineId = Int
 
 interface BeltConfig {
-    fun getOptions(): Map<CardinalDirection, MultiMap<BeltType, BeltLineId>>
+    val pos: TilePosition
+    fun getOptions(): MultiTable<CardinalDirection, BeltType, BeltLineId>
     val canBeEmpty: Boolean
     val propagatesForward: Boolean
     val propagatesBackward: Boolean
@@ -29,9 +32,11 @@ interface MutableBeltConfig : BeltConfig {
 }
 
 
-internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
+internal class BeltConfigImpl(
+    override val pos: TilePosition,
+) : BeltConfig, MutableBeltConfig {
     private val beltOptions =
-        EnumMap<CardinalDirection, MutableMultiMap<BeltType, BeltLineId>>(CardinalDirection::class.java)
+        mutableMultiTableOf<CardinalDirection, BeltType, BeltLineId>()
 
     private var isLineStart: Boolean = false
     private var isLineEnd: Boolean = false
@@ -62,7 +67,7 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
         lineId: BeltLineId,
     ) {
         require(lineId != 0) { "Line ID must be non-zero" }
-        beltOptions.getOrPut(direction) { MultiMap() }.add(beltType, lineId)
+        beltOptions.add(direction, beltType, lineId)
     }
 
     override fun makeLineStart(direction: CardinalDirection, lineId: BeltLineId) {
@@ -102,17 +107,14 @@ internal class BeltConfigImpl : BeltConfig, MutableBeltConfig {
     override val canBeEmpty: Boolean
         get() = forcedBeltId == null && forcedBeltType == null
 
-    override fun getOptions(): Map<CardinalDirection, MultiMap<BeltType, BeltLineId>> {
+    override fun getOptions(): MultiTable<CardinalDirection, BeltType, BeltLineId> {
         if (forcedBeltId == null && forcedDirection == null && forcedBeltType == null) return beltOptions
-        return beltOptions.filterKeys { forcedDirection == null || it == forcedDirection }
-            .mapValues {
-                it.value.filterKeys {
-                    forcedBeltType == null || it == forcedBeltType
-                }.mapValues {
-                    it.value.filterTo(hashSetOf()) {
-                        forcedBeltId == null || it == forcedBeltId
-                    }
-                }
+        return beltOptions.toMutableMap().apply {
+            retainAllM { direction, beltType, lineId ->
+                (forcedDirection == null || direction == forcedDirection) &&
+                        (forcedBeltType == null || beltType == forcedBeltType) &&
+                        (forcedBeltId == null || lineId == forcedBeltId)
             }
+        }
     }
 }

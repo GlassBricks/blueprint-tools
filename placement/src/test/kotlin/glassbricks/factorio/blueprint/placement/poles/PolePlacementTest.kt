@@ -60,7 +60,7 @@ class PolePlacementTest {
         val fixedPlacements = model.addFixedEntities(entities)
         val polePlacements = model.addPolePlacements(poles = listOf(smallPole))
         assertEquals(9, model.placements.size)
-        model.timeLimitInSeconds = 1.0
+        model.solver.parameters.maxTimeInSeconds = 1.0
         val solution = model.solve()
 
         assertEquals(2.0, solution.solver.objectiveValue())

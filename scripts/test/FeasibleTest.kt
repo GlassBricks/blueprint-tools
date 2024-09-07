@@ -28,7 +28,7 @@ class FeasibleTest {
                     if (it is ElectricPole) it.prototype else null
                 }.distinct()
         }.build()
-        model.timeLimitInSeconds = 30.0
+        model.solver.parameters.maxTimeInSeconds = 15.0
         val solution = model.solve(optimize = false)
         assertTrue(solution.isOk, solution.status.toString())
     }

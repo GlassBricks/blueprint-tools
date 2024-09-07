@@ -2,7 +2,6 @@ package glassbricks.factorio.blueprint.placement.belt
 
 import glassbricks.factorio.blueprint.placement.Axis
 import glassbricks.factorio.blueprint.placement.CardinalDirection
-import glassbricks.factorio.blueprint.placement.mapPerDirection
 import glassbricks.factorio.blueprint.placement.shifted
 import glassbricks.factorio.blueprint.tilePos
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -33,16 +32,4 @@ class CardinalDirectionTest {
         assertEquals(tilePos(0, -1), tilePos(0, 0).shifted(CardinalDirection.North))
     }
 
-    @Test
-    fun testMapPerDirection() {
-        val map = mapPerDirection { it.toString() }
-        assertEquals(
-            mapOf(
-                CardinalDirection.North to "North",
-                CardinalDirection.East to "East",
-                CardinalDirection.South to "South",
-                CardinalDirection.West to "West"
-            ), map
-        )
-    }
 }

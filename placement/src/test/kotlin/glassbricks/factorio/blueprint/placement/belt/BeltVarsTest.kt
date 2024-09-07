@@ -1,16 +1,16 @@
 package glassbricks.factorio.blueprint.placement.belt
 
 import com.google.ortools.Loader
-import com.google.ortools.sat.CpModel
 import glassbricks.factorio.blueprint.placement.CardinalDirection
-import glassbricks.factorio.blueprint.placement.MultiMap
+import glassbricks.factorio.blueprint.placement.EntityPlacementModel
+import glassbricks.factorio.blueprint.placement.multiMapOf
+import glassbricks.factorio.blueprint.tilePos
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 
 internal class BeltVarsTest {
-    val config = BeltConfigImpl()
-    val cp = CpModel()
+    val config = BeltConfigImpl(tilePos(0, 0))
+    val model = EntityPlacementModel()
 
     init {
         Loader.loadNativeLibraries()
@@ -22,13 +22,13 @@ internal class BeltVarsTest {
         config.addOption(CardinalDirection.East, BeltType.InputUnderground(ug), 2)
         config.addOption(CardinalDirection.West, BeltType.OutputUnderground(ug), 3)
 
-        val vars = BeltImpl(cp, config)
+        val vars = BeltImpl(model, config)
         val options = vars.getOptions()
-        assertEquals<Map<CardinalDirection, MultiMap<BeltType, BeltLineId>>>(
-            mapOf(
-                CardinalDirection.North to mapOf(BeltType.Belt(belt) to setOf(1)),
-                CardinalDirection.East to mapOf(BeltType.InputUnderground(ug) to setOf(2)),
-                CardinalDirection.West to mapOf(BeltType.OutputUnderground(ug) to setOf(3))
+        assertEquals(
+            multiMapOf(
+                CardinalDirection.North to BeltType.Belt(belt) to 1,
+                CardinalDirection.East to BeltType.InputUnderground(ug) to 2,
+                CardinalDirection.West to BeltType.OutputUnderground(ug) to 3
             ), options
         )
         assertEquals(vars.canBeEmpty, config.canBeEmpty)
@@ -36,9 +36,13 @@ internal class BeltVarsTest {
         assertEquals(vars.propagatesBackward, config.propagatesBackward)
 
         val selectedVars = vars.selectedBelt
-        assertEquals(setOf(BeltType.Belt(belt)), selectedVars[CardinalDirection.North]!!.keys)
-        assertEquals(setOf(BeltType.InputUnderground(ug)), selectedVars[CardinalDirection.East]!!.keys)
-        assertEquals(setOf(BeltType.OutputUnderground(ug)), selectedVars[CardinalDirection.West]!!.keys)
-        assertFalse(CardinalDirection.South in selectedVars)
+        assertEquals(
+            setOf(
+                CardinalDirection.North to BeltType.Belt(belt),
+                CardinalDirection.East to BeltType.InputUnderground(ug),
+                CardinalDirection.West to BeltType.OutputUnderground(ug)
+            ),
+            selectedVars.keys
+        )
     }
 }

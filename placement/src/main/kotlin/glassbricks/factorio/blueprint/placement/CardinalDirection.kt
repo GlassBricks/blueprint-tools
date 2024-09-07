@@ -59,11 +59,3 @@ fun TilePosition.shifted(direction: CardinalDirection, amt: Int = 1): TilePositi
     CardinalDirection.South -> add(0, amt)
     CardinalDirection.West -> add(-amt, 0)
 }
-
-inline fun <T> mapPerDirection(init: (CardinalDirection) -> T): Map<CardinalDirection, T> {
-    val result = enumMapOf<CardinalDirection, T>()
-    for (dir in CardinalDirection.entries) {
-        result[dir] = init(dir)
-    }
-    return result
-}

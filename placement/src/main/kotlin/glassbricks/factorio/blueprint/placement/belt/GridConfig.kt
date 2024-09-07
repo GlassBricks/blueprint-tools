@@ -1,8 +1,8 @@
 package glassbricks.factorio.blueprint.placement.belt
 
-import com.google.ortools.sat.CpModel
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.placement.CardinalDirection
+import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.shifted
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -10,21 +10,23 @@ private val logger = KotlinLogging.logger {}
 
 open class GridConfig {
     private val cells: MutableMap<TilePosition, MutableBeltConfig> = mutableMapOf()
-    operator fun get(position: TilePosition): MutableBeltConfig = cells.getOrPut(position) { BeltConfigImpl() }
+    operator fun get(position: TilePosition): MutableBeltConfig = cells.getOrPut(position) { BeltConfigImpl(position) }
     fun get(x: Int, y: Int): BeltConfig = get(TilePosition(x, y))
 
     /**
      * Doesn't actually create any entity placements
      */
-    internal fun applyTo(cp: CpModel): Grid {
+    internal fun addTo(model: EntityPlacementModel): Grid {
         logger.info { "Applying belt grid config to cp" }
-        val grid = cells.mapValuesTo(HashMap()) { (_, config) -> BeltImpl(cp, config) }
-        return Grid(cp, grid)
+        val grid = cells.mapValuesTo(HashMap()) { (_, config) -> BeltImpl(model, config) }
+        return Grid(model, grid)
     }
 
     private var nextBeltId: BeltLineId = 1
     fun newLineId(): BeltLineId = nextBeltId++
 }
+
+fun EntityPlacementModel.addBeltGrid(grid: GridConfig): Grid = grid.addTo(this)
 
 fun GridConfig.addBeltLine(
     start: TilePosition,
