@@ -55,7 +55,7 @@ suspend fun main(): Unit = coroutineScope {
 
         keepWithControlBehavior()
     }.build()
-    model.timeLimitInSeconds = 60.0 * 15
+    model.timeLimitInSeconds = 60.0 * 65
     model.solver.parameters.apply {
         maxMemoryInMb = 1024 * 16
     }
@@ -74,7 +74,7 @@ suspend fun main(): Unit = coroutineScope {
     val entityCounts =
         entities.groupingBy { it.prototype.name }.eachCount()
             .entries.sortedByDescending { it.value }
-            .take(20)
+            .take(10)
     for ((name, count) in entityCounts) {
         println("$name: $count")
     }
