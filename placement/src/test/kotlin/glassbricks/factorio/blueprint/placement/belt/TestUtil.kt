@@ -31,7 +31,7 @@ fun getBeltsAsStr(
     direction: CardinalDirection,
     length: Int,
 ): String {
-    val chars = (0..<length).map { i ->
+    return (0..<length).joinToString("") { i ->
         val pos = startPos.shifted(direction, i)
         val entity = entities.getInTile(pos)
             .firstOrNull()
@@ -46,9 +46,28 @@ fun getBeltsAsStr(
             entity is Wall -> '#'
             else -> '?'
         }
+            .toString()
     }
-    return chars.joinToString("")
 }
+
+fun getBeltPlacementsAsStr(
+    placements: BeltPlacementSolution,
+    length: Int = getMaxLen(placements),
+): String {
+    val byIndex = placements.associateBy { it.first }
+    return (0..<length).joinToString("") { i ->
+        val placement = byIndex[i]
+        val char = if (placement == null) ' ' else when (placement.second.beltType) {
+            is BeltType.Belt -> '='
+            is BeltType.InputUnderground -> '>'
+            is BeltType.OutputUnderground -> '<'
+            else -> ' '
+        }
+        char.toString()
+    }
+}
+
+fun getMaxLen(placements: BeltPlacementSolution): Int = placements.maxOf { it.first }
 
 fun createEntities(
     inStr: String,

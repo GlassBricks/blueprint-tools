@@ -23,8 +23,8 @@ class FeasibleTest {
         val bp = Blueprint(blueprint)
         val model = BpModelBuilder(bp).apply {
             optimizeBeltLines = true
-            if (entities.any { it is ElectricPole })
-                optimizePoles = entities.mapNotNull {
+            if (origEntities.any { it is ElectricPole })
+                optimizePoles = origEntities.mapNotNull {
                     if (it is ElectricPole) it.prototype else null
                 }.distinct()
         }.build()

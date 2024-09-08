@@ -5,9 +5,10 @@ import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.Vector
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.entity.hasControlBehavior
-import glassbricks.factorio.blueprint.findMatching
 import glassbricks.factorio.blueprint.model.Blueprint
+import glassbricks.factorio.blueprint.placement.belt.InitialSolutionParams
 import glassbricks.factorio.blueprint.placement.belt.addBeltLinesFrom
+import glassbricks.factorio.blueprint.placement.belt.addInitialSolution
 import glassbricks.factorio.blueprint.placement.poles.addPolePlacements
 import glassbricks.factorio.blueprint.placement.poles.enforceConnectedWithDag
 import glassbricks.factorio.blueprint.placement.poles.enforceConnectedWithDistanceLabels
@@ -26,7 +27,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 private val logger = KotlinLogging.logger {}
 // for handling nudging (in the future, make sure preserveWithControlBehavior still works as expected)
 
-class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
+class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
     constructor(blueprint: Blueprint) : this(blueprint.entities)
 
     var optimizeBeltLines = false
@@ -35,20 +36,20 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
     var useLabelConnectivity = false
     var poleRootRel: Vector = Vector(0.5, 0.5)
 
-    var hintFromExising = true
+    var addBeltInitialSolution = true
 
 
     val toKeep = mutableSetOf<BlueprintEntity>()
 
     fun keepWithControlBehavior() {
-        for (entity in entities) {
+        for (entity in origEntities) {
             if (entity.hasControlBehavior())
                 toKeep.add(entity)
         }
     }
 
     inline fun keepIf(condition: (BlueprintEntity) -> Boolean) {
-        for (entity in entities) {
+        for (entity in origEntities) {
             if (condition(entity)) toKeep.add(entity)
         }
     }
@@ -69,12 +70,12 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
     fun build(): EntityPlacementModel {
         logger.info { "Building model" }
         val model = EntityPlacementModel()
-        val beltGrid = if (optimizeBeltLines) {
-            model.addBeltLinesFrom(entities)
+        val beltPlacements = if (optimizeBeltLines) {
+            model.addBeltLinesFrom(origEntities)
         } else null
-        val bounds = entities.enclosingBox()
+        val bounds = origEntities.enclosingBox()
 
-        val entitiesToAdd = entities.filter {
+        val entitiesToAdd = origEntities.filter {
             if (optimizeBeltLines && (it.prototype is TransportBeltPrototype || it.prototype is UndergroundBeltPrototype)) {
                 return@filter false
             }
@@ -98,7 +99,7 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
                 removeEmptyPolesDist2()
                 removeIfParallel {
                     it.collisionBox.roundOutToTileBbox().any {
-                        beltGrid?.get(it)?.canBeEmpty == false
+                        beltPlacements?.get(it)?.canBeEmpty == false
                     }
                 }
             }
@@ -112,12 +113,7 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
             }
         }
 
-        logger.info { "Other config..." }
-        for (entity in toKeep) {
-            val existingEntity =
-                model.placements.findMatching(entity) ?: error("Entity placement matching preserved entity not found")
-            model.cp.addEquality(existingEntity.selected, true)
-        }
+        logger.info { "Setting costs" }
 
         for (placement in model.placements) {
             if (placement !is OptionalEntityPlacement<*>) continue
@@ -130,14 +126,18 @@ class BpModelBuilder(val entities: SpatialDataStructure<BlueprintEntity>) {
             model.addDistanceCostFrom(center, distanceCostFactor)
         }
 
-        if (hintFromExising) {
-            for (placement in model.placements) if (placement is OptionalEntityPlacement<*>) {
-                val existingEntity = entities.findMatching(placement)
-                model.cp.addHint(placement.selected, existingEntity != null)
-            }
+        if (optimizeBeltLines && addBeltInitialSolution) {
+            beltPlacements!!.addInitialSolution(params = InitialSolutionParams(
+                canUseTile = r@{
+                    val collidesWithOriginal = origEntities.getInTile(it).any {
+                        it.prototype !is TransportBeltPrototype && it.prototype !is UndergroundBeltPrototype
+                    }
+                    !collidesWithOriginal
+                }
+            ))
         }
 
-        model.exportCopySource = entities
+        model.exportCopySource = origEntities
         return model
     }
 }

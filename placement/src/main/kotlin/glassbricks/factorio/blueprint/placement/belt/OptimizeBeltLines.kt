@@ -67,12 +67,7 @@ data class BeltLineTile(
     val originalNode: ItemTransportGraph.Node? = null,
 )
 
-data class AddedBeltLine(
-    val line: BeltLine,
-    val id: BeltLineId,
-)
-
-fun GridConfig.addBeltLine(line: BeltLine): AddedBeltLine {
+fun BeltPlacementConfig.addBeltLine(line: BeltLine): BeltLineId {
     val direction = line.direction
     val id = newLineId()
     for ((i, lineTile) in line.tiles.withIndex()) {
@@ -102,8 +97,8 @@ fun GridConfig.addBeltLine(line: BeltLine): AddedBeltLine {
             }
         }
     }
-
-    return AddedBeltLine(line, id)
+    this.recordLine(id, line)
+    return id
 }
 
 fun getBeltLines(
@@ -240,7 +235,7 @@ fun getBeltLinesFromTransportGraph(
 fun EntityPlacementModel.addBeltLinesFrom(
     origEntities: SpatialDataStructure<BlueprintEntity>,
     prototypes: BlueprintPrototypes = VanillaPrototypes,
-): Grid {
+): BeltPlacements {
     logger.info { "Start: add belt lines" }
     return addBeltLinesFrom(getItemTransportGraph(origEntities), prototypes)
 }
@@ -249,11 +244,11 @@ fun EntityPlacementModel.addBeltLinesFrom(
 fun EntityPlacementModel.addBeltLinesFrom(
     transportGraph: ItemTransportGraph,
     prototypes: BlueprintPrototypes = VanillaPrototypes,
-): Grid {
-    val grid = GridConfig()
+): BeltPlacements {
+    val grid = BeltPlacementConfig()
     val beltLines = getBeltLinesFromTransportGraph(transportGraph, prototypes)
     for (line in beltLines) {
         grid.addBeltLine(line)
     }
-    return this.addBeltGrid(grid)
+    return this.addBeltPlacements(grid)
 }

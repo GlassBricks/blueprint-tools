@@ -55,23 +55,50 @@ class OptimizeBeltLineTest {
             startPos,
             direction,
         )
-        val beltGrid = GridConfig()
-        beltGrid.addBeltLine(line)
+        fun createModel(): Pair<BeltPlacements, EntityPlacementModel> {
+            val beltGrid = BeltPlacementConfig()
+            beltGrid.addBeltLine(line)
 
-        val model = EntityPlacementModel()
-        model.addBeltGrid(beltGrid)
-        model.addFixedEntities(entities)
+            val model = EntityPlacementModel()
+            val belts = model.addBeltPlacements(beltGrid)
+            model.addFixedEntities(entities)
 
-        for (placement in model.placements) {
-            if (placement.prototype is UndergroundBeltPrototype && placement is OptionalEntityPlacement) {
-                placement.cost = ugRelCost
+            for (placement in model.placements) {
+                if (placement !is OptionalEntityPlacement) continue
+                if (placement.prototype is UndergroundBeltPrototype) {
+                    placement.cost = ugRelCost
+                }
+                val distance = placement.position.occupiedTile().manhattanDistanceTo(startPos)
+                placement.cost += distance / 100.0
             }
+            return belts to model
         }
-        val solution = model.solve()
-        assertEquals(CpSolverStatus.OPTIMAL, solution.status)
 
-        val resultEntities = solution.export()
-        return getBeltsAsStr(resultEntities, startPos, direction, inStr.length)
+        fun solveModel(model: EntityPlacementModel): String {
+            val solution = model.solve()
+            assertEquals(CpSolverStatus.OPTIMAL, solution.status)
+
+            val resultEntities = solution.export()
+            return getBeltsAsStr(resultEntities, startPos, direction, inStr.length)
+        }
+
+        fun solveUsingCp(): String {
+            val (belts, model) = createModel()
+            return solveModel(model)
+        }
+
+        fun initialSolutionOnly(): String {
+            val (belts, model) = createModel()
+            val initialSolution = belts.findInitialSolution()
+            assertEquals(1, initialSolution.size)
+            return getBeltPlacementsAsStr(initialSolution.single().curSolution!!, inStr.length)
+        }
+
+        val solA = solveUsingCp()
+        val solB = initialSolutionOnly()
+        val solANoWalls = solA.replace("#", " ")
+        assertEquals(solANoWalls, solB, "Solutions differ")
+        return solA
     }
 
 
@@ -120,9 +147,6 @@ class OptimizeBeltLineTest {
     @Test
     fun `underground spam`() {
         val result = testBeltLine("r".repeat(8), ugRelCost = 0.5)
-        assertTrue("<<" !in result)
-        assertTrue(">>" !in result)
-        assertEquals(4, result.count { it == '<' })
-        assertEquals(4, result.count { it == '>' })
+        assertEquals("><><><><", result)
     }
 }

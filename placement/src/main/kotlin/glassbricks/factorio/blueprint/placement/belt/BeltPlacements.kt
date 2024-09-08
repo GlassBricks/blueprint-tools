@@ -8,8 +8,9 @@ import glassbricks.factorio.blueprint.placement.addEquality
 import glassbricks.factorio.blueprint.placement.get
 import glassbricks.factorio.blueprint.placement.shifted
 
-class Grid internal constructor(
+class BeltPlacements internal constructor(
     val model: EntityPlacementModel,
+    val beltLines: Map<BeltLineId, BeltLine>,
     tiles: MutableMap<TilePosition, BeltImpl>,
 ) {
     val tiles: Map<TilePosition, Belt> = tiles
@@ -19,10 +20,10 @@ class Grid internal constructor(
         addGridConstraints()
     }
 
-    operator fun get(tile: TilePosition): Belt? = this@Grid.tiles[tile]
+    operator fun get(tile: TilePosition): Belt? = tiles[tile]
 }
 
-private fun Grid.addGridConstraints() {
+private fun BeltPlacements.addGridConstraints() {
     for ((tile, belt) in tiles) {
         for (direction in CardinalDirection.entries) constrainBeltPropagation(tile, direction)
         for ((entry, thisPlacement) in belt.selectedBelt) {
@@ -34,7 +35,7 @@ private fun Grid.addGridConstraints() {
 }
 
 
-private fun Grid.constrainBeltPropagation(tile: TilePosition, direction: CardinalDirection) {
+private fun BeltPlacements.constrainBeltPropagation(tile: TilePosition, direction: CardinalDirection) {
     val belt = tiles[tile]!!
     val thisId = belt.lineId
     val nextCell = tiles[tile.shifted(direction)]
@@ -58,7 +59,7 @@ private fun Grid.constrainBeltPropagation(tile: TilePosition, direction: Cardina
     if (belt.propagatesBackward) constrainEqual(prevCell, false)
 }
 
-private fun Grid.constrainMustNotOutputIn(
+private fun BeltPlacements.constrainMustNotOutputIn(
     tile: TilePosition,
     direction: CardinalDirection,
 ) {
@@ -82,7 +83,7 @@ private fun Grid.constrainMustNotOutputIn(
     }
 }
 
-private fun Grid.constrainUnderground(
+private fun BeltPlacements.constrainUnderground(
     tile: TilePosition,
     direction: CardinalDirection,
     ugType: BeltType.Underground,
@@ -92,7 +93,7 @@ private fun Grid.constrainUnderground(
     else constrainNormalUnderground(tile, ugType, direction, thisSelected)
 }
 
-private fun Grid.constrainNormalUnderground(
+private fun BeltPlacements.constrainNormalUnderground(
     tile: TilePosition,
     thisType: BeltType.Underground,
     thisDirection: CardinalDirection,
@@ -138,7 +139,7 @@ private fun Grid.constrainNormalUnderground(
     cp.addAtLeastOne(previousPairs).onlyEnforceIf(thisSelected)
 }
 
-private fun Grid.constrainIsolatedUnderground(
+private fun BeltPlacements.constrainIsolatedUnderground(
     tile: TilePosition,
     thisType: BeltType.Underground,
     direction: CardinalDirection,

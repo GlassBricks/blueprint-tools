@@ -17,7 +17,7 @@ import kotlin.system.exitProcess
 
 val projectRoot = File(".")
 
-private val sourceFile = "test-blueprints/base8.txt"
+private val sourceFile = "test-blueprints/early-base.txt"
 //val sourceFile: String = ""
 
 suspend fun main(): Unit = coroutineScope {

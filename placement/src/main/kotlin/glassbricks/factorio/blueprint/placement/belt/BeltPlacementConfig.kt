@@ -8,7 +8,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
-open class GridConfig {
+class BeltPlacementConfig {
     private val cells: MutableMap<TilePosition, BeltConfig> = mutableMapOf()
     operator fun get(position: TilePosition): BeltConfig = cells.getOrPut(position) { BeltConfigImpl(position) }
     fun get(x: Int, y: Int): BeltCommon = get(TilePosition(x, y))
@@ -16,21 +16,27 @@ open class GridConfig {
     private var nextBeltId: BeltLineId = 1
     fun newLineId(): BeltLineId = nextBeltId++
 
+    private val beltLines: MutableMap<BeltLineId, BeltLine> = mutableMapOf()
+    internal fun recordLine(id: BeltLineId, line: BeltLine) {
+        beltLines[id] = line
+    }
+
     /**
      * Doesn't actually create any entity placements
      */
-    internal fun addTo(model: EntityPlacementModel): Grid {
+    internal fun addTo(model: EntityPlacementModel): BeltPlacements {
         logger.info { "Applying belt grid config to cp" }
         val grid = cells
             .mapValuesTo(HashMap()) { (_, config) -> BeltImpl(model, config) }
-        return Grid(model, grid)
+        return BeltPlacements(model, beltLines, grid)
     }
 
 }
 
-fun EntityPlacementModel.addBeltGrid(grid: GridConfig): Grid = grid.addTo(this)
+fun EntityPlacementModel.addBeltPlacements(grid: BeltPlacementConfig): BeltPlacements = grid.addTo(this)
 
-fun GridConfig.addBeltLine(
+// only kept around for testing reasons
+internal fun BeltPlacementConfig.addBeltLine(
     start: TilePosition,
     direction: CardinalDirection,
     length: Int,

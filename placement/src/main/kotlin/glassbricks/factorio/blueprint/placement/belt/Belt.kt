@@ -14,11 +14,19 @@ import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
 import glassbricks.factorio.blueprint.placement.Table
 import glassbricks.factorio.blueprint.placement.toFactorioDirection
 
+class BeltPlacement(
+    val beltType: BeltType,
+    val placement: OptionalEntityPlacement<*>,
+    val lineIds: Collection<BeltLineId>,
+) {
+    val selected get() = placement.selected
+}
+
 interface Belt : BeltCommon {
     val isEmpty: Literal
     val lineId: IntVar
     val lineIdDomainMap: Map<Int, Literal>
-    val selectedBelt: Table<CardinalDirection, BeltType, OptionalEntityPlacement<*>>
+    val selectedBelt: Table<CardinalDirection, BeltType, BeltPlacement>
     val hasOutputIn: Map<CardinalDirection, Literal>
     val hasInputIn: Map<CardinalDirection, Literal>
 }
@@ -63,18 +71,19 @@ internal class BeltImpl(
         }
     }
 
-    override val selectedBelt: Table<CardinalDirection, BeltType, OptionalEntityPlacement<*>> =
+    override val selectedBelt: Table<CardinalDirection, BeltType, BeltPlacement> =
         beltOptions.mapValues { (entry, lineIds) ->
             val (direction, beltType) = entry
-            model.createPlacement(
+            val placement = model.createPlacement(
                 pos,
                 direction,
                 beltType,
             )
-                .also {
-                    model.cp.addBoolOr(lineIds.map { lineIdDomainMap[it]!! })
-                        .onlyEnforceIf(it.selected)
-                }
+
+            model.cp.addBoolOr(lineIds.map { lineIdDomainMap[it]!! })
+                .onlyEnforceIf(placement.selected)
+
+            BeltPlacement(beltType, placement, lineIds)
         }
 
     init {

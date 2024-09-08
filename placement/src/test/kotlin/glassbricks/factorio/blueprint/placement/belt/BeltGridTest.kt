@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 
 
 class BeltGridTest {
-    val grid = GridConfig()
+    val grid = BeltPlacementConfig()
 
     companion object {
         val params = listOf(
@@ -32,20 +32,20 @@ class BeltGridTest {
         }
     }
 
-    private fun entityCostSolve(): Grid {
+    private fun entityCostSolve(): BeltPlacements {
         val vars = grid.addTo(EntityPlacementModel())
         assertEquals(CpSolverStatus.OPTIMAL, vars.model.solve().status)
         return vars
     }
 
-    private fun materialCostSolve(): Grid {
+    private fun materialCostSolve(): BeltPlacements {
         val vars = grid.addTo(EntityPlacementModel())
         addMaterialCost(vars)
         assertEquals(CpSolverStatus.OPTIMAL, vars.model.solve().status)
         return vars
     }
 
-    private fun addMaterialCost(vars: Grid) {
+    private fun addMaterialCost(vars: BeltPlacements) {
         val costs = mapOf(
             normalBelt.beltProto to 1,
             normalBelt.ugProto to 4,
