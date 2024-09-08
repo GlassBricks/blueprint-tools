@@ -14,7 +14,7 @@ import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
 import glassbricks.factorio.blueprint.placement.Table
 import glassbricks.factorio.blueprint.placement.toFactorioDirection
 
-interface Belt : BeltConfig {
+interface Belt : BeltCommon {
     val isEmpty: Literal
     val lineId: IntVar
     val lineIdDomainMap: Map<Int, Literal>
@@ -26,7 +26,7 @@ interface Belt : BeltConfig {
 
 internal class BeltImpl(
     model: EntityPlacementModel,
-    config: BeltConfig,
+    config: BeltCommon,
 ) : Belt {
     override val pos = config.pos
     override val isEmpty: Literal = model.cp.newBoolVar("isEmpty")
@@ -39,7 +39,6 @@ internal class BeltImpl(
     override val canBeEmpty: Boolean = config.canBeEmpty
     override val propagatesForward: Boolean = config.propagatesForward
     override val propagatesBackward: Boolean = config.propagatesBackward
-    override val mustNotOutputIn: CardinalDirection? = config.mustNotOutputIn
 
     init {
         val possibleBeltIds = mutableSetOf<Long>()

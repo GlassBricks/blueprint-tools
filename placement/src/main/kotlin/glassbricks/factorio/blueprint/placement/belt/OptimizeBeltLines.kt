@@ -55,16 +55,24 @@ class BeltLine(
     val direction: CardinalDirection,
     val tiles: List<BeltLineTile>,
     val outputsToNothing: Boolean = false,
-)
+) {
+    fun getTilePos(i: Int): TilePosition = start.shifted(direction, i)
+}
 
 data class BeltLineTile(
     val mustBeNotEmpty: Boolean,
     val allowedBeltTiers: Collection<BeltTier>,
     /** Has higher precedence than mustNotBeEmpty */
     val mustMatch: BeltType?,
+    val originalNode: ItemTransportGraph.Node? = null,
 )
 
-fun GridConfig.addBeltLine(line: BeltLine) {
+data class AddedBeltLine(
+    val line: BeltLine,
+    val id: BeltLineId,
+)
+
+fun GridConfig.addBeltLine(line: BeltLine): AddedBeltLine {
     val direction = line.direction
     val id = newLineId()
     for ((i, lineTile) in line.tiles.withIndex()) {
@@ -77,8 +85,9 @@ fun GridConfig.addBeltLine(line: BeltLine) {
         // a single tile line can be both start and end
         if (isEnd) {
             cell.makeLineEnd(direction, id)
-            if (line.outputsToNothing)
-                cell.mustNotOutputIn(direction)
+            if (line.outputsToNothing) {
+                this[line.getTilePos(i + 1)].mustNotTakeInputIn(direction)
+            }
         }
         if (lineTile.mustMatch != null) {
             cell.forceAs(direction, id, lineTile.mustMatch)
@@ -93,6 +102,8 @@ fun GridConfig.addBeltLine(line: BeltLine) {
             }
         }
     }
+
+    return AddedBeltLine(line, id)
 }
 
 fun getBeltLines(
@@ -192,7 +203,8 @@ fun findBeltLineFrom(
         BeltLineTile(
             mustBeNotEmpty = shouldNotBeEmpty,
             mustMatch = if (shouldMatchExactly) origNode.getBeltType() else null,
-            allowedBeltTiers = tile.allowedBeltTiers!!
+            allowedBeltTiers = tile.allowedBeltTiers!!,
+            originalNode = origNode,
         )
     }
 

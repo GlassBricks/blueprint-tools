@@ -4,21 +4,23 @@ import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.MultiTable
 import glassbricks.factorio.blueprint.placement.add
+import glassbricks.factorio.blueprint.placement.belt.BeltType.OutputUnderground
 import glassbricks.factorio.blueprint.placement.mutableMultiTableOf
-import glassbricks.factorio.blueprint.placement.retainAllM
+import glassbricks.factorio.blueprint.placement.removeAll
+import glassbricks.factorio.blueprint.placement.removeAllM
+import glassbricks.factorio.blueprint.placement.retainAll
 
 typealias BeltLineId = Int
 
-interface BeltConfig {
+interface BeltCommon {
     val pos: TilePosition
     fun getOptions(): MultiTable<CardinalDirection, BeltType, BeltLineId>
     val canBeEmpty: Boolean
     val propagatesForward: Boolean
     val propagatesBackward: Boolean
-    val mustNotOutputIn: CardinalDirection?
 }
 
-interface MutableBeltConfig : BeltConfig {
+interface BeltConfig : BeltCommon {
     fun addOption(direction: CardinalDirection, beltType: BeltType, lineId: BeltLineId)
     fun makeLineStart(direction: CardinalDirection, lineId: BeltLineId)
     fun makeLineEnd(direction: CardinalDirection, lineId: BeltLineId)
@@ -28,13 +30,12 @@ interface MutableBeltConfig : BeltConfig {
     // will also add as option
     fun forceAs(direction: CardinalDirection, lineId: BeltLineId, beltType: BeltType)
 
-    fun mustNotOutputIn(direction: CardinalDirection)
+    fun mustNotTakeInputIn(direction: CardinalDirection)
 }
-
 
 internal class BeltConfigImpl(
     override val pos: TilePosition,
-) : BeltConfig, MutableBeltConfig {
+) : BeltCommon, BeltConfig {
     private val beltOptions =
         mutableMultiTableOf<CardinalDirection, BeltType, BeltLineId>()
 
@@ -42,7 +43,7 @@ internal class BeltConfigImpl(
     private var isLineEnd: Boolean = false
     override val propagatesForward: Boolean get() = !isLineEnd
     override val propagatesBackward: Boolean get() = !isLineStart
-    override var mustNotOutputIn: CardinalDirection? = null
+    private val noInputDirections = mutableSetOf<CardinalDirection>()
 
     private var forcedDirection: CardinalDirection? = null
         set(value) {
@@ -59,7 +60,6 @@ internal class BeltConfigImpl(
             check(field == null || field == value) { "Belt type already set" }
             field = value
         }
-
 
     override fun addOption(
         direction: CardinalDirection,
@@ -100,20 +100,26 @@ internal class BeltConfigImpl(
         addOption(direction, beltType, lineId)
     }
 
-    override fun mustNotOutputIn(direction: CardinalDirection) {
-        mustNotOutputIn = direction
+    override fun mustNotTakeInputIn(direction: CardinalDirection) {
+        noInputDirections.add(direction)
     }
 
-    override val canBeEmpty: Boolean
-        get() = forcedBeltId == null && forcedBeltType == null
+    override val canBeEmpty: Boolean get() = forcedBeltId == null && forcedBeltType == null
 
     override fun getOptions(): MultiTable<CardinalDirection, BeltType, BeltLineId> {
-        if (forcedBeltId == null && forcedDirection == null && forcedBeltType == null) return beltOptions
+        if (
+            forcedBeltId == null && forcedDirection == null && forcedBeltType == null
+            && noInputDirections.isEmpty()
+        ) return beltOptions
         return beltOptions.toMutableMap().apply {
-            retainAllM { direction, beltType, lineId ->
-                (forcedDirection == null || direction == forcedDirection) &&
-                        (forcedBeltType == null || beltType == forcedBeltType) &&
-                        (forcedBeltId == null || lineId == forcedBeltId)
+            if (forcedDirection != null) removeAll { direction, _, _ -> direction != forcedDirection }
+            if (forcedBeltType != null) removeAll { _, beltType, _ -> beltType != forcedBeltType }
+            if (forcedBeltId != null) removeAllM { _, _, lineId -> lineId != forcedBeltId }
+            for (inDirection in noInputDirections) {
+                retainAll { direction, beltType, _ ->
+                    (direction == inDirection.oppositeDir()
+                            || (direction == inDirection && beltType is OutputUnderground))
+                }
             }
         }
     }

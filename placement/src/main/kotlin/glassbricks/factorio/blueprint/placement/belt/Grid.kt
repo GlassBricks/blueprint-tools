@@ -10,22 +10,21 @@ import glassbricks.factorio.blueprint.placement.shifted
 
 class Grid internal constructor(
     val model: EntityPlacementModel,
-    grid: MutableMap<TilePosition, BeltImpl>,
+    tiles: MutableMap<TilePosition, BeltImpl>,
 ) {
-    val belts: Map<TilePosition, Belt> = grid
+    val tiles: Map<TilePosition, Belt> = tiles
     val cp get() = model.cp
 
     init {
         addGridConstraints()
     }
 
-    operator fun get(tile: TilePosition): Belt? = belts[tile]
+    operator fun get(tile: TilePosition): Belt? = this@Grid.tiles[tile]
 }
 
 private fun Grid.addGridConstraints() {
-    for ((tile, belt) in belts) {
+    for ((tile, belt) in tiles) {
         for (direction in CardinalDirection.entries) constrainBeltPropagation(tile, direction)
-        belt.mustNotOutputIn?.let { constrainMustNotOutputIn(tile, it) }
         for ((entry, thisPlacement) in belt.selectedBelt) {
             val (direction, type) = entry
             if (type is BeltType.Underground)
@@ -36,10 +35,10 @@ private fun Grid.addGridConstraints() {
 
 
 private fun Grid.constrainBeltPropagation(tile: TilePosition, direction: CardinalDirection) {
-    val belt = belts[tile]!!
+    val belt = tiles[tile]!!
     val thisId = belt.lineId
-    val nextCell = belts[tile.shifted(direction)]
-    val prevCell = belts[tile.shifted(direction.oppositeDir())]
+    val nextCell = tiles[tile.shifted(direction)]
+    val prevCell = tiles[tile.shifted(direction.oppositeDir())]
 
     fun constrainEqual(
         nextCell: Belt?,
@@ -63,11 +62,11 @@ private fun Grid.constrainMustNotOutputIn(
     tile: TilePosition,
     direction: CardinalDirection,
 ) {
-    val belt = belts[tile]!!
+    val belt = tiles[tile]!!
     val hasOutput = belt.hasOutputIn[direction] ?: return
 
     val nextTile = tile.shifted(direction)
-    val nextBelt = belts[nextTile] ?: return
+    val nextBelt = tiles[nextTile] ?: return
     // allowed if:
     // - opposite direction
     // - is output underground in same direction
@@ -99,7 +98,7 @@ private fun Grid.constrainNormalUnderground(
     thisDirection: CardinalDirection,
     thisSelected: Literal,
 ) {
-    val belt = belts[tile]!!
+    val belt = tiles[tile]!!
     val ugDir = when (thisType) {
         is BeltType.InputUnderground -> thisDirection
         is BeltType.OutputUnderground -> thisDirection.oppositeDir()
@@ -111,7 +110,7 @@ private fun Grid.constrainNormalUnderground(
     // there cannot be anything in between that cuts off the connection
     val previousPairs = mutableListOf<Literal>()
     for (dist in 1..thisType.prototype.max_distance.toInt()) {
-        val otherBelt = belts[tile.shifted(ugDir, dist)] ?: continue
+        val otherBelt = tiles[tile.shifted(ugDir, dist)] ?: continue
 
 //        val pairSelected = otherBelt.selectedBelt[thisDirection]?.get(oppositeType)
         val pairSelected = otherBelt.selectedBelt[thisDirection, oppositeType]?.selected
@@ -152,7 +151,7 @@ private fun Grid.constrainIsolatedUnderground(
     }
     val breaksPair = mutableListOf<Literal>()
     for (dist in 1..thisType.prototype.max_distance.toInt()) {
-        val otherBelt = belts[tile.shifted(ugDir, dist)] ?: continue
+        val otherBelt = tiles[tile.shifted(ugDir, dist)] ?: continue
         val breaksPairThisTile = mutableListOf<Literal>()
         fun disallow(lit: Literal) {
             cp.addEquality(lit, false).apply {
