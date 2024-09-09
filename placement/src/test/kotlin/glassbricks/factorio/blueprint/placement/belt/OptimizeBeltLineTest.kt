@@ -5,7 +5,9 @@ import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.MutableSpatialDataStructure
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
+import glassbricks.factorio.blueprint.entity.UndergroundBelt
 import glassbricks.factorio.blueprint.entity.placedAtTile
+import glassbricks.factorio.blueprint.json.IOType
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
@@ -49,6 +51,9 @@ class OptimizeBeltLineTest {
         ugRelCost: Double,
         startPos: TilePosition = tilePos(0, 0),
         direction: CardinalDirection = CardinalDirection.East,
+        additionalCost: (Int, OptionalEntityPlacement<*>) -> Double = { distance, _ ->
+            distance / 100.0
+        },
     ): String {
         val (entities, line) = createBeltLine(
             inStr,
@@ -69,7 +74,7 @@ class OptimizeBeltLineTest {
                     placement.cost = ugRelCost
                 }
                 val distance = placement.position.occupiedTile().manhattanDistanceTo(startPos)
-                placement.cost += distance / 100.0
+                placement.cost += additionalCost(distance, placement)
             }
             return belts to model
         }
@@ -148,5 +153,17 @@ class OptimizeBeltLineTest {
     fun `underground spam`() {
         val result = testBeltLine("r".repeat(8), ugRelCost = 0.5)
         assertEquals("><><><><", result)
+    }
+
+    @Test
+    fun `chooses ug with least cost`() {
+        val result = testBeltLine(">#   <>#<", ugRelCost = 2.3, additionalCost = { distance, placement ->
+            if (distance == 4 && placement.originalEntity.let {
+                    it is UndergroundBelt && it.ioType == IOType.Output
+                }) -0.2
+            else 0.0
+        })
+        assertEquals(">#  <> #<", result)
+
     }
 }

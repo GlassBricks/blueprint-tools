@@ -9,6 +9,7 @@ class SlidingWindowMin<T : Any>(private val comparator: Comparator<T>) {
     }
 
     fun min(): T? = deque.firstOrNull()
+    fun back(): T? = deque.lastOrNull()
     fun removeMin() = deque.removeFirstOrNull()
     inline fun removeWhile(predicate: (T) -> Boolean) {
         while (true) {

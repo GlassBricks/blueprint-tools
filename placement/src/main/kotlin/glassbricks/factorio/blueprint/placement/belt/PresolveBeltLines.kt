@@ -2,6 +2,7 @@ package glassbricks.factorio.blueprint.placement.belt
 
 import com.google.ortools.sat.Literal
 import glassbricks.factorio.blueprint.TilePosition
+import glassbricks.factorio.blueprint.placement.SlidingWindowMin
 import glassbricks.factorio.blueprint.placement.addEquality
 import glassbricks.factorio.blueprint.placement.addHint
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -74,10 +75,7 @@ private fun BeltPlacements.addHintFromSolution(lines: List<OptBeltLine>, force: 
 }
 
 
-private class TileInfo(
-    val pos: TilePosition,
-    var canPlaceBelt: Boolean,
-) {
+private class TileInfo(var canPlaceBelt: Boolean) {
     var onlyUsableBy: BeltLineId = 0
     var numLines = 0
 
@@ -94,14 +92,18 @@ internal class OptTile(
     val position: TilePosition,
     val options: List<BeltPlacement>,
     val originalOption: BeltPlacement?,
-    val mustNotBeEmpty: Boolean,
+    val forcedOrMustBeNotEmpty: Boolean,
 )
 
-typealias BeltPlacementSolution = List<Pair<Int, BeltPlacement>>
+data class UsedBeltPlacement(
+    val index: Int,
+    val placement: BeltPlacement,
+)
+typealias BeltPlacementSolution = List<UsedBeltPlacement>
 
 class OptBeltLine internal constructor(
     val id: BeltLineId,
-    val origLine: BeltLine,
+    @Suppress("unused") val origLine: BeltLine,
     internal val tiles: List<OptTile>,
 ) {
     internal val ugPrototypes = buildSet {
@@ -134,7 +136,7 @@ private fun BeltPlacements.getOptBeltLines(): List<OptBeltLine> = beltLines.entr
             position = pos,
             options = options,
             originalOption = originalOption,
-            mustNotBeEmpty = mustNotBeEmpty,
+            forcedOrMustBeNotEmpty = mustNotBeEmpty,
         )
     }
     OptBeltLine(
@@ -147,7 +149,7 @@ private fun BeltPlacements.getOptBeltLines(): List<OptBeltLine> = beltLines.entr
 private fun getTileInfo(grid: BeltPlacements, costs: InitialSolutionParams): Map<TilePosition, TileInfo> {
     val tileInfo = grid.tiles.mapValues {
         val canPlaceBelt = grid.model.placements.getInTile(it.key).none { it.isFixed } && costs.canUseTile(it.key)
-        TileInfo(it.key, canPlaceBelt)
+        TileInfo(canPlaceBelt)
     }
     for ((id, line) in grid.beltLines) {
         for ((i, tile) in line.tiles.withIndex()) {
@@ -166,22 +168,19 @@ private fun solveSingleBeltLine(
     tileInfo: Map<TilePosition, TileInfo>,
     line: OptBeltLine,
     costs: InitialSolutionParams,
-): List<Pair<Int, BeltPlacement>> {
+): List<UsedBeltPlacement> {
     val size = line.tiles.size
 
     // dp
+    class UgInput(val index: Int, val cost: Double, val placement: BeltPlacement)
     // cost of ending with belt or output underground
     val withOutputCost = DoubleArray(size) { Double.POSITIVE_INFINITY }
-    // the prototype used for ^
+    // the placement used for ^
     val outputUsed = arrayOfNulls<BeltPlacement>(size)
-    // if ^ is output ug, index of connecting input ug
-    // exception: isolated output ug at beginning
-    val ugPairIndex = IntArray(size) { -1 }
-    // cost of ending with input underground
-    val ugInputCost = line.ugPrototypes.associateWith { DoubleArray(size) { Double.POSITIVE_INFINITY } }
-    val ugInputUsed = line.ugPrototypes.associateWith { arrayOfNulls<BeltPlacement>(size) }
-    // largest index of internal ug that can reach here
-    var lastUgInPos = line.ugPrototypes.associateWithTo(mutableMapOf()) { 0 }
+    // if placement is an output underground, the input underground used
+    val ugPair = arrayOfNulls<UgInput>(size)
+
+    val ugInputs = line.ugPrototypes.associateWith { SlidingWindowMin<UgInput>(compareBy { it.cost }) }
 
     fun costToUse(
         option: BeltPlacement,
@@ -200,19 +199,15 @@ private fun solveSingleBeltLine(
         val pos = tile.position
 
         // update lastUgInPos to be furthest reachable to here
-        for (ug in line.ugPrototypes) {
-            var ugI = lastUgInPos[ug]!!
-            val inputCosts = ugInputCost[ug]!!
-            while (ugI < i && (
-                        (i - ugI) > ug.max_distance.toInt() || inputCosts[ugI].isInfinite())
-            ) ugI++
-            lastUgInPos[ug] = ugI
+        for ((ug, min) in ugInputs) {
+            val minInd = i - ug.max_distance.toInt()
+            min.removeWhile { it.index < minInd }
         }
 
         // skip updating values if tile is blocked
         val canUse = tileInfo[pos]!!.canHaveId(line.id)
         if (!canUse) {
-            if (tile.mustNotBeEmpty) error("Tile must not be empty, but is blocked")
+            if (tile.forcedOrMustBeNotEmpty) error("Tile must not be empty, but is blocked")
             continue
         }
 
@@ -226,76 +221,82 @@ private fun solveSingleBeltLine(
                     if (thisCost < withOutputCost[i]) {
                         withOutputCost[i] = thisCost
                         outputUsed[i] = option
+                        ugPair[i] = null
                     }
                 }
 
                 is BeltType.OutputUnderground -> {
-                    // todo: bottom heuristic is wrong with non-uniform costs
-                    val ugInPos = lastUgInPos[beltType.prototype]!!
-                    val ugCost = when {
-                        beltType.isIsolated -> 0.0 // edge case
-                        ugInPos >= i -> continue@options // not possible
-                        else -> ugInputCost[beltType.prototype]!![ugInPos]
+                    val ugInputCost: Double
+                    val ugInput: UgInput?
+                    when {
+                        beltType.isIsolated -> {
+                            ugInputCost = 0.0
+                            ugInput = null
+                        }
+
+                        else -> {
+                            ugInput = ugInputs[beltType.prototype]!!.min() ?: continue
+                            ugInputCost = ugInput.cost
+                        }
                     }
-                    val thisCost = ugCost + costToUseThis
+                    val thisCost = ugInputCost + costToUseThis
                     if (thisCost < withOutputCost[i]) {
                         withOutputCost[i] = thisCost
                         outputUsed[i] = option
-                        ugPairIndex[i] = ugInPos
+                        ugPair[i] = ugInput
                     }
                 }
 
                 is BeltType.InputUnderground -> {
                     val prevCost = if (i == 0) 0.0 else withOutputCost[i - 1]
                     val thisCost = prevCost + costToUseThis
-                    val arr = ugInputCost[beltType.prototype]!!
-                    if (thisCost < arr[i]) {
-                        arr[i] = thisCost
-                        ugInputUsed[beltType.prototype]!![i] = option
-                    }
+                    val ugInput = UgInput(i, thisCost, option)
+                    ugInputs[beltType.prototype]!!.add(ugInput)
                 }
             }
         }
 
         // forbid underground skipping if mustNotBeEmpty
-        if (tile.mustNotBeEmpty) {
-            lastUgInPos.iterator().forEach { entry -> entry.setValue(i) }
+        if (tile.forcedOrMustBeNotEmpty) {
+            for (min in ugInputs.values) min.removeWhile { it.index < i }
         }
     }
     // recover solution
     val lastIndex = size - 1
     var curIndex = lastIndex
-    val placements = mutableListOf<Pair<Int, BeltPlacement>>()
+    val placements = mutableListOf<UsedBeltPlacement>()
 
     // edge case to handle isolated input ug at the end
     val finalIsolatedProto =
         (line.tiles.last().origTile.mustMatch as? BeltType.InputUnderground)
             ?.takeIf { it.isIsolated }
             ?.prototype
-    if (finalIsolatedProto != null) {
-        placements += lastIndex to ugInputUsed[finalIsolatedProto]!![lastIndex]!!
-        curIndex--
-    }
+    val lastIn = if (finalIsolatedProto != null) ugInputs[finalIsolatedProto]!!.back()!! else null
 
     val cost =
-        if (finalIsolatedProto != null) ugInputCost[finalIsolatedProto]!![lastIndex] else withOutputCost[lastIndex]
+        if (lastIn != null) lastIn.cost
+        else withOutputCost[lastIndex]
     check(cost.isFinite()) { "Impossible to reach end" }
+
+    if (finalIsolatedProto != null) {
+        placements += UsedBeltPlacement(curIndex, lastIn!!.placement)
+        curIndex--
+    }
 
     // backtrace to get solution
     while (curIndex >= 0) {
         val placementUsed = outputUsed[curIndex]!!
-        placements += curIndex to placementUsed
-        val pairIndex = ugPairIndex[curIndex]
-        if (pairIndex != -1 && curIndex != 0) {
-            val inputPlacement = ugInputUsed[placementUsed.beltType.prototype]!![pairIndex]!!
-            placements += pairIndex to inputPlacement
+        placements += UsedBeltPlacement(curIndex, placementUsed)
+        val pair = ugPair[curIndex]
+        if (pair != null) {
+            val pairIndex = pair.index
+            placements += UsedBeltPlacement(pairIndex, pair.placement)
             curIndex = pairIndex - 1
         } else {
             curIndex--
         }
     }
     return placements.also {
-//        it.reverse()
         line.curSolution = it
     }
 }
