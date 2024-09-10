@@ -1,11 +1,10 @@
-/*
-package glassbricks.factorio.blueprint.placement
+package glassbricks.factorio.blueprint.placement.ops
 
-import glassbricks.factorio.blueprint.json.BlueprintJson
-import glassbricks.factorio.blueprint.json.importBlueprint
-import glassbricks.factorio.blueprint.model.BlueprintModel
-import glassbricks.factorio.blueprint.placement.ops.addEntityNudgingWithInserters
+import glassbricks.factorio.blueprint.json.importBlueprintFrom
+import glassbricks.factorio.blueprint.model.Blueprint
+import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.poles.addPolePlacements
+import glassbricks.factorio.blueprint.placement.smallPole
 import glassbricks.factorio.blueprint.prototypes.ContainerPrototype
 import glassbricks.factorio.blueprint.prototypes.ElectricPolePrototype
 import glassbricks.factorio.blueprint.prototypes.InserterPrototype
@@ -13,18 +12,18 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import kotlin.test.assertEquals
 
-class ProblemTest {
+class EntityNudgingTest {
     @Test
     fun `test inserter nudging for better poles`() {
-        val bp = BlueprintModel(importBlueprint(File("../test-blueprints/two-inserters.txt")) as BlueprintJson)
+        val bp = Blueprint(importBlueprintFrom(File("../test-blueprints/two-inserters.txt")))
         val model = EntityPlacementModel()
-        model.addFixedEntities(bp.entities)
-        model.addEntityNudgingWithInserters(
-            model.placements
-                .filter { it.prototype is InserterPrototype }
-                .toSet()
+        val (toNudge, fixed) = bp.entities.partition { it.prototype is InserterPrototype }
+        model.addFixedEntities(fixed)
+        model.addEntityNudging(
+            toNudge,
+            getItemTransportGraph(bp.entities)
         )
-        model.addPolePlacements(listOf(smallPole), model.placements.enclosingTileBox())
+        model.addPolePlacements(listOf(smallPole), bounds = model.placements.enclosingTileBox())
 
         val result = model.solve()
         val entities = result.getSelectedEntities()
@@ -36,17 +35,11 @@ class ProblemTest {
 
     @Test
     fun `test can nudge containers with inserters`() {
-        val bp = BlueprintModel(importBlueprint(File("../test-blueprints/doublenudge.txt")) as BlueprintJson)
+        val bp = Blueprint(importBlueprintFrom(File("../test-blueprints/double-nudge.txt")))
         val model = EntityPlacementModel()
-        model.addFixedEntities(bp.entities)
-        model.addEntityNudgingWithInserters(
-            model.placements
-                .filter {
-                    it.prototype is InserterPrototype
-                            || it.prototype is ContainerPrototype
-                }
-                .toSet()
-        )
+        val (toNudge, fixed) = bp.entities.partition { it.prototype is InserterPrototype || it.prototype is ContainerPrototype }
+        model.addFixedEntities(fixed)
+        model.addEntityNudging(toNudge, getItemTransportGraph(bp.entities))
         model.addPolePlacements(listOf(smallPole), model.placements.enclosingTileBox())
 
         val result = model.solve()
@@ -59,4 +52,3 @@ class ProblemTest {
         assertEquals(1, poles.size)
     }
 }
-*/

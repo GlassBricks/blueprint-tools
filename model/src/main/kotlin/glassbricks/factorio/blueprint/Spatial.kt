@@ -35,4 +35,6 @@ public interface Spatial {
         if (!other.isSimpleCollisionBox) return other collidesWith this
         return collisionMask collidesWith other.collisionMask && this.intersects(other.collisionBox)
     }
+
+    public fun collidesWithPoint(point: Position): Boolean = point in collisionBox
 }

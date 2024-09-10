@@ -42,6 +42,11 @@ public fun CombinatorConnections.getCircuitConnectionPoint(id: CircuitID): Circu
     CircuitID.Second -> output
 }
 
+public fun CircuitConnectable.hasAnyCircuitConnections(): Boolean = when (this) {
+    is CircuitConnectionPoint -> !circuitConnections.isEmpty()
+    is CombinatorConnections -> !inputConnections.isEmpty() || !outputConnections.isEmpty()
+}
+
 
 public enum class WireColor { Red, Green }
 

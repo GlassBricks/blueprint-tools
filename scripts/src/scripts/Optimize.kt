@@ -1,6 +1,5 @@
 package scripts
 
-import drawing.drawEntities
 import glassbricks.factorio.blueprint.json.exportTo
 import glassbricks.factorio.blueprint.json.importBlueprintFrom
 import glassbricks.factorio.blueprint.json.importBlueprintString
@@ -9,16 +8,20 @@ import glassbricks.factorio.blueprint.placement.*
 import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.withIndex
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.io.File
 import kotlin.collections.mapOf
-import kotlin.system.exitProcess
 
 val projectRoot = File(".")
 
-private val sourceFile = "blueprints/base-100-iron.txt"
+private val sourceFile = "blueprints/base-100-after-belts.txt"
 
 suspend fun main(): Unit = coroutineScope {
     println("importing blueprint")
@@ -33,33 +36,29 @@ suspend fun main(): Unit = coroutineScope {
         fileName = "clipboard"
     }
 
-    val entityCosts = mapOf(
-        "transport-belt" to 1.5,
-        "underground-belt" to 17.5 / 2,
-        "fast-transport-belt" to 11.5,
-        "fast-underground-belt" to 97.5 / 2,
-        "small-electric-pole" to 0.5,
-        "medium-electric-pole" to 13.5,
-    )
-        .mapValues { it.value + 3.5 }
-        .mapKeys { VanillaPrototypes[it.key] as EntityPrototype }
-
     val model = BpModelBuilder(bp).apply {
-//        optimizePoles("small-electric-pole", "medium-electric-pole") {
-//            enforcePolesConnected = true
-//            addExistingAsInitialSolution = true
-//        }
         optimizeBeltLines {
-            withCp = true
-            forceWithCp = true
+            withCp = false
         }
-        keepEntitiesWithControlBehavior()
+        optimizePoles("small-electric-pole", "medium-electric-pole") {
+            enforcePolesConnected = true
+            addExistingAsInitialSolution = true
+        }
+        keepEntitiesWithCircuitConnections()
         keepIf {
             it.stage() <= 7
         }
 
-        this.entityCosts = entityCosts
-
+        entityCosts = mapOf(
+            "transport-belt" to 1.5,
+            "underground-belt" to 17.5 / 2,
+            "fast-transport-belt" to 11.5,
+            "fast-underground-belt" to 97.5 / 2,
+            "small-electric-pole" to 0.5,
+            "medium-electric-pole" to 13.5,
+        )
+            .mapValues { it.value + 3.5 }
+            .mapKeys { VanillaPrototypes[it.key] as EntityPrototype }
         distanceCostFactor = 5e-4
     }.build()
     model.solver.parameters.apply {
@@ -71,36 +70,26 @@ suspend fun main(): Unit = coroutineScope {
 //        hintConflictLimit = 500
 
 //        stopAfterFirstSolution = true
-//        numWorkers = 16
+//        numWorkers = 10
     }
     bp.entities.clear()
 
-    val solution = model.solve()
-    if (!solution.isOk) {
-        println("Failed to find a solution: ${solution.status}")
-        exitProcess(1)
-    }
+    val flow = model.solveFlow()
+    flow
+        .conflate()
+        .transform {
+            emit(it)
+            delay(10_000)
+        }.conflate()
+        .withIndex()
+        .onEach { (index, entities) ->
+            bp.entities = model.exportFromSelectedOptionals(entities)
+            val outFile = projectRoot.resolve("output-per/${fileName}-${"%03d".format(index)}.txt")
+            outFile.parentFile.mkdirs()
+            bp.toJson().exportTo(outFile)
 
-    val entities = solution.export()
-
-    val entityCounts =
-        entities.groupingBy { it.prototype.name }.eachCount()
-            .entries.sortedByDescending { it.value }
-            .take(10)
-    for ((name, count) in entityCounts) {
-        println("$name: $count")
-    }
-
-    println("Saving result")
-
-    bp.entities.addAll(entities)
-
-    launch {
-        val outFile = projectRoot.resolve("output/${fileName}-result.txt")
-        outFile.parentFile.mkdirs()
-        bp.toJson().exportTo(outFile)
-    }
-    launch {
-        drawEntities(entities).saveTo(projectRoot.resolve("output/${fileName}-result.png").absolutePath)
-    }
+            val numEntities = entities.size
+            val infoFile = projectRoot.resolve("output-per/${fileName}-${"%03d".format(index)}.info.txt")
+            infoFile.writeText("numEntities: $numEntities\n")
+        }.launchIn(this)
 }

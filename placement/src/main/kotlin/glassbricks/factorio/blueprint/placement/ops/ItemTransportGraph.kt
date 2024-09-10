@@ -93,12 +93,12 @@ fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTr
     val graph = ItemTransportGraph(nodes, entityToNode, belts)
 
     fun addInserterEdges(entity: Inserter, node: Node) {
-        val pickupEntity = source.getIntersectionPosition(entity.globalPickupPosition())
+        val pickupEntity = source.getIntersectingPosition(entity.globalPickupPosition())
             .firstNotNullOfOrNull { if (it.prototype is InserterPrototype) null else entityToNode[it] }
         if (pickupEntity != null) {
             graph.addEdge(pickupEntity, node, LogisticsEdgeType.Inserter)
         }
-        val dropEntity = source.getIntersectionPosition(entity.globalInsertPosition())
+        val dropEntity = source.getIntersectingPosition(entity.globalInsertPosition())
             .firstNotNullOfOrNull { if (it.prototype is InserterPrototype) null else entityToNode[it] }
         if (dropEntity != null) {
             graph.addEdge(node, dropEntity, LogisticsEdgeType.Inserter)

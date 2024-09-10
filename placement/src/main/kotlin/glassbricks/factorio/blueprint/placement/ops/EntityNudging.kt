@@ -1,87 +1,126 @@
-/*
 package glassbricks.factorio.blueprint.placement.ops
 
+import glassbricks.factorio.blueprint.BasicEntity
 import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.entity.BlueprintEntity
+import glassbricks.factorio.blueprint.entity.CircuitConnectionPoint
+import glassbricks.factorio.blueprint.entity.Inserter
+import glassbricks.factorio.blueprint.entity.Rail
+import glassbricks.factorio.blueprint.entity.TransportBeltConnectable
+import glassbricks.factorio.blueprint.findMatching
 import glassbricks.factorio.blueprint.globalInsertPosition
 import glassbricks.factorio.blueprint.globalPickupPosition
 import glassbricks.factorio.blueprint.placement.EntityPlacement
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
-import glassbricks.factorio.blueprint.placement.addBoolAndLenient
-import glassbricks.factorio.blueprint.placement.addExactlyOneLenient
-import glassbricks.factorio.blueprint.prototypes.InserterPrototype
 import glassbricks.factorio.blueprint.tileBbox
 
+// NOTE: fluids not handled
+// Nudging filter:
+//  - Belts and user-supplied fixed entities are _not_ nudgeable
+//  - Inserters are nudgeable if:
+//     - not connected to a belt
+//     - targets are nudgeable or have size > 1
+//  Making nudges:
+//  - For _non inserters_, generate all positions
+//      - If only one possible position, add as fixed
+//  - For inserters:
+//      - Find possible positions, based on targets
 
-private class InserterLinks(
-    val pickupEntity: EntityPlacement<*>?,
-    val insertEntity: EntityPlacement<*>?,
-)
+fun BlueprintEntity.nudgingAllowed(): Boolean = !(
+        this is TransportBeltConnectable
+                || this is Rail
+                || (this is CircuitConnectionPoint && !this.circuitConnections.isEmpty())
+        )
 
-// NOTE: does not handle custom blueprint pickup and dropoff positions
-fun EntityPlacementModel.addEntityNudgingWithInserters(
-    entitiesToNudge: Set<EntityPlacement<*>>,
+/**
+ * Assumes all other entities are added as fixed.
+ *
+ * Not yet compatible with belt optimization.
+ */
+fun EntityPlacementModel.addEntityNudging(
+    entities: Collection<BlueprintEntity>,
+    transportGraph: ItemTransportGraph,
     nudgeRange: Int = 2,
-    nudgeCost: Double = 0.01,
 ) {
-    for (entity in entitiesToNudge) {
-        require(entity in placements) { "Entity $entity is not in the model" }
-        require(entity.isFixed) { "Non-fixed entities not handled yet" }
-    }
-    val nudgeDistances = tileBbox(-nudgeRange, -nudgeRange, nudgeRange + 1, nudgeRange + 1)
-        .map { it.topLeftCorner() }
-
-    @Suppress("UNCHECKED_CAST") val inserters =
-        placements.filter { it.prototype is InserterPrototype } as List<EntityPlacement<InserterPrototype>>
-
-
-    val inserterLinks = inserters.associateWith { inserter ->
-        val pickup = inserter.globalPickupPosition()
-        val dropoff = inserter.globalInsertPosition()
-        val pickupEntity = placements.getAtPoint(pickup).firstOrNull()
-        val dropoffEntity = placements.getAtPoint(dropoff).firstOrNull()
-        InserterLinks(pickupEntity, dropoffEntity)
-    }
-    this.removeAll(entitiesToNudge)
-
-    val newPlacements = entitiesToNudge.associateWith { entity ->
-        nudgeDistances.mapNotNull { nudgeVec ->
-            val newPosition = entity.position + nudgeVec
-            val cost = if (nudgeVec.isZero()) 0.0 else nudgeCost
-            addPlacementIfPossible(entity.prototype, newPosition, entity.direction, cost)
-        }.also { placements ->
-            require(placements.isNotEmpty()) { "No valid placements for $entity" }
-            cp.addExactlyOneLenient(placements.map { it.selected })
+    val nudgedPlacements: MutableMap<BlueprintEntity, List<EntityPlacement<*>>> = mutableMapOf()
+    val nudgeDistances = tileBbox(-nudgeRange, -nudgeRange, nudgeRange + 1, nudgeRange + 1).map { it.tileTopLeft() }
+    fun getNudgePositions(entity: BlueprintEntity): List<Position> {
+        if (!entity.nudgingAllowed()) return listOf(entity.position)
+        val positions = nudgeDistances.map { nudgeVec ->
+            entity.position + nudgeVec
+        }.filter {
+            val testEntity = BasicEntity(entity.prototype, it, entity.direction)
+            this.canPlace(testEntity)
         }
+        check(positions.isNotEmpty()) { "No valid positions for $entity" }
+        return positions
     }
 
-    fun enforceInserterLink(
-        inserter: EntityPlacement<InserterPrototype>,
-        linkPosition: Position,
-        linkEntities: Set<EntityPlacement<*>>?,
-    ) {
-        val atPos = placements.getAtPoint(linkPosition)
-        if (linkEntities.isNullOrEmpty()) {
-            val atPosSelected = atPos.mapTo(ArrayList()) { it.selected.not() }
-            if (atPosSelected.isNotEmpty())
-                cp.addBoolAndLenient(atPosSelected, inserter.selected)
-        } else {
-            val validSelected = atPos.filter { it in linkEntities }
-                .mapTo(ArrayList()) { it.selected }
-            cp.addAtLeastOne(validSelected).onlyEnforceIf(inserter.selected)
+    fun addAsFixed(entity: BlueprintEntity, position: Position) {
+        val placement = this.addFixedPlacement(entity, position = position)
+        nudgedPlacements[entity] = listOf(placement)
+    }
+
+    for (entity in entities) if (entity !is Inserter) {
+        val positions = getNudgePositions(entity)
+        if (positions.size == 1) {
+            addAsFixed(entity, positions.first())
+            continue
         }
+        val placements = positions.map { this.addPlacement(entity, position = it) }
+        this.cp.addExactlyOne(placements.map { it.selected })
+        nudgedPlacements[entity] = placements
     }
+    data class InserterLinks(
+        val position: Position,
+        val pickupPlacements: List<EntityPlacement<*>>?,
+        val dropoffPlacements: List<EntityPlacement<*>>?,
+    )
+    for (entity in entities) if (entity is Inserter) {
+        val node = transportGraph.entityToNode[entity]!!
+        val pickupEntity = node.inEdges.find { it.type == LogisticsEdgeType.Inserter }?.from?.entity
+        val dropoffEntity = node.outEdges.find { it.type == LogisticsEdgeType.Inserter }?.to?.entity
 
-    for ((inserter, links) in inserterLinks) {
-        val pickupEntities =
-            links.pickupEntity?.let { newPlacements[it]?.toSet() ?: setOf(it) }
-        val insertEntities =
-            links.insertEntity?.let { newPlacements[it]?.toSet() ?: setOf(it) }
-        for (placement in newPlacements[inserter]!!) {
-            @Suppress("UNCHECKED_CAST")
-            placement as EntityPlacement<InserterPrototype>
-            enforceInserterLink(placement, placement.globalPickupPosition(), pickupEntities)
-            enforceInserterLink(placement, placement.globalInsertPosition(), insertEntities)
+        val pickupPlacements = pickupEntity?.let {
+            nudgedPlacements[it] ?: this.placements.findMatching(it)
+                ?.let { listOf(it) }
+            ?: error("Could not find placement for $it")
+        }
+        val dropoffPlacements = dropoffEntity?.let {
+            nudgedPlacements[it] ?: this.placements.findMatching(it)
+                ?.let { listOf(it) }
+            ?: error("Could not find placement for $it")
+        }
+        val positions = if (pickupPlacements == null || dropoffPlacements == null) listOf(entity.position)
+        else getNudgePositions(entity)
+        val inserterLinks = positions.mapNotNull { position ->
+            val testEntity = BasicEntity(entity.prototype, position, entity.direction)
+            val pickupPos = testEntity.globalPickupPosition()
+            val dropOffPos = testEntity.globalInsertPosition()
+            val pickupPlacementsAtPos = pickupPlacements?.filter { it.collidesWithPoint(pickupPos) }
+            if (pickupPlacementsAtPos?.isEmpty() == true) return@mapNotNull null
+            val dropoffPlacementsAtPos = dropoffPlacements?.filter { it.collidesWithPoint(dropOffPos) }
+            if (dropoffPlacementsAtPos?.isEmpty() == true) return@mapNotNull null
+            InserterLinks(position, pickupPlacementsAtPos, dropoffPlacementsAtPos)
+        }
+        check(inserterLinks.isNotEmpty()) { "No valid positions for $entity" }
+        val isSingle = inserterLinks.size == 1
+        val placements = inserterLinks.map { (position, pickupPlacements, dropoffPlacements) ->
+            val placement = if (isSingle) {
+                this.addFixedPlacement(entity, position = position)
+            } else {
+                this.addPlacement(entity, position = position)
+            }
+            if (pickupPlacements != null) {
+                this.cp.addBoolOr(pickupPlacements.map { it.selected }).onlyEnforceIf(placement.selected)
+            }
+            if (dropoffPlacements != null) {
+                this.cp.addBoolOr(dropoffPlacements.map { it.selected }).onlyEnforceIf(placement.selected)
+            }
+            placement
+        }
+        if (!isSingle) {
+            this.cp.addExactlyOne(placements.map { it.selected })
         }
     }
 }
-*/

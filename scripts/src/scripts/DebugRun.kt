@@ -56,7 +56,7 @@ private fun tryOpt(
             "fast-transport-belt" to 5.0,
             "fast-underground-belt" to 19.0,
         )
-        keepEntitiesWithControlBehavior()
+        keepEntitiesWithCircuitConnections()
     }.build()
     model.solver.parameters.apply {
         maxTimeInSeconds = 60.0

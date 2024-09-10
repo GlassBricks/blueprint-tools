@@ -144,8 +144,8 @@ fun EntityPlacementModel.createPoleCandidates(
 
 inline fun EntityPlacementModel.addPolePlacements(
     poles: Iterable<ElectricPolePrototype>,
-    ignoreUnpoweredEntities: Boolean = false,
     bounds: TileBoundingBox = placements.enclosingTileBox(),
+    ignoreUnpoweredEntities: Boolean = false,
     configure: PoleCandidates.() -> Unit = {},
 ): PolePlacements {
     return createPoleCandidates(poles, bounds).apply(configure).addToModel(this, ignoreUnpoweredEntities)

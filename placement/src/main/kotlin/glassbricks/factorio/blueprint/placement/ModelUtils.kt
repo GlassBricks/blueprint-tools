@@ -4,13 +4,21 @@ import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.Vector
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
-import glassbricks.factorio.blueprint.entity.hasControlBehavior
+import glassbricks.factorio.blueprint.entity.CircuitConnectable
+import glassbricks.factorio.blueprint.entity.Container
+import glassbricks.factorio.blueprint.entity.Furnace
+import glassbricks.factorio.blueprint.entity.Inserter
+import glassbricks.factorio.blueprint.entity.hasAnyCircuitConnections
+import glassbricks.factorio.blueprint.findMatching
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placedAtTileBasic
 import glassbricks.factorio.blueprint.placement.belt.BeltLineCosts
 import glassbricks.factorio.blueprint.placement.belt.withOptimizedBeltLines
 import glassbricks.factorio.blueprint.placement.beltcp.addBeltLinesFrom
 import glassbricks.factorio.blueprint.placement.beltcp.solveBeltLinesAsInitialSolution
+import glassbricks.factorio.blueprint.placement.ops.addEntityNudging
+import glassbricks.factorio.blueprint.placement.ops.getItemTransportGraph
+import glassbricks.factorio.blueprint.placement.ops.nudgingAllowed
 import glassbricks.factorio.blueprint.placement.poles.addPolePlacements
 import glassbricks.factorio.blueprint.placement.poles.enforceConnectedWithDag
 import glassbricks.factorio.blueprint.placement.poles.enforceConnectedWithDistanceLabels
@@ -78,16 +86,25 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
 
     val toKeep = mutableSetOf<BlueprintEntity>()
 
-    fun keepEntitiesWithControlBehavior() {
-        for (entity in origEntities) {
-            if (entity.hasControlBehavior())
-                toKeep.add(entity)
-        }
+    fun keepEntitiesWithCircuitConnections() {
+        keepIf { it is CircuitConnectable && it.hasAnyCircuitConnections() }
     }
 
     inline fun keepIf(condition: (BlueprintEntity) -> Boolean) {
         for (entity in origEntities) {
             if (condition(entity)) toKeep.add(entity)
+        }
+    }
+
+    val toNudge = mutableSetOf<BlueprintEntity>()
+
+    fun addSafeNudging() {
+        for (entity in origEntities) if (entity.nudgingAllowed()
+            && (entity is Inserter
+                    || entity is Furnace
+                    || entity is Container)
+        ) {
+            toNudge.add(entity)
         }
     }
 
@@ -115,6 +132,7 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
 
         val bounds = origEntities.enclosingBox()
         val distCostPosition = bounds.getRelPoint(distanceCostCenter ?: optimizePoles?.poleRootRel ?: Vector(0.5, 0.5))
+
         fun getEntityCost(
             prototype: EntityPrototype,
             position: Position,
@@ -145,8 +163,12 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
         }
 
         logger.info { "Adding fixed placements" }
-        for (entity in entitiesToAdd) {
+        val (nudgeEntities, fixedEntities) = entitiesToAdd.partition { it in toNudge }
+        for (entity in fixedEntities) {
             model.addFixedPlacement(entity)
+        }
+        if (nudgeEntities.isNotEmpty()) {
+            model.addEntityNudging(nudgeEntities, getItemTransportGraph(entities))
         }
 
 
@@ -181,7 +203,7 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
             }
             if (optimizePoles.addExistingAsInitialSolution) {
                 for (candidate in placements.poles) {
-                    val existing = entities.getIntersectionPosition(candidate.position).find {
+                    val existing = entities.getIntersectingPosition(candidate.position).find {
                         it.prototype == candidate.prototype
                     }
                     model.cp.addLiteralHint(candidate.placement.selected, existing != null)
@@ -190,10 +212,17 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
         }
 
         logger.info { "Setting costs" }
-
         for (placement in model.placements) {
             if (placement is OptionalEntityPlacement<*>) {
                 placement.cost = getEntityCost(placement.prototype, placement.position)
+            }
+        }
+
+        logger.info { "Setting to keep" }
+        for (entity in toKeep) {
+            val placement = model.placements.findMatching(entity)
+            if (placement is OptionalEntityPlacement<*>) {
+                model.cp.addLiteralEquality(placement.selected, true)
             }
         }
 

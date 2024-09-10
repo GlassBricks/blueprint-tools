@@ -9,6 +9,8 @@ import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlin.math.round
 
 private val logger = KotlinLogging.logger {}
@@ -18,10 +20,6 @@ class EntityPlacementModel(
     val cp: CpModel = CpModel(),
 ) {
     val solver: CpSolver = CpSolver()
-
-    init {
-        solver.parameters.catchSigintSignal = true
-    }
 
     val placements: SpatialDataStructure<EntityPlacement<*>> get() = _placements
     var exportCopySource: SpatialDataStructure<BlueprintEntity>? = null
@@ -153,6 +151,23 @@ class EntityPlacementModel(
         display: Boolean = true,
         optimize: Boolean = true,
     ): PlacementSolution {
+        beginSolve(optimize, display)
+        val status = solver.solve(cp)
+        return PlacementSolution(model = this, status = status, solver = solver)
+    }
+
+    fun solveFlow(
+        display: Boolean = true,
+        optimize: Boolean = true,
+    ): Flow<List<OptionalEntityPlacement<*>>> {
+        beginSolve(optimize, display)
+        return getSolutionFlow(solver, this)
+    }
+
+    private fun beginSolve(
+        optimize: Boolean,
+        display: Boolean,
+    ) {
         logger.info { "Adding final constraints" }
         addNonOverlappingConstraint()
         if (optimize) setObjective()
@@ -165,14 +180,45 @@ class EntityPlacementModel(
         }
         if (placements.size > 10_000) attemptAggressiveGc()
         logger.info { "Starting cp solve" }
-        val status = solver.solve(cp)
-        return PlacementSolution(
-            model = this,
-            status = status,
-            solver = solver
-        )
     }
 
+    private fun getSolutionFlow(solver: CpSolver, model: EntityPlacementModel): Flow<List<OptionalEntityPlacement<*>>> =
+        callbackFlow {
+            val optionals = model.placements.filterIsInstance<OptionalEntityPlacement<*>>()
+            val callback = object : CpSolverSolutionCallback() {
+                override fun onSolutionCallback() {
+                    try {
+                        if (isClosedForSend) {
+                            stopSearch()
+                            return
+                        }
+                        val result = optionals.filter { booleanValue(it.selected) }
+                        if (trySend(result).isFailure) {
+                            stopSearch()
+                        }
+                    } catch (e: Throwable) {
+                        close(e)
+                    }
+                }
+            }
+
+            val status = solver.solve(cp, callback)
+
+            if (status != CpSolverStatus.OPTIMAL && status != CpSolverStatus.FEASIBLE) {
+                close(RuntimeException("Failed to find solution: status $status"))
+            }
+        }
+
+    fun exportFromSelectedOptionals(optionals: List<OptionalEntityPlacement<*>>): MutableSpatialDataStructure<BlueprintEntity> {
+        val result = DefaultSpatialDataStructure<BlueprintEntity>()
+        for (entity in this.placements) if (entity.isFixed) {
+            result.add(entity.toBlueprintEntity(exportCopySource))
+        }
+        for (entity in optionals) {
+            result.add(entity.toBlueprintEntity(exportCopySource))
+        }
+        return result
+    }
 
     companion object {
         init {
