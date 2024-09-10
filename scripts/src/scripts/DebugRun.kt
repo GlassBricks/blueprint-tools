@@ -4,7 +4,7 @@ import glassbricks.factorio.blueprint.json.exportTo
 import glassbricks.factorio.blueprint.json.importBlueprintFrom
 import glassbricks.factorio.blueprint.json.importBlueprintString
 import glassbricks.factorio.blueprint.model.Blueprint
-import glassbricks.factorio.blueprint.placement.*
+import glassbricks.factorio.blueprint.placement.BpModelBuilder
 import java.io.File
 
 fun tryImportFromClipboard(): Blueprint? {
@@ -18,12 +18,25 @@ fun tryImportFromClipboard(): Blueprint? {
 }
 
 fun main() {
-    val bp = tryImportFromClipboard() ?: Blueprint(importBlueprintFrom(File("test-blueprints/base8.txt")))
+    val bp = tryImportFromClipboard() ?: Blueprint(importBlueprintFrom(File("blueprints/base-100-iron.txt")))
     val result = bisectBp(bp.entities) { entities ->
-        BpModelBuilder(entities).apply {
-            optimizeBeltLines()
+//        entities.withOptimizedBeltLines(BeltLineCosts { _, _, _ -> 1.0 })
+        val model = BpModelBuilder(bp).apply {
+            optimizeBeltLines {
+                withCp = true
+            }
             keepEntitiesWithControlBehavior()
         }.build()
+        model.solver.parameters.apply {
+            maxTimeInSeconds = 60.0
+
+            repairHint = true
+            hintConflictLimit = 100
+
+            stopAfterFirstSolution = true
+        }
+        val result = model.solve()
+        check(result.isOk)
     }
 
 
@@ -34,4 +47,5 @@ fun main() {
     outFile.parentFile.mkdirs()
     newBp.toJson().exportTo(outFile)
     println("Exported to $outFile")
+    println("Has: ${newBp.entities.size} entities")
 }

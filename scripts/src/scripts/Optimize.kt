@@ -6,6 +6,8 @@ import glassbricks.factorio.blueprint.json.importBlueprintFrom
 import glassbricks.factorio.blueprint.json.importBlueprintString
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placement.*
+import glassbricks.factorio.blueprint.prototypes.EntityPrototype
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.awt.Toolkit
@@ -16,7 +18,7 @@ import kotlin.system.exitProcess
 
 val projectRoot = File(".")
 
-private val sourceFile = "test-blueprints/base8.txt"
+private val sourceFile = "blueprints/base-100-iron.txt"
 
 suspend fun main(): Unit = coroutineScope {
     println("importing blueprint")
@@ -30,41 +32,48 @@ suspend fun main(): Unit = coroutineScope {
         bp = Blueprint(importBlueprintString(clipboardContents))
         fileName = "clipboard"
     }
+
+    val entityCosts = mapOf(
+        "transport-belt" to 1.5,
+        "underground-belt" to 17.5 / 2,
+        "fast-transport-belt" to 11.5,
+        "fast-underground-belt" to 97.5 / 2,
+        "small-electric-pole" to 0.5,
+        "medium-electric-pole" to 13.5,
+    )
+        .mapValues { it.value + 3.5 }
+        .mapKeys { VanillaPrototypes[it.key] as EntityPrototype }
+
     val model = BpModelBuilder(bp).apply {
+//        optimizePoles("small-electric-pole", "medium-electric-pole") {
+//            enforcePolesConnected = true
+//            addExistingAsInitialSolution = true
+//        }
         optimizeBeltLines {
-            addHeuristicInitialSolution = true
-//            forceInitialSolution = true
-        }
-        optimizePoles("small-electric-pole", "medium-electric-pole") {
-            enforcePolesConnected = true
-            addExistingAsInitialSolution = true
+            withCp = true
         }
         keepEntitiesWithControlBehavior()
+        keepIf {
+            it.stage() <= 7
+        }
 
-        setEntityCosts(mapOf(
-            "transport-belt" to 1.5,
-            "underground-belt" to 17.5 / 2,
-            "fast-transport-belt" to 11.5,
-            "fast-underground-belt" to 97.5 / 2,
-            "small-electric-pole" to 0.5,
-            "medium-electric-pole" to 13.5,
-        ).mapValues { it.value + 3.5 })
-//        check(entityCosts["underground-belt"]!! * 3 < entityCosts["transport-belt"]!! * 5)
-//        check(entityCosts["underground-belt"]!! * 3 > entityCosts["transport-belt"]!! * 4)
+        this.entityCosts = entityCosts
 
         distanceCostFactor = 5e-4
-
     }.build()
     model.solver.parameters.apply {
-        maxTimeInSeconds = 60.0 * 2
-        maxMemoryInMb = 1024 * 12
+        maxTimeInSeconds = 60.0 * 120
 
-//        maxPresolveIterations = 5
-        numWorkers = 8
+        maxPresolveIterations = 5
+
+        repairHint = true
+        hintConflictLimit = 100
+
+//        stopAfterFirstSolution = true
+
+//        numWorkers = 15
     }
     bp.entities.clear()
-
-//    drawEntities(model.placements).saveTo("output/${fileName}-pre-solve")
 
     val solution = model.solve()
     if (!solution.isOk) {

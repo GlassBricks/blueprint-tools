@@ -1,13 +1,15 @@
 package glassbricks.factorio.blueprint.placement.belt
 
-import com.google.ortools.sat.Literal
+import glassbricks.factorio.blueprint.Entity
+import glassbricks.factorio.blueprint.Position
+import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.TilePosition
+import glassbricks.factorio.blueprint.entity.BlueprintEntity
+import glassbricks.factorio.blueprint.entity.placedAtTile
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.SlidingWindowMin
-import glassbricks.factorio.blueprint.placement.addLiteralEquality
-import glassbricks.factorio.blueprint.placement.addLiteralHint
-import glassbricks.factorio.blueprint.placement.beltcp.GridCp
-import glassbricks.factorio.blueprint.placement.get
+import glassbricks.factorio.blueprint.placement.to8wayDirection
+import glassbricks.factorio.blueprint.prototypes.EntityPrototype
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.random.Random
@@ -15,8 +17,8 @@ import kotlin.random.Random
 private val logger = KotlinLogging.logger {}
 
 data class BeltLineSolveParams(
-    val initialIntersectionCost: Double = 2.0,
-    val intersectionCostMultiplier: Double = 1.5,
+    val initialIntersectionCost: Double = 0.2,
+    val intersectionCostMultiplier: Double = 2.0,
     /** Discount for intersection cost if the original belt is used. */
     val intersectionDiscountMultiplier: Double = 0.1,
     val maxConflictIterations: Int = 100,
@@ -34,7 +36,27 @@ fun interface BeltLineCosts {
     fun getCost(beltType: BeltType, pos: TilePosition, direction: CardinalDirection): Double
 }
 
-data class BeltTypeWithIndex(val index: Int, val beltType: BeltType)
+
+fun BeltLineCosts.notIntersecting(entities: SpatialDataStructure<Entity<*>>): BeltLineCosts =
+    BeltLineCosts { beltType, pos, direction ->
+        val testEntity = beltType.prototype.placedAtTile(pos, direction.to8wayDirection())
+        if (entities.getColliding(testEntity).any()) return@BeltLineCosts Double.POSITIVE_INFINITY
+        getCost(beltType, pos, direction)
+    }
+
+fun fromMapAndDistance(
+    costMap: Map<out EntityPrototype, Double>,
+    center: Position,
+    distanceCostFactor: Double,
+): BeltLineCosts = BeltLineCosts { beltType, pos, _ ->
+    val prototype = beltType.prototype
+    val cost = costMap[prototype] ?: 1.0
+    val distance = center.distanceTo(pos.tileCenter())
+    cost + distance * distanceCostFactor
+}
+
+data class BeltTypeWithIndex(val beltType: BeltType, val index: Int)
+data class BeltTypeWithCost(val beltType: BeltType, val cost: Double)
 
 class OptBeltLine internal constructor(
     val id: BeltLineId,
@@ -43,6 +65,17 @@ class OptBeltLine internal constructor(
 ) {
     internal var curSolution: List<BeltTypeWithIndex>? = null
     val solution get() = curSolution ?: error("Solution not (yet) found")
+
+    fun getTilePos(index: Int): TilePosition = tiles[index].position
+
+    fun solutionEntities(entitiesToCopyFrom: SpatialDataStructure<BlueprintEntity>? = null): List<BlueprintEntity> =
+        solution.map {
+            it.beltType.toBlueprintEntity(
+                position = getTilePos(it.index),
+                direction = origLine.direction,
+                entitiesToCopyFrom = entitiesToCopyFrom,
+            )
+        }
 }
 
 internal class OptTile(
@@ -52,68 +85,6 @@ internal class OptTile(
     val originalBeltType: BeltType?,
     val mustBeNotEmpty: Boolean,
 )
-
-
-/**
- * Generates a solution using a heuristic method.
- *
- * If [force] is true, the solution is forced to be used. Otherwise, it is used as a hint.
- */
-fun GridCp.addInitialSolution(
-    canPlace: (BeltType, TilePosition, CardinalDirection) -> Boolean = { _, _, _ -> true },
-    force: Boolean = false,
-    params: BeltLineSolveParams = BeltLineSolveParams(),
-) {
-    val lines = solveInitialSolution(canPlace, params)
-
-    addSolutionAsHint(lines, force)
-}
-
-private fun GridCp.addSolutionAsHint(lines: List<OptBeltLine>, force: Boolean) {
-    val usedLiterals = mutableSetOf<Literal>()
-    for (line in lines) {
-        for ((index, beltType) in line.solution) {
-            val pos = line.tiles[index].position
-            val literal = this[pos]
-                ?.beltPlacements?.get(line.origLine.direction, beltType)
-                ?.selected
-            if (literal == null) {
-                logger.warn { "Corresponding literal not found: $beltType at $pos" }
-                continue
-            }
-            usedLiterals += literal
-        }
-    }
-
-    for (literal in usedLiterals) {
-        if (force)
-            cp.addLiteralEquality(literal, true)
-        else
-            cp.addLiteralHint(literal, true)
-    }
-    for (tile in this.tiles.values) {
-        for (placement in tile.beltPlacements.values) {
-            if (placement.selected !in usedLiterals) {
-                if (force)
-                    cp.addLiteralEquality(placement.selected, false)
-                else
-                    cp.addLiteralHint(placement.selected, false)
-            }
-        }
-    }
-}
-
-fun GridCp.solveInitialSolution(
-    canPlace: (BeltType, TilePosition, CardinalDirection) -> Boolean = { _, _, _ -> true },
-    params: BeltLineSolveParams = BeltLineSolveParams(),
-): List<OptBeltLine> {
-    val costs = BeltLineCosts { beltType, pos, direction ->
-        val cost = this[pos]?.beltPlacements?.get(direction, beltType)?.cost ?: Double.POSITIVE_INFINITY
-        if (!canPlace(beltType, pos, direction)) Double.POSITIVE_INFINITY else cost
-    }
-    val lines = solveBeltLines(this, costs, params)
-    return lines
-}
 
 fun solveBeltLines(
     grid: BeltGridCommon,
@@ -125,17 +96,12 @@ fun solveBeltLines(
     return lines
 }
 
-data class BeltTypeWithCost(
-    val beltType: BeltType,
-    val cost: Double,
-)
-
 private fun getOptBeltLines(grid: BeltGridCommon, costs: BeltLineCosts): List<OptBeltLine> =
     grid.beltLines.entries.map { (lineId, line) ->
         val tiles = line.tiles.mapIndexed { i, tile ->
             val pos = line.getTilePos(i)
-            val config = grid.tiles[pos]
-            val options = config?.options?.mapNotNull { (direction, beltType, id) ->
+            val beltConfig = grid.tiles[pos]
+            val options = beltConfig?.options?.mapNotNull { (direction, beltType, id) ->
                 if (direction != line.direction || id != lineId) return@mapNotNull null
                 val cost = costs.getCost(beltType, pos, direction)
                 if (cost.isInfinite()) return@mapNotNull null
@@ -150,7 +116,7 @@ private fun getOptBeltLines(grid: BeltGridCommon, costs: BeltLineCosts): List<Op
                 position = pos,
                 options = options,
                 originalBeltType = originalBeltType,
-                mustBeNotEmpty = (config != null && !config.canBeEmpty),
+                mustBeNotEmpty = (beltConfig != null && beltConfig.forcedId == lineId),
             )
         }
         OptBeltLine(
@@ -162,6 +128,11 @@ private fun getOptBeltLines(grid: BeltGridCommon, costs: BeltLineCosts): List<Op
 
 private class TileInfo {
     var onlyUsableBy: BeltLineId = 0
+        set(value) {
+            if (field != 0 && field != value)
+                error("onlyUsableBy set twice")
+            field = value
+        }
     var numLines = 0
 
     var intersectionCost: Double = 0.0
@@ -171,13 +142,14 @@ private class TileInfo {
     val usedLines = mutableSetOf<BeltLineId>()
 }
 
-private fun getTiles(lines: List<OptBeltLine>): Map<TilePosition, TileInfo> = buildMap {
+private fun getTileInfo(lines: List<OptBeltLine>): Map<TilePosition, TileInfo> = buildMap {
     for (line in lines) {
         for ((i, tile) in line.tiles.withIndex()) {
             val pos = line.origLine.getTilePos(i)
             val info = this.getOrPut(pos, ::TileInfo)
             info.numLines++
-            if (tile.mustBeNotEmpty) info.onlyUsableBy = line.id
+            if (tile.mustBeNotEmpty)
+                info.onlyUsableBy = line.id
         }
     }
 }
@@ -224,7 +196,11 @@ private fun solveSingleBeltLine(
             var costToUseThis = option.cost
             if (tileInfo.numLines > 1) {
                 // discount intersection cost if matches original
-                costToUseThis += if (option == tile.originalBeltType) tileInfo.intersectionCost * costs.intersectionDiscountMultiplier else tileInfo.intersectionCost
+                costToUseThis += if (option.beltType == tile.originalBeltType) {
+                    tileInfo.intersectionCost * costs.intersectionDiscountMultiplier
+                } else {
+                    tileInfo.intersectionCost
+                }
             }
             when (val beltType = option.beltType) {
                 is BeltType.Belt -> {
@@ -283,21 +259,23 @@ private fun solveSingleBeltLine(
     val cost =
         if (lastIn != null) lastIn.cost
         else withOutputCost[lastIndex]
-    check(cost.isFinite()) { "Impossible to reach end" }
+    check(cost.isFinite()) {
+        "Impossible to reach end"
+    }
 
     if (finalIsolatedProto != null) {
-        placements += BeltTypeWithIndex(curIndex, lastIn!!.beltType)
+        placements += BeltTypeWithIndex(lastIn!!.beltType, curIndex)
         curIndex--
     }
 
     // backtrace to get solution
     while (curIndex >= 0) {
         val placementUsed = outputUsed[curIndex]!!
-        placements += BeltTypeWithIndex(curIndex, placementUsed)
+        placements += BeltTypeWithIndex(placementUsed, curIndex)
         val pair = ugPair[curIndex]
         if (pair != null) {
             val pairIndex = pair.index
-            placements += BeltTypeWithIndex(pairIndex, pair.beltType)
+            placements += BeltTypeWithIndex(pair.beltType, pairIndex)
             curIndex = pairIndex - 1
         } else {
             curIndex--
@@ -310,16 +288,16 @@ private fun solveSingleBeltLine(
 
 private fun iterativeSolve(allLines: List<OptBeltLine>, params: BeltLineSolveParams) {
     logger.info { "Finding initial solution" }
-    val tileInfo = getTiles(allLines)
+    val tileInfo = getTileInfo(allLines)
     val linesById = allLines.associateBy { it.id }
     var curLines: List<OptBeltLine> = allLines.shuffled(params.random)
 
     for (i in 0..<params.maxConflictIterations) {
         // find solutions, mark intersections
         val intersections = mutableSetOf<TileInfo>()
+        curLines.forEach { line -> solveSingleBeltLine(tileInfo, line, params) }
         for (line in curLines) {
-            val solution = solveSingleBeltLine(tileInfo, line, params)
-            for ((i) in solution) {
+            for ((_, i) in line.solution) {
                 val pos = line.tiles[i].position
                 val tileInfo = tileInfo[pos]!!
                 tileInfo.usedLines += line.id

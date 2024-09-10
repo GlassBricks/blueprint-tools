@@ -1,8 +1,13 @@
 package glassbricks.factorio.blueprint.placement.belt
 
+import glassbricks.factorio.blueprint.SpatialDataStructure
 import glassbricks.factorio.blueprint.TilePosition
+import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.placement.CardinalDirection
+import glassbricks.factorio.blueprint.placement.ops.ItemTransportGraph
 import glassbricks.factorio.blueprint.placement.shifted
+import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 
 interface BeltGridCommon {
     val tiles: Map<TilePosition, BeltTile>
@@ -27,7 +32,7 @@ class BeltGrid : BeltGridCommon {
 }
 
 // only kept around for testing reasons
-internal fun BeltGrid.addBeltLine(
+internal fun BeltGrid.addSimpleBeltLine(
     start: TilePosition,
     direction: CardinalDirection,
     length: Int,
@@ -61,3 +66,21 @@ internal fun BeltGrid.addBeltLine(
     }
     return id
 }
+
+fun getBeltGrid(lines: List<BeltLine>): BeltGrid {
+    val grid = BeltGrid()
+    for (line in lines) {
+        grid.addBeltLine(line)
+    }
+    return grid
+}
+
+fun getBeltGridFromTransportGraph(
+    transportGraph: ItemTransportGraph,
+    prototypes: BlueprintPrototypes = VanillaPrototypes,
+): BeltGrid = getBeltGrid(getBeltLinesFromTransportGraph(transportGraph, prototypes))
+
+fun getBeltGrid(
+    entities: SpatialDataStructure<BlueprintEntity>,
+    prototypes: BlueprintPrototypes = VanillaPrototypes,
+): BeltGrid = getBeltGrid(getBeltLines(entities, prototypes))

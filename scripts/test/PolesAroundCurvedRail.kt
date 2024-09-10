@@ -2,7 +2,7 @@ import glassbricks.factorio.blueprint.DefaultSpatialDataStructure
 import glassbricks.factorio.blueprint.Direction
 import glassbricks.factorio.blueprint.Position
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
-import glassbricks.factorio.blueprint.entity.copyEntities
+import glassbricks.factorio.blueprint.entity.copyEntitiesSpatial
 import glassbricks.factorio.blueprint.entity.createBpEntity
 import glassbricks.factorio.blueprint.entity.placedAtTile
 import glassbricks.factorio.blueprint.json.exportTo
@@ -27,7 +27,7 @@ class PolesAroundCurvedRailTest {
             { proto, pos -> proto.placedAtTile(pos) }
         )
         run {
-            val entities2 = bp.entities.copyEntities()
+            val entities2 = bp.entities.copyEntitiesSpatial()
             entities2.addAll(poles)
             Blueprint(entities = entities2).toJson().exportTo(File("output/poles-around-curved-rail.txt"))
         }

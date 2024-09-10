@@ -203,15 +203,15 @@ class TilePositionTest {
     }
 
     @Test
-    fun center() {
+    fun tileCenter() {
         val pos = TilePosition(1, 2)
-        assertEquals(pos(1.5, 2.5), pos.center())
+        assertEquals(pos(1.5, 2.5), pos.tileCenter())
     }
 
     @Test
-    fun topLeftCorner() {
+    fun tileTopLeft() {
         val pos = TilePosition(1, 2)
-        assertEquals(pos(1.0, 2.0), pos.topLeftCorner())
+        assertEquals(pos(1.0, 2.0), pos.tileTopLeft())
     }
 
     @Test

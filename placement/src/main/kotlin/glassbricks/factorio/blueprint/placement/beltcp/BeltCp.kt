@@ -3,17 +3,14 @@ package glassbricks.factorio.blueprint.placement.beltcp
 import com.google.ortools.sat.IntVar
 import com.google.ortools.sat.Literal
 import com.google.ortools.util.Domain
-import glassbricks.factorio.blueprint.TilePosition
-import glassbricks.factorio.blueprint.entity.UndergroundBelt
-import glassbricks.factorio.blueprint.entity.createBpEntity
-import glassbricks.factorio.blueprint.json.IOType
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
 import glassbricks.factorio.blueprint.placement.Table
+import glassbricks.factorio.blueprint.placement.belt.BeltLineId
 import glassbricks.factorio.blueprint.placement.belt.BeltTile
 import glassbricks.factorio.blueprint.placement.belt.BeltType
-import glassbricks.factorio.blueprint.placement.to8wayDirection
+import glassbricks.factorio.blueprint.placement.belt.createBeltPlacement
 
 interface BeltCp : BeltTile {
     val lineId: IntVar
@@ -36,6 +33,7 @@ internal class BeltCpImpl(
     override val canBeEmpty: Boolean = config.canBeEmpty
     override val propagatesForward: Boolean = config.propagatesForward
     override val propagatesBackward: Boolean = config.propagatesBackward
+    override val forcedId: BeltLineId? = config.forcedId
 
     init {
         val cp = model.cp
@@ -60,7 +58,7 @@ internal class BeltCpImpl(
     override val beltPlacements: Table<CardinalDirection, BeltType, OptionalEntityPlacement<*>> =
         options.groupBy { it.direction to it.beltType }.mapValues { (entry, options) ->
             val (direction, beltType) = entry
-            val placement = model.createPlacement(pos, direction, beltType)
+            val placement = model.createBeltPlacement(beltType, pos, direction)
 
             model.cp.addBoolOr(options.map { lineIdDomainMap[it.lineId]!! })
                 .onlyEnforceIf(placement.selected)
@@ -106,27 +104,4 @@ internal class BeltCpImpl(
             put(direction, hasInVar)
         }
     }
-}
-
-internal fun EntityPlacementModel.createPlacement(
-    tile: TilePosition,
-    direction: CardinalDirection,
-    type: BeltType,
-): OptionalEntityPlacement<*> = when (type) {
-    is BeltType.Belt -> addPlacement(
-        type.prototype,
-        tile.center(),
-        direction.to8wayDirection(),
-    )
-
-    is BeltType.Underground ->
-        createBpEntity(type.prototype, tile.center(), direction.to8wayDirection())
-            .apply {
-                this as UndergroundBelt
-                ioType = when (type) {
-                    is BeltType.InputUnderground -> IOType.Input
-                    is BeltType.OutputUnderground -> IOType.Output
-                }
-            }
-            .let { addPlacement(it) }
 }

@@ -91,12 +91,12 @@ fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTr
     val graph = ItemTransportGraph(nodes, entityToNode, belts)
 
     fun addInserterEdges(entity: Inserter, node: Node) {
-        val pickupEntity = source.getAtPoint(entity.globalPickupPosition())
+        val pickupEntity = source.getIntersectionPosition(entity.globalPickupPosition())
             .firstNotNullOfOrNull { if (it.prototype is InserterPrototype) null else entityToNode[it] }
         if (pickupEntity != null) {
             graph.addEdge(pickupEntity, node, LogisticsEdgeType.Inserter)
         }
-        val dropEntity = source.getAtPoint(entity.globalInsertPosition())
+        val dropEntity = source.getIntersectionPosition(entity.globalInsertPosition())
             .firstNotNullOfOrNull { if (it.prototype is InserterPrototype) null else entityToNode[it] }
         if (dropEntity != null) {
             graph.addEdge(node, dropEntity, LogisticsEdgeType.Inserter)
@@ -149,7 +149,7 @@ fun TransportBeltConnectable.canAcceptBeltInputFrom(
     targetTile: TilePosition,
     beltDirection: Direction,
 ): Boolean {
-    if (targetTile.center() !in collisionBox) return false
+    if (targetTile.tileCenter() !in collisionBox) return false
     return when (this) {
         is TransportBelt -> direction != beltDirection.oppositeDirection()
         is UndergroundBelt -> when (ioType) {

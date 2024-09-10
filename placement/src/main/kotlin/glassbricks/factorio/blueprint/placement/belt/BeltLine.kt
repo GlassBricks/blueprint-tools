@@ -219,7 +219,7 @@ fun getBeltLinesFromTransportGraph(
     transportGraph: ItemTransportGraph,
     prototypes: BlueprintPrototypes = VanillaPrototypes,
 ): List<BeltLine> {
-    logger.info { "Finding belt lines" }
+    logger.info { "Finding belt lines from transport graph" }
     val beltTiers = prototypes.getAllBeltTiers()
     val visited = mutableSetOf<ItemTransportGraph.Node>()
     val result = transportGraph.nodes.mapNotNull {

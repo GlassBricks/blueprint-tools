@@ -248,7 +248,7 @@ fun attemptAggresiveGc() {
     var t = r.totalMemory()
     repeat(10) {
         r.gc()
-        Thread.sleep(5)
+        Thread.sleep(10)
         val f2 = r.freeMemory()
         val m2 = r.maxMemory()
         val t2 = r.totalMemory()

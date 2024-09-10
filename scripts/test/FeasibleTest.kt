@@ -24,7 +24,7 @@ class FeasibleTest {
         val bp = Blueprint(blueprint)
         val model = BpModelBuilder(bp).apply {
             optimizeBeltLines {
-                addHeuristicInitialSolution = true
+                withCp = true
             }
             if (origEntities.any { it is ElectricPole }) {
                 val poles = origEntities.mapNotNull { it.prototype as? ElectricPolePrototype }.distinct()

@@ -12,11 +12,8 @@ import glassbricks.factorio.blueprint.placement.belt.BeltGridCommon
 import glassbricks.factorio.blueprint.placement.belt.BeltLine
 import glassbricks.factorio.blueprint.placement.belt.BeltLineId
 import glassbricks.factorio.blueprint.placement.belt.BeltType
-import glassbricks.factorio.blueprint.placement.belt.addBeltLine
-import glassbricks.factorio.blueprint.placement.belt.getBeltLinesFromTransportGraph
+import glassbricks.factorio.blueprint.placement.belt.getBeltGrid
 import glassbricks.factorio.blueprint.placement.get
-import glassbricks.factorio.blueprint.placement.ops.ItemTransportGraph
-import glassbricks.factorio.blueprint.placement.ops.getItemTransportGraph
 import glassbricks.factorio.blueprint.placement.shifted
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
@@ -39,39 +36,22 @@ class GridCp internal constructor(
 }
 
 
+fun EntityPlacementModel.addBeltLinesFrom(
+    entities: SpatialDataStructure<BlueprintEntity>,
+    prototypes: BlueprintPrototypes = VanillaPrototypes,
+): GridCp {
+    return addBeltPlacements(getBeltGrid(entities, prototypes))
+}
+
 /**
  * Doesn't actually create any entity placements
  */
 internal fun EntityPlacementModel.addBeltPlacements(grid: BeltGrid): GridCp {
     logger.info { "Applying belt grid config to cp" }
     val tiles = grid.tiles
-        .mapValuesTo(HashMap()) { (_, config) ->
-            BeltCpImpl(this, config)
-        }
+        .mapValuesTo(HashMap()) { (_, config) -> BeltCpImpl(this, config) }
     return GridCp(this, grid.beltLines, tiles)
 }
-
-fun EntityPlacementModel.addBeltLinesFrom(
-    origEntities: SpatialDataStructure<BlueprintEntity>,
-    prototypes: BlueprintPrototypes = VanillaPrototypes,
-): GridCp {
-    logger.info { "Start: add belt lines" }
-    return addBeltLinesFrom(getItemTransportGraph(origEntities), prototypes)
-}
-
-// this function can probably be dissected for more advanced usage
-fun EntityPlacementModel.addBeltLinesFrom(
-    transportGraph: ItemTransportGraph,
-    prototypes: BlueprintPrototypes = VanillaPrototypes,
-): GridCp {
-    val grid = BeltGrid()
-    val beltLines = getBeltLinesFromTransportGraph(transportGraph, prototypes)
-    for (line in beltLines) {
-        grid.addBeltLine(line)
-    }
-    return this.addBeltPlacements(grid)
-}
-
 
 private fun GridCp.addGridConstraints() {
     for ((tile, belt) in tiles) {

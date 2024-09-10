@@ -17,7 +17,7 @@ public constructor(
     public override var description: String? = null,
     public val iconsArr: Array<SignalIDJson?> = arrayOfNulls(4),
     public val tiles: TileMap = HashMap(),
-    public val entities: MutableSpatialDataStructure<BlueprintEntity> = DefaultSpatialDataStructure(),
+    public var entities: MutableSpatialDataStructure<BlueprintEntity> = DefaultSpatialDataStructure(),
     public var snapToGridSettings: SnapToGridSettings? = null,
     public override var item: String = "blueprint",
     public override val version: FactorioVersion = FactorioVersion.DEFAULT,
@@ -91,7 +91,7 @@ public constructor(
         description = description,
         iconsArr = iconsArr.copyOf(),
         tiles = tiles.toMutableMap(),
-        entities = entities.copyEntities(),
+        entities = entities.copyEntitiesSpatial(),
         snapToGridSettings = snapToGridSettings?.copy(),
         item = item,
         version = version

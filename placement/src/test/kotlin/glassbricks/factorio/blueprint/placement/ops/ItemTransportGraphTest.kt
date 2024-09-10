@@ -16,14 +16,14 @@ class ItemTransportGraphTest {
         x: Int,
         y: Int,
         direction: Direction = Direction.North,
-    ): TransportBelt = VanillaPrototypes.createBpEntity("transport-belt", tilePos(x, y).center(), direction)
+    ): TransportBelt = VanillaPrototypes.createBpEntity("transport-belt", tilePos(x, y).tileCenter(), direction)
 
     private fun inputUG(
         x: Int,
         y: Int,
         direction: Direction = Direction.North,
     ): UndergroundBelt =
-        VanillaPrototypes.createBpEntity<UndergroundBelt>("underground-belt", tilePos(x, y).center(), direction)
+        VanillaPrototypes.createBpEntity<UndergroundBelt>("underground-belt", tilePos(x, y).tileCenter(), direction)
             .also { it.ioType = IOType.Input }
 
     private fun outputUg(
@@ -31,11 +31,11 @@ class ItemTransportGraphTest {
         y: Int,
         direction: Direction = Direction.North,
     ): UndergroundBelt =
-        VanillaPrototypes.createBpEntity<UndergroundBelt>("underground-belt", tilePos(x, y).center(), direction)
+        VanillaPrototypes.createBpEntity<UndergroundBelt>("underground-belt", tilePos(x, y).tileCenter(), direction)
             .also { it.ioType = IOType.Output }
 
     private fun upwardsSplitter(x: Int, y: Int): Splitter =
-        VanillaPrototypes.createBpEntity("splitter", tilePos(x, y).center() + pos(0.5, 0.0), Direction.North)
+        VanillaPrototypes.createBpEntity("splitter", tilePos(x, y).tileCenter() + pos(0.5, 0.0), Direction.North)
 
     private fun testEntities(
         vararg entities: BlueprintEntity,
@@ -170,7 +170,7 @@ class ItemTransportGraphTest {
         x: Int,
         y: Int,
         direction: Direction = Direction.North,
-    ): Inserter = VanillaPrototypes.createBpEntity("inserter", tilePos(x, y).center(), direction)
+    ): Inserter = VanillaPrototypes.createBpEntity("inserter", tilePos(x, y).tileCenter(), direction)
 
     @Test
     fun `inserter grabbing from belt`() {

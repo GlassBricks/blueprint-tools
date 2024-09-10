@@ -18,7 +18,7 @@ public interface SpatialDataStructure<out T : Spatial> : Collection<T> {
     public fun getInTile(tile: TilePosition): Sequence<T>
 
     /** Gets all entities that intersect with the given point. */
-    public fun getAtPoint(position: Position): Sequence<T>
+    public fun getIntersectionPosition(position: Position): Sequence<T>
 
     /**
      * Gets all entities that are within the given circle.

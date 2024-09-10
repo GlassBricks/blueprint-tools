@@ -107,9 +107,9 @@ private fun copyCircuitConnections(
  *
  * Returns a map of old entities to new entities.
  */
-public fun <T : BlueprintEntity> copyEntitiesWithConnections(entities: Iterable<T>): Map<T, T> {
+public fun <T : BlueprintEntity> Iterable<T>.copyEntitiesWithConnections(): Map<T, T> {
     @Suppress("UNCHECKED_CAST")
-    val resultMap = entities.associateWith { it.copyIsolated() as T }
+    val resultMap = this.associateWith { it.copyIsolated() as T }
     for ((old, new) in resultMap) {
         if (old is CableConnectionPoint) {
             copyCableConnections(old, new as CableConnectionPoint, resultMap)
@@ -170,9 +170,6 @@ public inline fun <T : BlueprintEntity> MutableCollection<T>.removeWithConnectio
         }
     }
 
-public fun <T : BlueprintEntity> SpatialDataStructure<T>.copyEntities(): MutableSpatialDataStructure<T> {
-    return DefaultSpatialDataStructure<T>()
-        .also {
-            it.addAll(copyEntitiesWithConnections(this).values)
-        }
+public fun <T : BlueprintEntity> SpatialDataStructure<T>.copyEntitiesSpatial(): MutableSpatialDataStructure<T> {
+    return DefaultSpatialDataStructure<T>(copyEntitiesWithConnections<T>().values)
 }

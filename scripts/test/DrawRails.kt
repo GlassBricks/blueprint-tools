@@ -38,7 +38,7 @@ class DrawRails {
                 200
             )
             for (tile in bounds.roundOutToTileBbox()) {
-                val pt = tile.topLeftCorner()
+                val pt = tile.tileTopLeft()
                 val color = if (hitsPoint(pt)) Color.RED else Color.BLACK
                 drawing.drawPoint(pt, color)
 
@@ -68,7 +68,7 @@ class DrawRails {
         entities.retainAll { it is Rail }
         val drawing = drawingFor(entities)
         for (tile in entities.enclosingTileBox()) {
-            val testArea = BoundingBox.around(tile.center(), 0.3)
+            val testArea = BoundingBox.around(tile.tileCenter(), 0.3)
             val hasStuff = entities.getInArea(testArea).any()
             if (hasStuff) {
                 drawing.drawRect(testArea, Color.RED)

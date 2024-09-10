@@ -28,7 +28,7 @@ class Oracle : MutableSpatialDataStructure<SimpleSpatial>,
     override fun getInTile(tile: TilePosition): Sequence<SimpleSpatial> =
         getInArea(tile.tileBoundingBox())
 
-    override fun getAtPoint(position: Position): Sequence<SimpleSpatial> =
+    override fun getIntersectionPosition(position: Position): Sequence<SimpleSpatial> =
         asSequence().filter { position in it.collisionBox }
 
     override fun getPosInCircle(center: Position, radius: Double): Sequence<SimpleSpatial> =
@@ -123,7 +123,7 @@ class TileHashMapTest {
         removeHalf()
         for (i in 0 until 10) {
             val point = pos(random.nextDouble(bounds.toDouble()), random.nextDouble(bounds.toDouble()))
-            assertMatches(oracle.getAtPoint(point), testee.getAtPoint(point))
+            assertMatches(oracle.getIntersectionPosition(point), testee.getIntersectionPosition(point))
         }
     }
 

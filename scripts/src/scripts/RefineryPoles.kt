@@ -38,7 +38,7 @@ suspend fun main(): Unit = coroutineScope {
     val originalBox = getEnclosingBox(origEntities.map { it.collisionBox }).roundOutToTileBbox()
     val leftTop = originalBox.leftTop
         .add(2, 0)
-        .topLeftCorner()
+        .tileTopLeft()
     for (entity in origEntities) {
         entity.position -= leftTop
     }
@@ -54,7 +54,7 @@ suspend fun main(): Unit = coroutineScope {
 
         val polePlacements = model.addPolePlacements(
             listOf(smallPole),
-            TileBoundingBox(TilePosition.ZERO, TilePosition(xWrapSize, originalBox.height)),
+            bounds = TileBoundingBox(TilePosition.ZERO, TilePosition(xWrapSize, originalBox.height)),
         ) {
             removeEmptyPolesDist2()
         }

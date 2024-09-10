@@ -63,7 +63,7 @@ class BeltGridTest {
     @FieldSource("params")
     fun `all belt`(params: Pair<TilePosition, CardinalDirection>) {
         val (start, direction) = params
-        grid.addBeltLine(
+        grid.addSimpleBeltLine(
             start = start,
             direction,
             length = 12,
@@ -107,7 +107,7 @@ class BeltGridTest {
     @FieldSource("params")
     fun `ug chain`(params: Pair<TilePosition, CardinalDirection>) {
         val (start, direction) = params
-        grid.addBeltLine(
+        grid.addSimpleBeltLine(
             start = start,
             direction,
             length = 12,
@@ -132,13 +132,13 @@ class BeltGridTest {
 
     @Test
     fun intersection() {
-        grid.addBeltLine(
+        grid.addSimpleBeltLine(
             start = tilePos(-2, 0),
             direction = CardinalDirection.East,
             length = 4,
             beltTiers = setOf(normalBelt)
         )
-        grid.addBeltLine(
+        grid.addSimpleBeltLine(
             start = tilePos(0, -2),
             direction = CardinalDirection.South,
             length = 5,
@@ -170,13 +170,13 @@ class BeltGridTest {
         val (start, direction) = params
         // fast:   >......<>......<>......<
         // normal: ......>....<>....<......
-        grid.addBeltLine(
+        grid.addSimpleBeltLine(
             start = start,
             direction,
             length = 8 * 3,
             beltTiers = setOf(fastTier)
         )
-        grid.addBeltLine(
+        grid.addSimpleBeltLine(
             start = start.shifted(direction, 6),
             direction,
             length = 6 * 2,

@@ -7,8 +7,10 @@ import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.entity.hasControlBehavior
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placedAtTileBasic
-import glassbricks.factorio.blueprint.placement.belt.addInitialSolution
+import glassbricks.factorio.blueprint.placement.belt.BeltLineCosts
+import glassbricks.factorio.blueprint.placement.belt.withOptimizedBeltLines
 import glassbricks.factorio.blueprint.placement.beltcp.addBeltLinesFrom
+import glassbricks.factorio.blueprint.placement.beltcp.solveBeltLinesAsInitialSolution
 import glassbricks.factorio.blueprint.placement.poles.addPolePlacements
 import glassbricks.factorio.blueprint.placement.poles.enforceConnectedWithDag
 import glassbricks.factorio.blueprint.placement.poles.enforceConnectedWithDistanceLabels
@@ -32,37 +34,43 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
 
 
     class OptimizeBelts {
-        var addHeuristicInitialSolution = false
-        var forceInitialSolution = false
+        /**
+         * If true, solution is added as initial solution to the cp model.
+         *
+         * If false, the heuristic solution is applied first.
+         */
+        var withCp = false
+        var forceWithCp = false
     }
 
 
-    class OptimizedPoles(
+    class OptimizePoles(
         val prototypes: List<ElectricPolePrototype>,
     ) {
         var enforcePolesConnected = false
         var useLabelConnectivity = false
         var poleRootRel: Vector = Vector(0.5, 0.5)
         var addExistingAsInitialSolution = false
+        var ignoreUnpoweredEntities = false
     }
 
     var optimizeBeltLines: OptimizeBelts? = null
-    var optimizePoles: OptimizedPoles? = null
     fun optimizeBeltLines(init: OptimizeBelts.() -> Unit = {}) {
         optimizeBeltLines = OptimizeBelts().apply(init)
     }
 
-    fun optimizePoles(prototypes: List<ElectricPolePrototype>, init: OptimizedPoles.() -> Unit = {}) {
-        optimizePoles = OptimizedPoles(prototypes).apply(init)
+    var optimizePoles: OptimizePoles? = null
+    fun optimizePoles(prototypes: List<ElectricPolePrototype>, init: OptimizePoles.() -> Unit = {}) {
+        optimizePoles = OptimizePoles(prototypes).apply(init)
     }
 
     @JvmName("optimizePolesString")
-    fun optimizePoles(prototypes: List<String>, init: OptimizedPoles.() -> Unit = {}) {
+    fun optimizePoles(prototypes: List<String>, init: OptimizePoles.() -> Unit = {}) {
         val prototypes = prototypes.map { VanillaPrototypes.getAs<ElectricPolePrototype>(it) }
         optimizePoles(prototypes, init)
     }
 
-    fun optimizePoles(vararg prototypes: String, init: OptimizedPoles.() -> Unit = {}) {
+    fun optimizePoles(vararg prototypes: String, init: OptimizePoles.() -> Unit = {}) {
         require(prototypes.isNotEmpty())
         optimizePoles(prototypes.asList(), init)
     }
@@ -103,15 +111,31 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
     fun build(): EntityPlacementModel {
         logger.info { "Building model" }
         val optimizePoles = optimizePoles
-        val optimizeBeltLines = optimizeBeltLines
+        val optimizeBeltLinesWithCp = optimizeBeltLines?.withCp == true
+
+        val bounds = origEntities.enclosingBox()
+        val distCostPosition = bounds.getRelPoint(distanceCostCenter ?: optimizePoles?.poleRootRel ?: Vector(0.5, 0.5))
+        fun getEntityCost(
+            prototype: EntityPrototype,
+            position: Position,
+        ): Double {
+            var baseCost = entityCosts[prototype] ?: 0.0
+            if (distanceCostFactor != 0.0)
+                baseCost += distanceCostFactor * distCostPosition.distanceTo(position)
+            return baseCost
+        }
+
+        val entities = if (optimizeBeltLines?.withCp == false) {
+            origEntities.withOptimizedBeltLines(BeltLineCosts { type, pos, _ ->
+                getEntityCost(type.prototype, pos.tileCenter())
+            })
+        } else origEntities
 
         val model = EntityPlacementModel()
 
 
-        val bounds = origEntities.enclosingBox()
-
-        val entitiesToAdd = origEntities.filter {
-            if (optimizeBeltLines != null && (it.prototype is TransportBeltPrototype || it.prototype is UndergroundBeltPrototype)) {
+        val entitiesToAdd = entities.filter {
+            if (optimizeBeltLinesWithCp && (it.prototype is TransportBeltPrototype || it.prototype is UndergroundBeltPrototype)) {
                 return@filter false
             }
             if (optimizePoles != null && it.prototype is ElectricPolePrototype) {
@@ -121,24 +145,29 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
         }
 
         logger.info { "Adding fixed placements" }
-        for (entity in entitiesToAdd)
+        for (entity in entitiesToAdd) {
             model.addFixedPlacement(entity)
+        }
 
 
-        val beltPlacements = if (optimizeBeltLines != null) {
-            model.addBeltLinesFrom(origEntities)
+        val beltPlacements = if (optimizeBeltLinesWithCp) {
+            model.addBeltLinesFrom(entities)
         } else null
 
         // important that fixed placements added before poles
         if (optimizePoles != null) {
             logger.info { "Adding pole placements" }
             val placements = model.addPolePlacements(
-                optimizePoles.prototypes, bounds = bounds.roundOutToTileBbox()
+                optimizePoles.prototypes,
+                bounds = bounds.roundOutToTileBbox(),
+                ignoreUnpoweredEntities = optimizePoles.ignoreUnpoweredEntities
             ) {
                 removeEmptyPolesDist2()
-                removeIfParallel {
-                    it.collisionBox.roundOutToTileBbox().any {
-                        beltPlacements?.get(it)?.canBeEmpty == false
+                if (beltPlacements != null) {
+                    removeIfParallel {
+                        it.collisionBox.roundOutToTileBbox().any {
+                            beltPlacements[it]?.canBeEmpty == false
+                        }
                     }
                 }
             }
@@ -152,7 +181,7 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
             }
             if (optimizePoles.addExistingAsInitialSolution) {
                 for (candidate in placements.poles) {
-                    val existing = origEntities.getAtPoint(candidate.position).find {
+                    val existing = entities.getIntersectionPosition(candidate.position).find {
                         it.prototype == candidate.prototype
                     }
                     model.cp.addLiteralHint(candidate.placement.selected, existing != null)
@@ -163,30 +192,24 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
         logger.info { "Setting costs" }
 
         for (placement in model.placements) {
-            if (placement !is OptionalEntityPlacement<*>) continue
-            val cost = entityCosts[placement.prototype] ?: continue
-            placement.cost = cost
+            if (placement is OptionalEntityPlacement<*>) {
+                placement.cost = getEntityCost(placement.prototype, placement.position)
+            }
         }
 
-        if (distanceCostFactor != 0.0) {
-            val center = bounds.getRelPoint(distanceCostCenter ?: optimizePoles?.poleRootRel ?: Vector(0.5, 0.5))
-            model.addDistanceCostFrom(center, distanceCostFactor)
-        }
-
-        if (optimizeBeltLines?.addHeuristicInitialSolution == true) {
-            val force = optimizeBeltLines.forceInitialSolution
-            beltPlacements!!.addInitialSolution(
-                force = force,
+        if (optimizeBeltLinesWithCp) {
+            beltPlacements!!.solveBeltLinesAsInitialSolution(
+                force = optimizeBeltLines!!.forceWithCp,
                 canPlace = { beltType, position, direction ->
                     val testEntity = beltType.prototype.placedAtTileBasic(position, direction.to8wayDirection())
-                    origEntities.getColliding(testEntity).none {
+                    entities.getColliding(testEntity).none {
                         it.prototype !is TransportBeltPrototype && it.prototype !is UndergroundBeltPrototype
                     }
                 }
             )
         }
 
-        model.exportCopySource = origEntities
+        model.exportCopySource = entities
         return model
     }
 }

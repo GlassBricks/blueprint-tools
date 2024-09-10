@@ -77,7 +77,7 @@ public open class TileHashMap<T : Spatial> :
             .filter { it.intersects(area) }
 
     // todo: handle rails/move responsibility to spatial
-    override fun getAtPoint(position: Position): Sequence<T> =
+    override fun getIntersectionPosition(position: Position): Sequence<T> =
         getInTile(position.occupiedTile())
             .filter { position in it.collisionBox }
 

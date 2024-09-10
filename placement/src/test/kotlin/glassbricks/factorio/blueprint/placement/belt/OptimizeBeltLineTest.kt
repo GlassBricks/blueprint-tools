@@ -13,6 +13,7 @@ import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
 import glassbricks.factorio.blueprint.placement.beltcp.GridCp
 import glassbricks.factorio.blueprint.placement.beltcp.addBeltPlacements
+import glassbricks.factorio.blueprint.placement.beltcp.solveBeltLinesFromCp
 import glassbricks.factorio.blueprint.placement.shifted
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.tilePos
@@ -96,7 +97,7 @@ class OptimizeBeltLineTest {
 
         fun initialSolutionOnly(): String {
             val (belts, model) = createModel()
-            val initialSolution = belts.solveInitialSolution()
+            val initialSolution = solveBeltLinesFromCp(belts)
             assertEquals(1, initialSolution.size)
             return getBeltPlacementsAsStr(initialSolution.single().curSolution!!, inStr.length)
         }

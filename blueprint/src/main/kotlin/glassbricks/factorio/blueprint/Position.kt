@@ -130,8 +130,8 @@ public data class TilePosition(val x: Int, val y: Int) : Comparable<TilePosition
     public fun squaredLength(): Int = x * x + y * y
     public fun length(): Double = sqrt(squaredLength().toDouble())
 
-    public fun center(): Position = Position(x + 0.5, y + 0.5)
-    public fun topLeftCorner(): Position = Position(x.toDouble(), y.toDouble())
+    public fun tileCenter(): Position = Position(x + 0.5, y + 0.5)
+    public fun tileTopLeft(): Position = Position(x.toDouble(), y.toDouble())
 
     public fun isZero(): Boolean = x == 0 && y == 0
 

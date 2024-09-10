@@ -11,6 +11,8 @@ interface BeltTile {
     val canBeEmpty: Boolean
     val propagatesForward: Boolean
     val propagatesBackward: Boolean
+    val forcedId: BeltLineId?
+
     val options: Set<BeltOption>
 }
 
@@ -38,8 +40,8 @@ class BeltConfig(override val pos: TilePosition) : BeltTile {
             field = value
             cachedOptions = null
         }
-    private var forcedBeltId: BeltLineId? = null
-        set(value) {
+    override var forcedId: BeltLineId? = null
+        private set(value) {
             check(field == null || field == value) { "Belt ID already set" }
             field = value
             cachedOptions = null
@@ -68,7 +70,7 @@ class BeltConfig(override val pos: TilePosition) : BeltTile {
     fun makeLineStart(direction: CardinalDirection, lineId: BeltLineId) {
         isLineStart = true
         forcedDirection = direction
-        forcedBeltId = lineId
+        forcedId = lineId
     }
 
     fun makeLineEnd(
@@ -77,11 +79,11 @@ class BeltConfig(override val pos: TilePosition) : BeltTile {
     ) {
         isLineEnd = true
         forcedDirection = direction
-        forcedBeltId = lineId
+        forcedId = lineId
     }
 
     fun forceIsId(lineId: BeltLineId) {
-        forcedBeltId = lineId
+        forcedId = lineId
     }
 
     fun forceAs(
@@ -90,19 +92,19 @@ class BeltConfig(override val pos: TilePosition) : BeltTile {
         beltType: BeltType,
     ) {
         forcedDirection = direction
-        forcedBeltId = lineId
+        forcedId = lineId
         forcedBeltType = beltType
         addOption(direction, beltType, lineId)
     }
 
-    override val canBeEmpty: Boolean get() = forcedBeltId == null && forcedBeltType == null
+    override val canBeEmpty: Boolean get() = forcedId == null && forcedBeltType == null
 
     override val options get() = cachedOptions ?: computeBeltOptions().also { cachedOptions = it }
 
     private fun computeBeltOptions(): MutableSet<BeltOption> = beltOptions.filterTo(mutableSetOf()) {
         if (forcedDirection != null && it.direction != forcedDirection) return@filterTo false
         if (forcedBeltType != null && it.beltType != forcedBeltType) return@filterTo false
-        if (forcedBeltId != null && it.lineId != forcedBeltId) return@filterTo false
+        if (forcedId != null && it.lineId != forcedId) return@filterTo false
         for (inDirection in noInputDirections) {
             val allowed =
                 it.direction == inDirection.oppositeDir() || (it.direction == inDirection && it.beltType is OutputUnderground)
