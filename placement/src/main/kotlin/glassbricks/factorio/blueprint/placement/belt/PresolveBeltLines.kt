@@ -1,10 +1,14 @@
 package glassbricks.factorio.blueprint.placement.belt
 
 import com.google.ortools.sat.Literal
+import glassbricks.factorio.blueprint.Entity
 import glassbricks.factorio.blueprint.TilePosition
+import glassbricks.factorio.blueprint.basicPlacedAtTile
 import glassbricks.factorio.blueprint.placement.SlidingWindowMin
 import glassbricks.factorio.blueprint.placement.addEquality
 import glassbricks.factorio.blueprint.placement.addHint
+import glassbricks.factorio.blueprint.prototypes.TransportBeltPrototype
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.random.Random
 
@@ -14,9 +18,10 @@ data class InitialSolutionParams(
     val initialIntersectionCost: Double = 2.0,
     val intersectionCostMultiplier: Double = 1.5,
     /** Discount for intersection cost if the original belt is used. */
-    val intersectionDiscountMultiplier: Double = 0.5,
+    val intersectionDiscountMultiplier: Double = 0.1,
     val maxConflictIterations: Int = 100,
-    val canUseTile: (TilePosition) -> Boolean = { true },
+    val canPlace: (Entity<*>) -> Boolean = { testEntity -> true },
+    val sampleBelt: TransportBeltPrototype = VanillaPrototypes.getAs("transport-belt"),
 ) {
     init {
         require(initialIntersectionCost > 0)
@@ -146,9 +151,10 @@ private fun BeltPlacements.getOptBeltLines(): List<OptBeltLine> = beltLines.entr
     )
 }
 
-private fun getTileInfo(grid: BeltPlacements, costs: InitialSolutionParams): Map<TilePosition, TileInfo> {
-    val tileInfo = grid.tiles.mapValues {
-        val canPlaceBelt = grid.model.placements.getInTile(it.key).none { it.isFixed } && costs.canUseTile(it.key)
+private fun getTileInfo(grid: BeltPlacements, params: InitialSolutionParams): Map<TilePosition, TileInfo> {
+    val tileInfo = grid.tiles.mapValues { (pos, _) ->
+        val testEntity = params.sampleBelt.basicPlacedAtTile(pos)
+        val canPlaceBelt = grid.model.canPlace(testEntity) && params.canPlace(testEntity)
         TileInfo(canPlaceBelt)
     }
     for ((id, line) in grid.beltLines) {
@@ -315,8 +321,6 @@ private fun BeltPlacements.solveBeltLines(
         // find solutions, mark intersections
         val intersections = mutableSetOf<TileInfo>()
         for (line in curLines) {
-
-
             val solution = solveSingleBeltLine(tileInfo, line, costs)
             for ((i) in solution) {
                 val pos = line.tiles[i].position
@@ -326,7 +330,10 @@ private fun BeltPlacements.solveBeltLines(
                     intersections += tileInfo
             }
         }
-        if (intersections.isEmpty()) return
+        if (intersections.isEmpty()) {
+            logger.info { "Found a solution on iteration ${i + 1}" }
+            return
+        }
         if (i == costs.maxConflictIterations - 1) break
 
         // increase cost of intersections
@@ -338,6 +345,7 @@ private fun BeltPlacements.solveBeltLines(
         val intersectingIds = intersections.flatMapTo(mutableSetOf()) { it.usedLines }
         for (tile in intersections) tile.usedLines.clear()
         curLines = intersectingIds.map { linesById[it]!! }
+        logger.debug { "Iteration ${i + 1}: ${intersections.size} intersections, ${curLines.size} lines" }
     }
 
     error("Failed to find a solution after ${costs.maxConflictIterations} iterations")

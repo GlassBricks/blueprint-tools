@@ -26,7 +26,10 @@ fun bisectBp(
         }
         return false
     }
-    if (!tryRun(curBp)) error("Initial run does not throw")
+    if (!tryRun(curBp)) {
+        println("Initial run does not throw!")
+        return curBp
+    }
     while (true) {
         val quarter = curBounds.split().firstOrNull { tryRun(curBp.subset(it)) }
         if (quarter == null) {
@@ -34,7 +37,6 @@ fun bisectBp(
         }
         curBounds = quarter
         curBp = curBp.subset(quarter)
-        println(curBounds)
         println(curBp.size)
     }
 }

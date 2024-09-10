@@ -240,6 +240,7 @@ fun <P : EntityPrototype> getAllUnrotatedTilePlacementsBasic(
 
 
 fun attemptAggresiveGc() {
+    logger.info { "Attempting to achieve full GC" }
     val r = Runtime.getRuntime()
     r.gc()
     var f = r.freeMemory()
@@ -252,12 +253,12 @@ fun attemptAggresiveGc() {
         val m2 = r.maxMemory()
         val t2 = r.totalMemory()
         if (f == f2 && m == m2 && t == t2) {
-            println("Full GC achieved.")
+            logger.info { "Achieved full GC" }
             return
         }
         f = f2
         m = m2
         t = t2
     }
-    println("Failed to achieve full GC.")
+    logger.warn { "Failed to achieve full GC" }
 }

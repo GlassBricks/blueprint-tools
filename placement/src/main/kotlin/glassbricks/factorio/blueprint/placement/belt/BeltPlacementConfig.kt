@@ -27,7 +27,9 @@ class BeltPlacementConfig {
     internal fun addTo(model: EntityPlacementModel): BeltPlacements {
         logger.info { "Applying belt grid config to cp" }
         val grid = cells
-            .mapValuesTo(HashMap()) { (_, config) -> BeltImpl(model, config) }
+            .mapValuesTo(HashMap()) { (_, config) ->
+                BeltImpl(model, config)
+            }
         return BeltPlacements(model, beltLines, grid)
     }
 

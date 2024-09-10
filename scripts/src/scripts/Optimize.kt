@@ -6,7 +6,6 @@ import glassbricks.factorio.blueprint.json.importBlueprintFrom
 import glassbricks.factorio.blueprint.json.importBlueprintString
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placement.*
-import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.awt.Toolkit
@@ -17,8 +16,7 @@ import kotlin.system.exitProcess
 
 val projectRoot = File(".")
 
-private val sourceFile = "test-blueprints/early-base.txt"
-//val sourceFile: String = ""
+private val sourceFile = "test-blueprints/base8.txt"
 
 suspend fun main(): Unit = coroutineScope {
     println("importing blueprint")
@@ -33,12 +31,15 @@ suspend fun main(): Unit = coroutineScope {
         fileName = "clipboard"
     }
     val model = BpModelBuilder(bp).apply {
-        optimizeBeltLines = true
-        optimizePoles = listOf(
-            VanillaPrototypes.getAs("small-electric-pole"),
-            VanillaPrototypes.getAs("medium-electric-pole"),
-        )
-        enforcePolesConnected = true
+        optimizeBeltLines {
+            addHeuristicInitialSolution = true
+//            forceInitialSolution = true
+        }
+        optimizePoles("small-electric-pole", "medium-electric-pole") {
+            enforcePolesConnected = true
+            addExistingAsInitialSolution = true
+        }
+        keepEntitiesWithControlBehavior()
 
         setEntityCosts(mapOf(
             "transport-belt" to 1.5,
@@ -53,11 +54,13 @@ suspend fun main(): Unit = coroutineScope {
 
         distanceCostFactor = 5e-4
 
-        keepWithControlBehavior()
     }.build()
     model.solver.parameters.apply {
-        maxTimeInSeconds = 60.0 * 10
+        maxTimeInSeconds = 60.0 * 2
         maxMemoryInMb = 1024 * 12
+
+//        maxPresolveIterations = 5
+        numWorkers = 8
     }
     bp.entities.clear()
 

@@ -23,7 +23,6 @@ class BeltPlacement(
 }
 
 interface Belt : BeltCommon {
-    val isEmpty: Literal
     val lineId: IntVar
     val lineIdDomainMap: Map<Int, Literal>
     val selectedBelt: Table<CardinalDirection, BeltType, BeltPlacement>
@@ -37,8 +36,6 @@ internal class BeltImpl(
     config: BeltCommon,
 ) : Belt {
     override val pos = config.pos
-    override val isEmpty: Literal = model.cp.newBoolVar("isEmpty")
-
     override val lineId: IntVar
     override val lineIdDomainMap: Map<Int, Literal>
     private val beltOptions = config.getOptions()
@@ -87,8 +84,11 @@ internal class BeltImpl(
         }
 
     init {
-        model.cp.addAtLeastOne(selectedBelt.values.map { it.selected } + isEmpty)
-        if (!canBeEmpty) model.cp.addEquality(isEmpty, 0)
+        if (canBeEmpty) {
+            model.cp.addAtMostOne(selectedBelt.values.map { it.selected })
+        } else {
+            model.cp.addExactlyOne(selectedBelt.values.map { it.selected })
+        }
     }
 
     override val hasOutputIn: Map<CardinalDirection, Literal> = buildMap {
@@ -120,11 +120,6 @@ internal class BeltImpl(
             for (literal in selected) model.cp.addImplication(literal, hasInVar)
             put(direction, hasInVar)
         }
-    }
-
-    init {
-        // this is redundant, but it might help cp
-        model.cp.addAtMostOne(hasOutputIn.values)
     }
 }
 
