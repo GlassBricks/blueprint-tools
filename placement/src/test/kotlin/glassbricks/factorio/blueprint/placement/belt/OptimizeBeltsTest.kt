@@ -8,6 +8,7 @@ import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
 import glassbricks.factorio.blueprint.placement.PlacementSolution
+import glassbricks.factorio.blueprint.placement.beltcp.addBeltLinesFrom
 import glassbricks.factorio.blueprint.prototypes.TransportBeltConnectablePrototype
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.tilePos

@@ -177,11 +177,12 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
             val force = optimizeBeltLines.forceInitialSolution
             beltPlacements!!.addInitialSolution(
                 force = force,
-                params = InitialSolutionParams(canPlace = { testEntity ->
+                canPlace = { beltType, position, direction ->
+                    val testEntity = beltType.prototype.placedAtTileBasic(position, direction.to8wayDirection())
                     origEntities.getColliding(testEntity).none {
                         it.prototype !is TransportBeltPrototype && it.prototype !is UndergroundBeltPrototype
                     }
-                })
+                }
             )
         }
 

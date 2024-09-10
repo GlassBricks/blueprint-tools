@@ -59,7 +59,7 @@ sealed interface BeltType {
         override val prototype: UndergroundBeltPrototype,
         override val isIsolated: Boolean = false,
     ) : Underground {
-        override fun toString(): String = "<${prototype.name}_in${if (isIsolated) "_isolated" else ""}>"
+        override fun toString(): String = "<${prototype.name} in${if (isIsolated) " isolated" else ""}>"
         override val hasInput: Boolean get() = true
         override val hasOutput: Boolean get() = false
 
@@ -72,7 +72,7 @@ sealed interface BeltType {
         override val isIsolated: Boolean = false,
     ) :
         Underground {
-        override fun toString(): String = "<${prototype.name}_out${if (isIsolated) "_isolated" else ""}>"
+        override fun toString(): String = "<${prototype.name} out${if (isIsolated) " isolated" else ""}>"
         override val hasInput: Boolean get() = false
         override val hasOutput: Boolean get() = true
 

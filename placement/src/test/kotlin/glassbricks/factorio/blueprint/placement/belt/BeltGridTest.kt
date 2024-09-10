@@ -6,6 +6,8 @@ import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
+import glassbricks.factorio.blueprint.placement.beltcp.GridCp
+import glassbricks.factorio.blueprint.placement.beltcp.addBeltPlacements
 import glassbricks.factorio.blueprint.placement.get
 import glassbricks.factorio.blueprint.placement.shifted
 import glassbricks.factorio.blueprint.tilePos
@@ -17,7 +19,7 @@ import kotlin.test.assertTrue
 
 
 class BeltGridTest {
-    val grid = BeltPlacementConfig()
+    val grid = BeltGrid()
 
     companion object {
         val params = listOf(
@@ -32,20 +34,20 @@ class BeltGridTest {
         }
     }
 
-    private fun entityCostSolve(): BeltPlacements {
-        val vars = grid.addTo(EntityPlacementModel())
-        assertEquals(CpSolverStatus.OPTIMAL, vars.model.solve().status)
-        return vars
+    private fun entityCostSolve(): GridCp {
+        val grid = EntityPlacementModel().addBeltPlacements(this@BeltGridTest.grid)
+        assertEquals(CpSolverStatus.OPTIMAL, grid.model.solve().status)
+        return grid
     }
 
-    private fun materialCostSolve(): BeltPlacements {
-        val vars = grid.addTo(EntityPlacementModel())
-        addMaterialCost(vars)
-        assertEquals(CpSolverStatus.OPTIMAL, vars.model.solve().status)
-        return vars
+    private fun materialCostSolve(): GridCp {
+        val grid = EntityPlacementModel().addBeltPlacements(this@BeltGridTest.grid)
+        addMaterialCost(grid)
+        assertEquals(CpSolverStatus.OPTIMAL, grid.model.solve().status)
+        return grid
     }
 
-    private fun addMaterialCost(vars: BeltPlacements) {
+    private fun addMaterialCost(vars: GridCp) {
         val costs = mapOf(
             normalBelt.beltProto to 1,
             normalBelt.ugProto to 4,
@@ -73,7 +75,7 @@ class BeltGridTest {
         for (i in 0..<12) {
             val tile = start.shifted(direction, i)
             assertEquals(1, solver.value(vars[tile]!!.lineId))
-            val belt = vars[tile]!!.selectedBelt[direction, normalBelt.belt]!!
+            val belt = vars[tile]!!.beltPlacements[direction, normalBelt.belt]!!
             assertTrue(solver.booleanValue(belt.selected))
         }
     }
@@ -94,10 +96,10 @@ class BeltGridTest {
         val solver = vars.model.solver
         assertEquals(2.0, solver.objectiveValue())
         assertTrue(
-            vars[start]!!.selectedBelt[direction, normalBelt.inputUg]!!.selected
+            vars[start]!!.beltPlacements[direction, normalBelt.inputUg]!!.selected
                 .let { solver.booleanValue(it) })
         assertTrue(
-            vars[start.shifted(direction, 2)]!!.selectedBelt[direction, normalBelt.outputUg]!!.selected
+            vars[start.shifted(direction, 2)]!!.beltPlacements[direction, normalBelt.outputUg]!!.selected
                 .let { solver.booleanValue(it) })
     }
 
@@ -118,11 +120,11 @@ class BeltGridTest {
         assertEquals(4.0, solver.objectiveValue())
         for (dist in listOf(0, 6)) {
             val tile = start.shifted(direction, dist)
-            val ugVar = vars[tile]!!.selectedBelt[direction, normalBelt.inputUg]!!.selected
+            val ugVar = vars[tile]!!.beltPlacements[direction, normalBelt.inputUg]!!.selected
             assertTrue(solver.booleanValue(ugVar))
             assertEquals(1, solver.value(vars[tile]!!.lineId))
             val tile5 = start.shifted(direction, dist + 5)
-            val ugVar5 = vars[tile5]!!.selectedBelt[direction, normalBelt.outputUg]!!.selected
+            val ugVar5 = vars[tile5]!!.beltPlacements[direction, normalBelt.outputUg]!!.selected
             assertTrue(solver.booleanValue(ugVar5))
             assertEquals(1, solver.value(vars[tile5]!!.lineId))
         }
@@ -149,15 +151,15 @@ class BeltGridTest {
         for (i in 0..<4) {
             val tile = tilePos(i - 2, 0)
             assertEquals(1, solver.value(vars[tile]!!.lineId))
-            val belt = vars[tile]!!.selectedBelt[CardinalDirection.East, normalBelt.belt]!!.selected
+            val belt = vars[tile]!!.beltPlacements[CardinalDirection.East, normalBelt.belt]!!.selected
             assertTrue(solver.booleanValue(belt))
         }
         val tile1 = tilePos(0, -2)
-        val belt1 = vars[tile1]!!.selectedBelt[CardinalDirection.South, normalBelt.inputUg]!!.selected
+        val belt1 = vars[tile1]!!.beltPlacements[CardinalDirection.South, normalBelt.inputUg]!!.selected
         assertEquals(2, solver.value(vars[tile1]!!.lineId))
         assertTrue(solver.booleanValue(belt1))
         val tile2 = tilePos(0, -2 + 4)
-        val belt2 = vars[tile2]!!.selectedBelt[CardinalDirection.South, normalBelt.outputUg]!!.selected
+        val belt2 = vars[tile2]!!.beltPlacements[CardinalDirection.South, normalBelt.outputUg]!!.selected
         assertEquals(2, solver.value(vars[tile2]!!.lineId))
         assertTrue(solver.booleanValue(belt2))
     }
@@ -185,18 +187,18 @@ class BeltGridTest {
         assertEquals(10.0, solver.objectiveValue())
         for (dist in listOf(0, 8, 16)) {
             val tile = start.shifted(direction, dist)
-            assertTrue(solver.booleanValue(vars[tile]!!.selectedBelt[direction, fastTier.inputUg]!!.selected))
+            assertTrue(solver.booleanValue(vars[tile]!!.beltPlacements[direction, fastTier.inputUg]!!.selected))
             assertEquals(1, solver.value(vars[tile]!!.lineId))
             val tile7 = start.shifted(direction, dist + 7)
-            assertTrue(solver.booleanValue(vars[tile7]!!.selectedBelt[direction, fastTier.outputUg]!!.selected))
+            assertTrue(solver.booleanValue(vars[tile7]!!.beltPlacements[direction, fastTier.outputUg]!!.selected))
             assertEquals(1, solver.value(vars[tile7]!!.lineId))
         }
         for (dist in listOf(6, 12)) {
             val tile = start.shifted(direction, dist)
-            assertTrue(solver.booleanValue(vars[tile]!!.selectedBelt[direction, normalBelt.inputUg]!!.selected))
+            assertTrue(solver.booleanValue(vars[tile]!!.beltPlacements[direction, normalBelt.inputUg]!!.selected))
             assertEquals(2, solver.value(vars[tile]!!.lineId))
             val tile5 = start.shifted(direction, dist + 5)
-            assertTrue(solver.booleanValue(vars[tile5]!!.selectedBelt[direction, normalBelt.outputUg]!!.selected))
+            assertTrue(solver.booleanValue(vars[tile5]!!.beltPlacements[direction, normalBelt.outputUg]!!.selected))
             assertEquals(2, solver.value(vars[tile5]!!.lineId))
         }
     }

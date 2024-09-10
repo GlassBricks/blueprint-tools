@@ -2,43 +2,32 @@ package glassbricks.factorio.blueprint.placement.belt
 
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.placement.CardinalDirection
-import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.shifted
-import io.github.oshai.kotlinlogging.KotlinLogging
 
-private val logger = KotlinLogging.logger {}
+interface BeltGridCommon {
+    val tiles: Map<TilePosition, BeltTile>
+    val beltLines: Map<BeltLineId, BeltLine>
+}
 
-class BeltPlacementConfig {
-    private val cells: MutableMap<TilePosition, BeltConfig> = mutableMapOf()
-    operator fun get(position: TilePosition): BeltConfig = cells.getOrPut(position) { BeltConfigImpl(position) }
-    fun get(x: Int, y: Int): BeltCommon = get(TilePosition(x, y))
+class BeltGrid : BeltGridCommon {
+    private val _tiles: MutableMap<TilePosition, BeltConfig> = mutableMapOf()
+    override val tiles: Map<TilePosition, BeltConfig> get() = _tiles
+    operator fun get(position: TilePosition): BeltConfig = _tiles.getOrPut(position) { BeltConfig(position) }
+    fun get(x: Int, y: Int): BeltTile = get(TilePosition(x, y))
 
     private var nextBeltId: BeltLineId = 1
     fun newLineId(): BeltLineId = nextBeltId++
 
-    private val beltLines: MutableMap<BeltLineId, BeltLine> = mutableMapOf()
-    internal fun recordLine(id: BeltLineId, line: BeltLine) {
-        beltLines[id] = line
-    }
+    private val _beltLines: MutableMap<BeltLineId, BeltLine> = mutableMapOf()
+    override val beltLines: Map<BeltLineId, BeltLine> get() = _beltLines
 
-    /**
-     * Doesn't actually create any entity placements
-     */
-    internal fun addTo(model: EntityPlacementModel): BeltPlacements {
-        logger.info { "Applying belt grid config to cp" }
-        val grid = cells
-            .mapValuesTo(HashMap()) { (_, config) ->
-                BeltImpl(model, config)
-            }
-        return BeltPlacements(model, beltLines, grid)
+    internal fun addLine(id: BeltLineId, line: BeltLine) {
+        _beltLines[id] = line
     }
-
 }
 
-fun EntityPlacementModel.addBeltPlacements(grid: BeltPlacementConfig): BeltPlacements = grid.addTo(this)
-
 // only kept around for testing reasons
-internal fun BeltPlacementConfig.addBeltLine(
+internal fun BeltGrid.addBeltLine(
     start: TilePosition,
     direction: CardinalDirection,
     length: Int,

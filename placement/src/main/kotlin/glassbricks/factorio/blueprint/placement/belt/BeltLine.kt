@@ -5,7 +5,6 @@ import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.entity.*
 import glassbricks.factorio.blueprint.json.IOType
 import glassbricks.factorio.blueprint.placement.CardinalDirection
-import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.ops.ItemTransportGraph
 import glassbricks.factorio.blueprint.placement.ops.LogisticsEdgeType
 import glassbricks.factorio.blueprint.placement.ops.getItemTransportGraph
@@ -59,7 +58,7 @@ class BeltLine(
     fun getTilePos(i: Int): TilePosition = start.shifted(direction, i)
 }
 
-data class BeltLineTile(
+class BeltLineTile(
     val mustBeNotEmpty: Boolean,
     val allowedBeltTiers: Collection<BeltTier>,
     /** Has higher precedence than mustNotBeEmpty */
@@ -67,7 +66,7 @@ data class BeltLineTile(
     val originalNode: ItemTransportGraph.Node? = null,
 )
 
-fun BeltPlacementConfig.addBeltLine(line: BeltLine): BeltLineId {
+fun BeltGrid.addBeltLine(line: BeltLine): BeltLineId {
     val direction = line.direction
     val id = newLineId()
     for ((i, lineTile) in line.tiles.withIndex()) {
@@ -97,7 +96,7 @@ fun BeltPlacementConfig.addBeltLine(line: BeltLine): BeltLineId {
             }
         }
     }
-    this.recordLine(id, line)
+    this.addLine(id, line)
     return id
 }
 
@@ -230,25 +229,4 @@ fun getBeltLinesFromTransportGraph(
         lineInfo.first
     }
     return result
-}
-
-fun EntityPlacementModel.addBeltLinesFrom(
-    origEntities: SpatialDataStructure<BlueprintEntity>,
-    prototypes: BlueprintPrototypes = VanillaPrototypes,
-): BeltPlacements {
-    logger.info { "Start: add belt lines" }
-    return addBeltLinesFrom(getItemTransportGraph(origEntities), prototypes)
-}
-
-// this function can probably be dissected for more advanced usage
-fun EntityPlacementModel.addBeltLinesFrom(
-    transportGraph: ItemTransportGraph,
-    prototypes: BlueprintPrototypes = VanillaPrototypes,
-): BeltPlacements {
-    val grid = BeltPlacementConfig()
-    val beltLines = getBeltLinesFromTransportGraph(transportGraph, prototypes)
-    for (line in beltLines) {
-        grid.addBeltLine(line)
-    }
-    return this.addBeltPlacements(grid)
 }

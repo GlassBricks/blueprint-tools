@@ -51,13 +51,13 @@ fun getBeltsAsStr(
 }
 
 fun getBeltPlacementsAsStr(
-    placements: BeltPlacementSolution,
-    length: Int = getMaxLen(placements),
+    placements: List<BeltTypeWithIndex>,
+    length: Int,
 ): String {
     val byIndex = placements.associateBy { it.index }
     return (0..<length).joinToString("") { i ->
         val placement = byIndex[i]
-        val char = if (placement == null) ' ' else when (placement.placement.beltType) {
+        val char = if (placement == null) ' ' else when (placement.beltType) {
             is BeltType.Belt -> '='
             is BeltType.InputUnderground -> '>'
             is BeltType.OutputUnderground -> '<'
@@ -66,8 +66,6 @@ fun getBeltPlacementsAsStr(
         char.toString()
     }
 }
-
-fun getMaxLen(placements: BeltPlacementSolution): Int = placements.maxOf { it.index }
 
 fun createEntities(
     inStr: String,

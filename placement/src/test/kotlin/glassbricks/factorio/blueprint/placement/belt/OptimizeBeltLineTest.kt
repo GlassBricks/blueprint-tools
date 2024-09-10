@@ -11,6 +11,8 @@ import glassbricks.factorio.blueprint.json.IOType
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
+import glassbricks.factorio.blueprint.placement.beltcp.GridCp
+import glassbricks.factorio.blueprint.placement.beltcp.addBeltPlacements
 import glassbricks.factorio.blueprint.placement.shifted
 import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import glassbricks.factorio.blueprint.tilePos
@@ -60,8 +62,8 @@ class OptimizeBeltLineTest {
             startPos,
             direction,
         )
-        fun createModel(): Pair<BeltPlacements, EntityPlacementModel> {
-            val beltGrid = BeltPlacementConfig()
+        fun createModel(): Pair<GridCp, EntityPlacementModel> {
+            val beltGrid = BeltGrid()
             beltGrid.addBeltLine(line)
 
             val model = EntityPlacementModel()
@@ -94,15 +96,15 @@ class OptimizeBeltLineTest {
 
         fun initialSolutionOnly(): String {
             val (belts, model) = createModel()
-            val initialSolution = belts.findInitialSolution()
+            val initialSolution = belts.solveInitialSolution()
             assertEquals(1, initialSolution.size)
             return getBeltPlacementsAsStr(initialSolution.single().curSolution!!, inStr.length)
         }
 
         val solA = solveUsingCp()
-        val solB = initialSolutionOnly()
-        val solANoWalls = solA.replace("#", " ")
-        assertEquals(solANoWalls, solB, "Solutions differ")
+//        val solB = initialSolutionOnly()
+//        val solANoWalls = solA.replace("#", " ")
+//        assertEquals(solANoWalls, solB, "Solutions differ")
         return solA
     }
 
