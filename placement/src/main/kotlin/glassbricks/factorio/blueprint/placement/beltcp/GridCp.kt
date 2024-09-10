@@ -4,7 +4,14 @@ import com.google.ortools.sat.Literal
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.placement.CardinalDirection
 import glassbricks.factorio.blueprint.placement.EntityPlacementModel
-import glassbricks.factorio.blueprint.placement.addEquality
+import glassbricks.factorio.blueprint.placement.addLiteralEquality
+import glassbricks.factorio.blueprint.placement.belt.BeltGrid
+import glassbricks.factorio.blueprint.placement.belt.BeltGridCommon
+import glassbricks.factorio.blueprint.placement.belt.BeltLine
+import glassbricks.factorio.blueprint.placement.belt.BeltLineId
+import glassbricks.factorio.blueprint.placement.belt.BeltType
+import glassbricks.factorio.blueprint.placement.belt.addBeltLine
+import glassbricks.factorio.blueprint.placement.belt.getBeltLinesFromTransportGraph
 import glassbricks.factorio.blueprint.placement.get
 import glassbricks.factorio.blueprint.placement.shifted
 
@@ -49,7 +56,7 @@ private fun BeltPlacements.constrainBeltPropagation(tile: TilePosition, directio
         if (thisVar == null) return
         val nextVar = if (thisIsOutput) nextCell?.hasInputIn[direction] else nextCell?.hasOutputIn[direction]
         if (nextVar == null) {
-            cp.addEquality(thisVar, false)
+            cp.addLiteralEquality(thisVar, false)
             return
         }
         cp.addImplication(thisVar, nextVar)
@@ -124,8 +131,8 @@ private fun BeltPlacements.constrainNormalUnderground(
         }
 
         fun disallow(type: BeltType.Underground, direction: CardinalDirection) {
-            val lit = otherBelt.selectedBelt[direction, type]?.selected ?: return
-            cp.addEquality(lit, false).apply {
+            val lit = otherBelt.beltPlacements[direction, type]?.selected ?: return
+            cp.addLiteralEquality(lit, false).apply {
                 onlyEnforceIf(thisSelected)
                 for (previous in previousPairs) onlyEnforceIf(!previous)
             }
@@ -155,7 +162,7 @@ private fun BeltPlacements.constrainIsolatedUnderground(
         val otherBelt = tiles[tile.shifted(ugDir, dist)] ?: continue
         val breaksPairThisTile = mutableListOf<Literal>()
         fun disallow(lit: Literal) {
-            cp.addEquality(lit, false).apply {
+            cp.addLiteralEquality(lit, false).apply {
                 onlyEnforceIf(thisSelected)
                 for (previous in breaksPair) onlyEnforceIf(!previous)
             }

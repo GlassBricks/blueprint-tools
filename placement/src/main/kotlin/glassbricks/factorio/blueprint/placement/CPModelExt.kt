@@ -46,13 +46,13 @@ fun doubleLinearExpr(values: Map<Literal, Double>): DoubleLinearExpr {
     return DoubleLinearExpr(terms.requireNoNulls(), coefficients, 0.0)
 }
 
-fun CpModel.addHint(literal: Literal, value: Boolean) {
+fun CpModel.addLiteralHint(literal: Literal, value: Boolean) {
     when (literal) {
         is BoolVar -> addHint(literal, if (value) 1 else 0)
         is NotBoolVar -> addHint(literal.not() as BoolVar, if (value) 0 else 1)
     }
 }
 
-fun CpModel.addEquality(literal: Literal, value: Boolean): Constraint {
+fun CpModel.addLiteralEquality(literal: Literal, value: Boolean): Constraint {
     return this.addEquality(literal, if (value) 1L else 0L)
 }

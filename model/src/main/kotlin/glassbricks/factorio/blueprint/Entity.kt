@@ -52,7 +52,7 @@ public open class BasicEntity<out P : EntityPrototype>(
     override val isSimpleCollisionBox: Boolean get() = true
 }
 
-public fun <P : EntityPrototype> P.basicPlacedAtTile(
+public fun <P : EntityPrototype> P.placedAtTileBasic(
     position: TilePosition,
     direction: Direction = Direction.North,
 ): BasicEntity<P> =

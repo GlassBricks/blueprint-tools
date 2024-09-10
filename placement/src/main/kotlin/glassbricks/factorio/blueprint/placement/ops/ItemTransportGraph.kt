@@ -18,7 +18,7 @@ private val logger = KotlinLogging.logger {}
 // - all belts: belt, ug belt, splitters
 // - crafting machines
 // - containers
-// todo: trains (rails), miners
+// todo: trains (rails)
 
 enum class LogisticsEdgeType {
     Inserter,
@@ -77,6 +77,7 @@ fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTr
             || entity is CraftingMachine
             || entity is Container
             || entity is Lab
+            || entity is MiningDrill
         ) {
             val node = Node(entity, mutableListOf(), mutableListOf())
             nodes += node
@@ -88,8 +89,8 @@ fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTr
         }
     }
     val graph = ItemTransportGraph(nodes, entityToNode, belts)
-    for (node in nodes) if (node.entity is Inserter) {
-        val entity = node.entity
+
+    fun addInserterEdges(entity: Inserter, node: Node) {
         val pickupEntity = source.getAtPoint(entity.globalPickupPosition())
             .firstNotNullOfOrNull { if (it.prototype is InserterPrototype) null else entityToNode[it] }
         if (pickupEntity != null) {
@@ -105,18 +106,35 @@ fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTr
     fun addBeltEdge(beltNode: Node, outputTile: TilePosition) {
         val outputNode = belts[outputTile]
         if (outputNode?.entity is TransportBeltConnectable &&
-            outputNode.entity.canAcceptInputFrom(outputTile, beltNode.entity.direction)
+            outputNode.entity.canAcceptBeltInputFrom(outputTile, beltNode.entity.direction)
         ) {
             graph.addEdge(beltNode, outputNode, LogisticsEdgeType.Belt)
         }
     }
 
-    for (beltNode in nodes) {
-        val belt = beltNode.entity as? TransportBeltConnectable ?: continue
-        belt.getOutputTile1()?.let { addBeltEdge(beltNode, it) }
-        belt.getOutputTile2()?.let { addBeltEdge(beltNode, it) }
-        (belt as? UndergroundBelt)?.findForwardPair(source)?.let { pairUg ->
-            graph.addEdge(beltNode, entityToNode[pairUg]!!, LogisticsEdgeType.Belt)
+
+    fun addMinerEdge(miner: MiningDrill, node: Node) {
+        val outputVector = miner.prototype.vector_to_place_result
+        if (outputVector.isZero()) return
+        val outputTile = (miner.position + outputVector.rotate(miner.direction))
+            .occupiedTile()
+        val outputNode = belts[outputTile]
+        if (outputNode?.entity is TransportBeltConnectable) {
+            graph.addEdge(node, outputNode, LogisticsEdgeType.Inserter)
+        }
+    }
+    for (node in nodes) when (val entity = node.entity) {
+        is Inserter -> addInserterEdges(entity, node)
+        is MiningDrill -> addMinerEdge(entity, node)
+        is TransportBeltConnectable -> {
+            entity.getOutputTile1()?.let { addBeltEdge(node, it) }
+            entity.getOutputTile2()?.let { addBeltEdge(node, it) }
+            if (entity is UndergroundBelt) {
+                val pair = entity.findForwardPair(source)
+                if (pair != null) {
+                    graph.addEdge(node, entityToNode[pair]!!, LogisticsEdgeType.Belt)
+                }
+            }
         }
     }
 
@@ -127,7 +145,7 @@ fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTr
 /**
  * Source entity is in _opposite_ direction of [beltDirection]
  */
-fun TransportBeltConnectable.canAcceptInputFrom(
+fun TransportBeltConnectable.canAcceptBeltInputFrom(
     targetTile: TilePosition,
     beltDirection: Direction,
 ): Boolean {

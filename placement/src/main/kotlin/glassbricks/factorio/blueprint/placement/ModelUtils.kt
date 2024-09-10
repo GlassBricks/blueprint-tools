@@ -6,9 +6,9 @@ import glassbricks.factorio.blueprint.Vector
 import glassbricks.factorio.blueprint.entity.BlueprintEntity
 import glassbricks.factorio.blueprint.entity.hasControlBehavior
 import glassbricks.factorio.blueprint.model.Blueprint
-import glassbricks.factorio.blueprint.placement.belt.InitialSolutionParams
-import glassbricks.factorio.blueprint.placement.belt.addBeltLinesFrom
+import glassbricks.factorio.blueprint.placedAtTileBasic
 import glassbricks.factorio.blueprint.placement.belt.addInitialSolution
+import glassbricks.factorio.blueprint.placement.beltcp.addBeltLinesFrom
 import glassbricks.factorio.blueprint.placement.poles.addPolePlacements
 import glassbricks.factorio.blueprint.placement.poles.enforceConnectedWithDag
 import glassbricks.factorio.blueprint.placement.poles.enforceConnectedWithDistanceLabels
@@ -155,7 +155,7 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
                     val existing = origEntities.getAtPoint(candidate.position).find {
                         it.prototype == candidate.prototype
                     }
-                    model.cp.addHint(candidate.placement.selected, existing != null)
+                    model.cp.addLiteralHint(candidate.placement.selected, existing != null)
                 }
             }
         }

@@ -32,7 +32,7 @@ fun Direction.toCardinalDirection(): CardinalDirection? = when (this) {
     else -> null
 }
 
-fun CardinalDirection.toFactorioDirection(): Direction = when (this) {
+fun CardinalDirection.to8wayDirection(): Direction = when (this) {
     CardinalDirection.North -> Direction.North
     CardinalDirection.East -> Direction.East
     CardinalDirection.South -> Direction.South

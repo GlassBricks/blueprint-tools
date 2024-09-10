@@ -124,7 +124,7 @@ class EntityPlacementModel(
                 val colliding = placements.getColliding(entity)
                 for (other in colliding) {
                     if (!other.isFixed) {
-                        cp.addEquality(other.selected, false)
+                        cp.addLiteralEquality(other.selected, false)
                     }
                 }
             }
@@ -234,7 +234,7 @@ fun <P : EntityPrototype> getAllUnrotatedTilePlacementsBasic(
         prototypes,
         bounds,
         allowPlacement = { model.canPlace(it) },
-        createEntity = { prototype, tile -> prototype.basicPlacedAtTile(tile) }
+        createEntity = { prototype, tile -> prototype.placedAtTileBasic(tile) }
     )
 }
 

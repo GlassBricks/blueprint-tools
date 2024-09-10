@@ -1,6 +1,6 @@
 package glassbricks.factorio.blueprint.placement
 
-import glassbricks.factorio.blueprint.basicPlacedAtTile
+import glassbricks.factorio.blueprint.placedAtTileBasic
 import glassbricks.factorio.blueprint.pos
 import glassbricks.factorio.blueprint.prototypes.tileSnappedPosition
 import glassbricks.factorio.blueprint.tileBbox
@@ -59,7 +59,7 @@ class EntityPlacementModelTest {
             listOf(smallPole),
             tileBbox(0, 0, 2, 2),
             allowPlacement = { model.canPlace(it) },
-            createEntity = { prototype, tile -> prototype.basicPlacedAtTile(tile) }
+            createEntity = { prototype, tile -> prototype.placedAtTileBasic(tile) }
         )
         assertEquals(2, placements.size)
         assertNotNull(placements.singleOrNull { it.position == pos(0.5, 1.5) })

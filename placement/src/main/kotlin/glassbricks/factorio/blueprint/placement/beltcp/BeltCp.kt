@@ -12,7 +12,9 @@ import glassbricks.factorio.blueprint.placement.EntityPlacementModel
 import glassbricks.factorio.blueprint.placement.MultiTable
 import glassbricks.factorio.blueprint.placement.OptionalEntityPlacement
 import glassbricks.factorio.blueprint.placement.Table
-import glassbricks.factorio.blueprint.placement.toFactorioDirection
+import glassbricks.factorio.blueprint.placement.belt.BeltTile
+import glassbricks.factorio.blueprint.placement.belt.BeltType
+import glassbricks.factorio.blueprint.placement.to8wayDirection
 
 class BeltPlacement(
     val beltType: BeltType,
@@ -131,11 +133,11 @@ internal fun EntityPlacementModel.createPlacement(
     is BeltType.Belt -> addPlacement(
         type.prototype,
         tile.center(),
-        direction.toFactorioDirection(),
+        direction.to8wayDirection(),
     )
 
     is BeltType.Underground ->
-        createBpEntity(type.prototype, tile.center(), direction.toFactorioDirection())
+        createBpEntity(type.prototype, tile.center(), direction.to8wayDirection())
             .apply {
                 this as UndergroundBelt
                 ioType = when (type) {

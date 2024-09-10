@@ -5,10 +5,11 @@ import glassbricks.factorio.blueprint.Entity
 import glassbricks.factorio.blueprint.TilePosition
 import glassbricks.factorio.blueprint.basicPlacedAtTile
 import glassbricks.factorio.blueprint.placement.SlidingWindowMin
-import glassbricks.factorio.blueprint.placement.addEquality
-import glassbricks.factorio.blueprint.placement.addHint
-import glassbricks.factorio.blueprint.prototypes.TransportBeltPrototype
-import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
+import glassbricks.factorio.blueprint.placement.addLiteralEquality
+import glassbricks.factorio.blueprint.placement.addLiteralHint
+import glassbricks.factorio.blueprint.placement.beltcp.GridCp
+import glassbricks.factorio.blueprint.placement.get
+import glassbricks.factorio.blueprint.prototypes.UndergroundBeltPrototype
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.random.Random
 
@@ -63,17 +64,17 @@ private fun BeltPlacements.addHintFromSolution(lines: List<OptBeltLine>, force: 
     }
     for (literal in usedLiterals) {
         if (force)
-            cp.addEquality(literal, true)
+            cp.addLiteralEquality(literal, true)
         else
-            cp.addHint(literal, true)
+            cp.addLiteralHint(literal, true)
     }
     for (tile in this.tiles.values) {
         for (placement in tile.selectedBelt.values) {
             if (placement.selected !in usedLiterals) {
                 if (force)
-                    cp.addEquality(placement.selected, false)
+                    cp.addLiteralEquality(placement.selected, false)
                 else
-                    cp.addHint(placement.selected, false)
+                    cp.addLiteralHint(placement.selected, false)
             }
         }
     }

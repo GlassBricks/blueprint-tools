@@ -208,7 +208,7 @@ public data class Vector(
 
     internal object Serializer : KSerializer<Vector> {
         private val doubleAsIntListSerializer = ListSerializer(DoubleAsIntSerializer)
-        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Vec2d") {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Vector") {
             element<Double>("x")
             element<Double>("y")
         }
