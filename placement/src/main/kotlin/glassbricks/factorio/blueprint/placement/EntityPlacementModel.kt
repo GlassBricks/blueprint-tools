@@ -163,7 +163,7 @@ class EntityPlacementModel(
                 logToStdout = true
             }
         }
-        attemptAggresiveGc()
+        if (placements.size > 10_000) attemptAggressiveGc()
         logger.info { "Starting cp solve" }
         val status = solver.solve(cp)
         return PlacementSolution(
@@ -239,7 +239,7 @@ fun <P : EntityPrototype> getAllUnrotatedTilePlacementsBasic(
 }
 
 
-fun attemptAggresiveGc() {
+fun attemptAggressiveGc() {
     logger.info { "Attempting to achieve full GC" }
     val r = Runtime.getRuntime()
     r.gc()

@@ -326,3 +326,33 @@ private fun iterativeSolve(allLines: List<OptBeltLine>, params: BeltLineSolvePar
 
     error("Failed to find a solution after ${params.maxConflictIterations} iterations")
 }
+
+
+// doesn't verify everything atm
+fun verifySolution(
+    resultEntities: SpatialDataStructure<BlueprintEntity>,
+    lines: List<OptBeltLine>,
+) {
+    val origSig = getLinesSignature(lines.map { it.origLine })
+    val curSig = getLinesSignature(getBeltLines(resultEntities))
+
+    assertEqualsFancy(origSig, curSig)
+}
+
+private fun <K, V> assertEqualsFancy(expected: Map<K, V>, actual: Map<K, V>) {
+    val missing = expected.keys - actual.keys
+    val extra = actual.keys - expected.keys
+    if (missing.isNotEmpty() || extra.isNotEmpty()) {
+        error("Missing keys: $missing, extra keys: $extra")
+    }
+    for ((k, v) in expected) {
+        if (v != actual[k]) {
+            error("At key $k, expected $v, got ${actual[k]}")
+        }
+    }
+}
+
+private fun getLinesSignature(lines: List<BeltLine>): Map<Pair<TilePosition, CardinalDirection>, Int> =
+    lines.associate {
+        (it.start to it.direction) to it.tiles.size
+    }

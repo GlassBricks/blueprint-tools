@@ -136,7 +136,7 @@ fun findBeltLineFrom(
 
     fun ItemTransportGraph.Node.index() = position.occupiedTile().manhattanDistanceTo(startTile)
     var segmentStartIndex = 0
-    var curSegmentTiers = mutableListOf<BeltTier>()
+    val curSegmentTiers = mutableListOf<BeltTier>()
 
 
     var cachedTierLists = mutableListOf<List<BeltTier>>()
@@ -144,16 +144,22 @@ fun findBeltLineFrom(
     fun endSegment(endIndex: Int) {
         if (segmentStartIndex > endIndex) return
         curSegmentTiers.sort()
-        val segmentTiers = cachedTierLists.find { it == curSegmentTiers } ?: curSegmentTiers.also {
+        val segmentTiers = cachedTierLists.find { it == curSegmentTiers } ?: curSegmentTiers.toList().also {
             cachedTierLists += it
-            curSegmentTiers = mutableListOf()
         }
+        curSegmentTiers.clear()
 
         while (segmentStartIndex <= endIndex) {
             tiles[segmentStartIndex].allowedBeltTiers = segmentTiers
             segmentStartIndex++
         }
     }
+
+    fun ItemTransportGraph.Node.startsSegment(): Boolean =
+        isWeavedUndergroundBelt || inEdges.any { !it.from.isPartOfLine() }
+
+    fun ItemTransportGraph.Node.endsSegment(): Boolean =
+        isWeavedUndergroundBelt || outEdges.any { !it.to.isPartOfLine() }
 
 
     val nodes = mutableSetOf<ItemTransportGraph.Node>()
@@ -165,8 +171,7 @@ fun findBeltLineFrom(
         }
         tiles += LineTileMut(node)
 
-        val nodeHasOtherInput = node.inEdges.any { !it.from.isPartOfLine() }
-        if (nodeHasOtherInput) {
+        if (node.startsSegment()) {
             endSegment(thisIndex - 1)
         }
 
@@ -175,8 +180,7 @@ fun findBeltLineFrom(
         assert(tiles.lastIndex == thisIndex)
         assert(segmentStartIndex <= thisIndex)
 
-        val nodeHasOtherOutput = node.outEdges.any { !it.to.isPartOfLine() }
-        if (nodeHasOtherOutput) {
+        if (node.endsSegment()) {
             endSegment(thisIndex)
         }
     }

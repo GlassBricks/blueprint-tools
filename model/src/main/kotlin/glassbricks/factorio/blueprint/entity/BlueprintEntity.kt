@@ -58,6 +58,7 @@ public abstract class BaseEntity(json: EntityJson) : BlueprintEntity {
         name = prototype.name,
         position = position,
         direction = direction,
+        tags = tags,
     )
 
     override fun toJsonIsolated(entityNumber: EntityNumber): EntityJson {

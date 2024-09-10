@@ -51,6 +51,7 @@ suspend fun main(): Unit = coroutineScope {
 //        }
         optimizeBeltLines {
             withCp = true
+            forceWithCp = true
         }
         keepEntitiesWithControlBehavior()
         keepIf {
@@ -62,16 +63,15 @@ suspend fun main(): Unit = coroutineScope {
         distanceCostFactor = 5e-4
     }.build()
     model.solver.parameters.apply {
-        maxTimeInSeconds = 60.0 * 120
+        maxTimeInSeconds = 60.0 * 15
 
-        maxPresolveIterations = 5
+//        maxPresolveIterations = 3
 
-        repairHint = true
-        hintConflictLimit = 100
+//        repairHint = true
+//        hintConflictLimit = 500
 
 //        stopAfterFirstSolution = true
-
-//        numWorkers = 15
+//        numWorkers = 16
     }
     bp.entities.clear()
 

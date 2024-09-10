@@ -10,7 +10,6 @@ import glassbricks.factorio.blueprint.entity.copyEntitiesSpatial
 import glassbricks.factorio.blueprint.prototypes.BlueprintPrototypes
 import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 
-// XXX: maybe not use, breaks belt weaving
 fun SpatialDataStructure<BlueprintEntity>.withOptimizedBeltLines(
     costs: BeltLineCosts,
     params: BeltLineSolveParams = BeltLineSolveParams(),
@@ -26,5 +25,6 @@ fun SpatialDataStructure<BlueprintEntity>.withOptimizedBeltLines(
     for (line in solution) {
         result.addAll(line.solutionEntities(entitiesToCopyFrom = entities))
     }
+    verifySolution(entities, solution)
     return result
 }

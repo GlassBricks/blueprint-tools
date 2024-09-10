@@ -9,8 +9,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 
 fun main() {
-    val bp = Blueprint(importBlueprintFrom(File("blueprints/base-100-iron.txt")))
-//    println(bp.entities.take(5).map { it.stage() })
+    val bp = Blueprint(importBlueprintFrom(File("output/base-100-belt-cp.txt")))
+    println(bp.entities.take(5).map { it.tags })
     val stageEntities = bp.entities.groupingBy { it.stage() }.eachCount().toSortedMap()
     println(stageEntities)
 }

@@ -53,6 +53,8 @@ class ItemTransportGraph(
         fun outEdges(type: LogisticsEdgeType): List<Edge> = outEdges.filter { it.type == type }
 
         override fun toString(): String = "Node(entity=$entity)"
+        var isWeavedUndergroundBelt = false
+            internal set
     }
 
     class Edge(
@@ -131,8 +133,13 @@ fun getItemTransportGraph(source: SpatialDataStructure<BlueprintEntity>): ItemTr
             entity.getOutputTile2()?.let { addBeltEdge(node, it) }
             if (entity is UndergroundBelt) {
                 val pair = entity.findForwardPair(source)
+                val pairNode = pair?.let { entityToNode[it]!! }
                 if (pair != null) {
-                    graph.addEdge(node, entityToNode[pair]!!, LogisticsEdgeType.Belt)
+                    graph.addEdge(node, pairNode!!, LogisticsEdgeType.Belt)
+                    if (isBeltWeaving(entity, pair, source)) {
+                        node.isWeavedUndergroundBelt = true
+                        pairNode.isWeavedUndergroundBelt = true
+                    }
                 }
             }
         }
@@ -201,4 +208,27 @@ fun UndergroundBelt.findForwardPair(entities: SpatialDataStructure<BlueprintEnti
         }
     }
     return null
+}
+
+fun isBeltWeaving(
+    a: UndergroundBelt,
+    b: UndergroundBelt,
+    entities: SpatialDataStructure<BlueprintEntity>,
+): Boolean {
+    val dist = a.position.occupiedTile().manhattanDistanceTo(b.position.occupiedTile())
+    val startUg = if (a.ioType == IOType.Input) a else b
+    val start = startUg.position.occupiedTile()
+    val direction = a.direction
+    val prototype = a.prototype
+    for (i in 1..<dist) {
+        val tile = start.shifted(direction, i)
+        val hasWeave = entities.getInTile(tile)
+            .any {
+                it is UndergroundBelt &&
+                        it.prototype != prototype &&
+                        (it.direction == direction || it.direction == direction.oppositeDirection())
+            }
+        if (hasWeave) return true
+    }
+    return false
 }

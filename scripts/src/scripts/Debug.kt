@@ -30,11 +30,16 @@ fun bisectBp(
         println("Initial run does not throw!")
         return curBp
     }
+    var numIter = 0
     while (true) {
         val quarter = curBounds.split().firstOrNull { tryRun(curBp.subset(it)) }
         if (quarter == null) {
+            if (numIter == 0) {
+                println("Could not find smaller area")
+            }
             return curBp
         }
+        numIter++
         curBounds = quarter
         curBp = curBp.subset(quarter)
         println(curBp.size)
@@ -49,18 +54,18 @@ fun TileBoundingBox.split(): List<TileBoundingBox> {
     val xQuartile3 = minX + 3 * (maxXExclusive - minX) / 4
     val yQuartile3 = minY + 3 * (maxYExclusive - minY) / 4
     return listOf(
-        // cut on x only
-        TileBoundingBox(minX, minY, maxXExclusive, midY),
-        TileBoundingBox(minX, midY, maxXExclusive, maxYExclusive),
         // cut on y only
         TileBoundingBox(minX, minY, midX, maxYExclusive),
         TileBoundingBox(midX, minY, maxXExclusive, maxYExclusive),
-        // cut a quarter of x
-        TileBoundingBox(minX, minY, xQuartile3, maxYExclusive),
-        TileBoundingBox(xQuartile, minY, maxXExclusive, maxYExclusive),
+        // cut on x only
+        TileBoundingBox(minX, minY, maxXExclusive, midY),
+        TileBoundingBox(minX, midY, maxXExclusive, maxYExclusive),
         // cut a quarter of y
         TileBoundingBox(minX, minY, maxXExclusive, yQuartile3),
         TileBoundingBox(minX, yQuartile, maxXExclusive, maxYExclusive),
+        // cut a quarter of x
+        TileBoundingBox(minX, minY, xQuartile3, maxYExclusive),
+        TileBoundingBox(xQuartile, minY, maxXExclusive, maxYExclusive),
         // cut 1 tile on each side
         TileBoundingBox(minX + 1, minY, maxXExclusive, maxYExclusive),
         TileBoundingBox(minX, minY + 1, maxXExclusive, maxYExclusive),

@@ -48,5 +48,7 @@ bin/
 ### other
 
 output/
+output2/
+debug-out/
 
 */drawings
