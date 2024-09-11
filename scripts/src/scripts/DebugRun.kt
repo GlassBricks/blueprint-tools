@@ -8,6 +8,8 @@ import glassbricks.factorio.blueprint.json.importBlueprintString
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placement.BpModelBuilder
 import glassbricks.factorio.blueprint.placement.PlacementSolution
+import glassbricks.factorio.blueprint.prototypes.EntityPrototype
+import glassbricks.factorio.blueprint.prototypes.VanillaPrototypes
 import java.io.File
 
 fun tryImportFromClipboard(): Blueprint? {
@@ -21,7 +23,7 @@ fun tryImportFromClipboard(): Blueprint? {
 }
 
 fun main() {
-    val bp = tryImportFromClipboard() ?: Blueprint(importBlueprintFrom(File("blueprints/base-100-iron.txt")))
+    val bp = tryImportFromClipboard() ?: Blueprint(importBlueprintFrom(File("blueprints/base-100-belts2.txt")))
     val result = bisectBp(bp.entities) { entities ->
         val result = tryOpt(entities)
         check(result.isOk)
@@ -36,8 +38,8 @@ fun main() {
         println("Exported to $outFile")
     }
     export("problem", result)
-    export("no-cp", tryOpt(result, withCp = false).export())
-    export("no-force", tryOpt(result, force = false).export())
+//    export("no-cp", tryOpt(result, withCp = false).export())
+//    export("no-force", tryOpt(result, force = false).export())
 }
 
 private fun tryOpt(
@@ -46,17 +48,29 @@ private fun tryOpt(
     force: Boolean = true,
 ): PlacementSolution {
     val model = BpModelBuilder(entities).apply {
-        optimizeBeltLines {
-            this.withCp = withCp
-            forceWithCp = force
+//        optimizeBeltLines {
+//            this.withCp = withCp
+////            this.forceWithCp = force
+//        }
+        optimizePoles("small-electric-pole", "medium-electric-pole") {
+            enforcePolesConnected = true
+            ignoreUnpoweredEntities = true
+//            addExistingAsInitialSolution = true
         }
-        setEntityCosts(
-            "transport-belt" to 1.0,
-            "underground-belt" to 3.4,
-            "fast-transport-belt" to 5.0,
-            "fast-underground-belt" to 19.0,
+        addSafeNudging()
+        entityCosts = mapOf(
+            "transport-belt" to 5.0,
+            "underground-belt" to 5.0 * 4.8 / 2,
+            "fast-transport-belt" to 15.0,
+            "fast-underground-belt" to 15.0 * 5.8 / 2,
+            "small-electric-pole" to 4.0,
+            "medium-electric-pole" to 15.0
         )
+            .mapKeys { VanillaPrototypes[it.key] as EntityPrototype }
         keepEntitiesWithCircuitConnections()
+        keepIf {
+            it.stage() <= 7
+        }
     }.build()
     model.solver.parameters.apply {
         maxTimeInSeconds = 60.0
@@ -64,8 +78,6 @@ private fun tryOpt(
 //            repairHint = true
 //            hintConflictLimit = 100
 
-        stopAfterFirstSolution = true
     }
-    val result = model.solve(display = false)
-    return result
+    return model.solve(optimize = false)
 }

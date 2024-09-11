@@ -8,8 +8,10 @@ import glassbricks.factorio.blueprint.entity.CircuitConnectable
 import glassbricks.factorio.blueprint.entity.Container
 import glassbricks.factorio.blueprint.entity.Furnace
 import glassbricks.factorio.blueprint.entity.Inserter
+import glassbricks.factorio.blueprint.entity.WithIoType
+import glassbricks.factorio.blueprint.entity.copyEntitiesSpatial
 import glassbricks.factorio.blueprint.entity.hasAnyCircuitConnections
-import glassbricks.factorio.blueprint.findMatching
+import glassbricks.factorio.blueprint.matches
 import glassbricks.factorio.blueprint.model.Blueprint
 import glassbricks.factorio.blueprint.placedAtTileBasic
 import glassbricks.factorio.blueprint.placement.belt.BeltLineCosts
@@ -38,7 +40,7 @@ private val logger = KotlinLogging.logger {}
 // for handling nudging (in the future, make sure preserveWithControlBehavior still works as expected)
 
 class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
-    constructor(blueprint: Blueprint) : this(blueprint.entities)
+    constructor(blueprint: Blueprint) : this(blueprint.entities.copyEntitiesSpatial())
 
 
     class OptimizeBelts {
@@ -60,6 +62,7 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
         var poleRootRel: Vector = Vector(0.5, 0.5)
         var addExistingAsInitialSolution = false
         var ignoreUnpoweredEntities = false
+        var expand = 1
     }
 
     var optimizeBeltLines: OptimizeBelts? = null
@@ -181,7 +184,7 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
             logger.info { "Adding pole placements" }
             val placements = model.addPolePlacements(
                 optimizePoles.prototypes,
-                bounds = bounds.roundOutToTileBbox(),
+                bounds = bounds.roundOutToTileBbox().expand(optimizePoles.expand),
                 ignoreUnpoweredEntities = optimizePoles.ignoreUnpoweredEntities
             ) {
                 removeEmptyPolesDist2()
@@ -195,7 +198,9 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
             }
             if (optimizePoles.enforcePolesConnected) {
                 val rootPoles = placements.getRootPolesNear(bounds.getRelPoint(optimizePoles.poleRootRel))
-                if (optimizePoles.useLabelConnectivity) {
+                if (rootPoles.isEmpty()) {
+                    logger.warn { "No poles found near root position" }
+                } else if (optimizePoles.useLabelConnectivity) {
                     placements.enforceConnectedWithDistanceLabels(rootPoles)
                 } else {
                     placements.enforceConnectedWithDag(rootPoles)
@@ -220,7 +225,7 @@ class BpModelBuilder(val origEntities: SpatialDataStructure<BlueprintEntity>) {
 
         logger.info { "Setting to keep" }
         for (entity in toKeep) {
-            val placement = model.placements.findMatching(entity)
+            val placement = model.placements.findMatchingBp(entity)
             if (placement is OptionalEntityPlacement<*>) {
                 model.cp.addLiteralEquality(placement.selected, true)
             }
@@ -247,4 +252,20 @@ fun EntityPlacementModel.addDistanceCostFrom(position: Position, scale: Double =
     for (entity in placements) if (entity is OptionalEntityPlacement<*>) {
         entity.cost += scale * entity.position.distanceTo(position)
     }
+}
+
+fun SpatialDataStructure<EntityPlacement<*>>.findMatchingBp(entity: BlueprintEntity): EntityPlacement<*>? {
+    val candidates = getInTile(entity.position.occupiedTile())
+        .toList()
+        .filter {
+            if (!it.matches(entity)) return@filter false
+            val originalEntity = it.originalEntity
+            if (originalEntity is BlueprintEntity) {
+                if (originalEntity === entity && it.position == entity.position) return it
+                if ((originalEntity as? WithIoType)?.ioType != (entity as? WithIoType)?.ioType)
+                    return@filter false
+            }
+            true
+        }
+    return candidates.firstOrNull()
 }

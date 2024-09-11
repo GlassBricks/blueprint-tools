@@ -17,11 +17,12 @@ import kotlinx.coroutines.flow.withIndex
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.io.File
+import java.io.FileOutputStream
 import kotlin.collections.mapOf
 
 val projectRoot = File(".")
 
-private val sourceFile = "blueprints/base-100-after-belts.txt"
+private val sourceFile = "blueprints/base-100-belts2.txt"
 
 suspend fun main(): Unit = coroutineScope {
     println("importing blueprint")
@@ -37,34 +38,34 @@ suspend fun main(): Unit = coroutineScope {
     }
 
     val model = BpModelBuilder(bp).apply {
-        optimizeBeltLines {
-            withCp = false
-        }
+//        optimizeBeltLines {
+//            withCp = true
+//        }
         optimizePoles("small-electric-pole", "medium-electric-pole") {
             enforcePolesConnected = true
             addExistingAsInitialSolution = true
         }
+//        addSafeNudging()
         keepEntitiesWithCircuitConnections()
         keepIf {
-            it.stage() <= 7
+            it.stage() <= 13
         }
 
         entityCosts = mapOf(
-            "transport-belt" to 1.5,
-            "underground-belt" to 17.5 / 2,
-            "fast-transport-belt" to 11.5,
-            "fast-underground-belt" to 97.5 / 2,
-            "small-electric-pole" to 0.5,
-            "medium-electric-pole" to 13.5,
+            "transport-belt" to 5.0,
+            "underground-belt" to 5.0 * 4.8 / 2,
+            "fast-transport-belt" to 15.0,
+            "fast-underground-belt" to 15.0 * 5.8 / 2,
+            "small-electric-pole" to 4.0,
+            "medium-electric-pole" to 15.0
         )
-            .mapValues { it.value + 3.5 }
             .mapKeys { VanillaPrototypes[it.key] as EntityPrototype }
         distanceCostFactor = 5e-4
     }.build()
     model.solver.parameters.apply {
-        maxTimeInSeconds = 60.0 * 15
+        maxTimeInSeconds = 60.0 * 30
 
-//        maxPresolveIterations = 3
+//        maxPresolveIterations = 5
 
 //        repairHint = true
 //        hintConflictLimit = 500
@@ -72,24 +73,37 @@ suspend fun main(): Unit = coroutineScope {
 //        stopAfterFirstSolution = true
 //        numWorkers = 10
     }
-    bp.entities.clear()
 
     val flow = model.solveFlow()
     flow
         .conflate()
         .transform {
             emit(it)
-            delay(10_000)
+            delay(1_000)
         }.conflate()
         .withIndex()
         .onEach { (index, entities) ->
             bp.entities = model.exportFromSelectedOptionals(entities)
-            val outFile = projectRoot.resolve("output-per/${fileName}-${"%03d".format(index)}.txt")
+            val outFile = projectRoot.resolve("output-per/${fileName}-2-${"%03d".format(index)}.txt")
             outFile.parentFile.mkdirs()
             bp.toJson().exportTo(outFile)
 
-            val numEntities = entities.size
-            val infoFile = projectRoot.resolve("output-per/${fileName}-${"%03d".format(index)}.info.txt")
-            infoFile.writeText("numEntities: $numEntities\n")
+            val infoFile = projectRoot.resolve("output-per/${fileName}.info.txt")
+            val toCount = listOf(
+                "transport-belt",
+                "underground-belt",
+                "fast-transport-belt",
+                "fast-underground-belt",
+                "small-electric-pole",
+                "medium-electric-pole",
+            )
+            val writer = FileOutputStream(infoFile, true).bufferedWriter()
+            writer.appendLine("#$index")
+            for (entity in toCount) {
+                val count = bp.entities.count { it.name == entity }
+                writer.appendLine("$entity: $count")
+            }
+            writer.appendLine()
+            writer.close()
         }.launchIn(this)
 }

@@ -198,6 +198,7 @@ class EntityPlacementModel(
                         }
                     } catch (e: Throwable) {
                         close(e)
+                        throw e
                     }
                 }
             }
@@ -206,6 +207,8 @@ class EntityPlacementModel(
 
             if (status != CpSolverStatus.OPTIMAL && status != CpSolverStatus.FEASIBLE) {
                 close(RuntimeException("Failed to find solution: status $status"))
+            } else {
+                close()
             }
         }
 
